@@ -1,12 +1,12 @@
 'use client'
 
 import { useId, useRef, useState, type KeyboardEvent, type ReactNode } from 'react'
+import { useTranslations } from 'next-intl'
 
 import {
   ACCESS_TAB_ORDER,
   ACCESS_TAB_PARAM,
   ACCESS_TAB_VALUES,
-  accessTabsCopy,
   type AccessTab,
 } from '@/app/lib/auth/login'
 
@@ -25,10 +25,12 @@ export interface AccessTabsProps {
  * roving focus, arrow keys, Home and End.
  */
 export function AccessTabs({ initialTab, login, register }: AccessTabsProps) {
+  const t = useTranslations('auth.tabs')
   const [selected, setSelected] = useState<AccessTab>(initialTab)
   const baseId = useId()
   const tabs = useRef<Partial<Record<AccessTab, HTMLButtonElement | null>>>({})
   const panels: Record<AccessTab, ReactNode> = { login, register }
+  const tabLabel: Record<AccessTab, string> = { login: t('login'), register: t('register') }
 
   function select(tab: AccessTab, moveFocus = false) {
     setSelected(tab)
@@ -56,12 +58,7 @@ export function AccessTabs({ initialTab, login, register }: AccessTabsProps) {
 
   return (
     <div className="access-tabs-shell">
-      <div
-        aria-label={accessTabsCopy.label}
-        className="access-tabs"
-        onKeyDown={handleKeyDown}
-        role="tablist"
-      >
+      <div aria-label={t('label')} className="access-tabs" onKeyDown={handleKeyDown} role="tablist">
         {ACCESS_TAB_ORDER.map((tab) => (
           <button
             aria-controls={`${baseId}-${tab}-panel`}
@@ -77,7 +74,7 @@ export function AccessTabs({ initialTab, login, register }: AccessTabsProps) {
             tabIndex={selected === tab ? 0 : -1}
             type="button"
           >
-            {accessTabsCopy.tabs[tab]}
+            {tabLabel[tab]}
           </button>
         ))}
       </div>

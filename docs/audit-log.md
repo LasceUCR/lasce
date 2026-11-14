@@ -111,10 +111,23 @@ falls back to the stored summary, so a new action still shows something before i
 When you record a new action, add its message to `es.json` and `en.json`, and keep the summary in
 the form `<Noun> <verb>: <name>` so the name can be read back.
 
+## Labels for the codes
+
+The Auditoría table and its filters also show the stored codes as words. `useAuditLabels()`
+(`components/administracion/`) turns an `action` (`research_area.delete` → "Área de investigación
+eliminada" / "Research area deleted") and an `entityType` (`research_area` → "Área de investigación")
+into text from `administration.auditLabels` in the catalogues. The filters still submit the stored
+codes, so the URL and the query do not change. A code with no label falls back to its own words
+("New thing archive"), so a new kind of event never breaks the page. When you record a new action
+or entity type, add its label to `administration.auditLabels` in `es.json` and `en.json`.
+
 ## The panel
 
 `getRecentActivity()` reads the newest `RECENT_ACTIVITY_LIMIT` (5) events, and
 `(public)/administracion/page.tsx` passes them to `RecentActivityPanel`, which shows each event's
-summary, how long ago it happened and who did it. With no events it says "Aún no hay actividad
-registrada.". The list area keeps the height of five rows (`.admin-activity-body` in
-`globals.css`), so the card does not change size with fewer events or none; change both together.
+summary, how long ago it happened and who did it. For accounts holding the `view_audit_log`
+permission, the card header shows a "Ver todo" / "View all" link to `/administracion/auditoria`, and
+each event's summary links directly to the audit trail (filtered to its entity or action). With no
+events it says "Aún no hay actividad registrada.". The list area keeps the height of five rows
+(`.admin-activity-body` in `globals.css`), so the card does not change size with fewer events or none;
+change both together.

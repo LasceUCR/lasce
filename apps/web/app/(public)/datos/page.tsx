@@ -33,11 +33,11 @@ interface ScientificDataRouteProps {
 
 export default async function ScientificDataRoute({ searchParams }: ScientificDataRouteProps) {
   const today = new Date()
-  const maxDate = today.toISOString().slice(0, 10)
+  const goesAvailability = getGoesAvailability(today)
   const params = await searchParams
   // A complete query in the URL (left by the sign-in redirect) is restored and run again.
-  const requestedQuery = getRequestedScientificQuery(params, maxDate)
-  const initialQuery = requestedQuery ?? getInitialScientificQuery(params, maxDate)
+  const requestedQuery = getRequestedScientificQuery(params, goesAvailability)
+  const initialQuery = requestedQuery ?? getInitialScientificQuery(params, goesAvailability)
   // The page stays public: an anonymous visitor gets an empty grant set, not a redirect.
   // Grants only decide which download buttons are enabled; the Server Action checks again.
   const user = await getSessionUser()
@@ -63,7 +63,7 @@ export default async function ScientificDataRoute({ searchParams }: ScientificDa
       />
       <ScientificDataExplorer
         key={`${initialQuery.source}:${initialQuery.product}`}
-        goesAvailability={getGoesAvailability(today)}
+        goesAvailability={goesAvailability}
         initialQuery={initialQuery}
         consultOnLoad={requestedQuery !== null}
         sources={sources}

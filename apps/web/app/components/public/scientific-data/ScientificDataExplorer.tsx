@@ -23,8 +23,10 @@ import type { DownloadFormat } from '@/app/lib/downloads/formats'
 import { getDownloadOptions } from '@/app/lib/downloads/policy'
 import {
   getAvailabilityMessage,
+  getLatestAvailableDate,
   type GoesAvailability,
 } from '@/app/lib/scientific-data-availability'
+import { crossesMidnight, getLocalRange, type LocalTime } from '@/app/lib/scientific-data-time'
 import {
   findScientificProduct,
   getDefaultQueryForSource,
@@ -117,7 +119,7 @@ export function ScientificDataExplorer({
         invalidDate: tValidation('invalidDate'),
         invalidStartTime: tValidation('invalidStartTime'),
         invalidEndTime: tValidation('invalidEndTime'),
-        startBeforeEnd: tValidation('startBeforeEnd'),
+        sameStartEnd: tValidation('sameStartEnd'),
         productUnavailable: tValidation('productUnavailable'),
         invalidParameterForProduct: tValidation('invalidParameterForProduct'),
       }),
@@ -132,9 +134,23 @@ export function ScientificDataExplorer({
     return format.number(value, { maximumSignificantDigits: 5, notation: 'scientific' })
   }
 
-  function getValidationMessage(validatedQuery: ScientificDataQuery) {
+  /** What is wrong with the criteria: a problem with the times is shown beside the time fields. */
+  function getValidationIssues(validatedQuery: ScientificDataQuery) {
     const parsed = querySchema.safeParse(validatedQuery)
-    return parsed.success ? null : (parsed.error.issues[0]?.message ?? tValidation('default'))
+    if (parsed.success) return null
+
+    const isTimeIssue = (issue: (typeof parsed.error.issues)[number]) =>
+      issue.path[0] === 'startTime' || issue.path[0] === 'endTime'
+    const time = parsed.error.issues.find(isTimeIssue)?.message ?? null
+    const other = parsed.error.issues.find((issue) => !isTimeIssue(issue))?.message ?? null
+    return { time, other: time || other ? other : tValidation('default') }
+  }
+
+  /** A local time as text, naming the day when it is not the query's own UTC day. */
+  function formatLocalTime({ time, dayOffset }: LocalTime) {
+    if (dayOffset < 0) return t('localDayBefore', { time })
+    if (dayOffset > 0) return t('localDayAfter', { time })
+    return time
   }
 
   // Server-rendered controls must wait for React's handlers before accepting input.
@@ -152,7 +168,10 @@ export function ScientificDataExplorer({
   const [requestState, setRequestState] = useState<RequestState>(initialResult ? 'success' : 'idle')
   const [hasConsulted, setHasConsulted] = useState(Boolean(initialResult))
   const [message, setMessage] = useState<string | null>(null)
+  /** A problem with the start or end time, shown next to the time fields. */
+  const [timeError, setTimeError] = useState<string | null>(null)
   const resultsHeading = useRef<HTMLHeadingElement>(null)
+  const pendingResultsFocus = useRef(false)
   const activeRequest = useRef<AbortController | null>(null)
   const [progress, setProgress] = useState(0)
   /** The asynchronous job that produced `result`, so a download can reuse it instead of re-queuing. */
@@ -160,6 +179,20 @@ export function ScientificDataExplorer({
   const [pendingDownload, setPendingDownload] = useState<DownloadFormat | null>(null)
   const [downloadMessage, setDownloadMessage] = useState<ResourceDownloadMessage | null>(null)
   useEffect(() => () => activeRequest.current?.abort(), [])
+
+  // Bring the results into view, which on a phone is what shows that the query ran, and move
+  // focus to their heading. This waits for the commit that renders the heading and lifts the
+  // loading region's inert state: a frame callback scheduled from the request can run before it.
+  // Motion is skipped for visitors who ask for less of it.
+  useEffect(() => {
+    if (requestState !== 'success' || !result || !pendingResultsFocus.current) return
+    const heading = resultsHeading.current
+    if (!heading) return
+    pendingResultsFocus.current = false
+    const reduceMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
+    heading.focus({ preventScroll: true })
+    heading.scrollIntoView?.({ behavior: reduceMotion ? 'auto' : 'smooth', block: 'start' })
+  }, [requestState, result])
   const controlsDisabled = !hydrated
 
   const selectedSource = sources.find((source) => source.code === query.source)!
@@ -167,10 +200,17 @@ export function ScientificDataExplorer({
     () => findScientificProduct(query.source, query.product, sources),
     [query.product, query.source],
   )
-  const invalidRange = query.startTime >= query.endTime
+  const rangeCrossesMidnight = crossesMidnight(query)
+  const timeDescribedBy = timeError
+    ? 'scientific-time-hint scientific-time-error'
+    : 'scientific-time-hint'
   const solarImages =
     query.source === 'GOES' && selected?.product.visualization === 'image-sequence'
-  const maxDate = query.source === 'GOES' ? goesAvailability.today : undefined
+  // The latest day that already has data for this instrument; later days cannot be picked.
+  const maxDate =
+    query.source === 'GOES' && selected
+      ? getLatestAvailableDate(selected.instrument.code, goesAvailability)
+      : undefined
   const downloadOptions = getDownloadOptions(
     query,
     signedIn ? downloadGrants : ['download_resources'],
@@ -198,8 +238,22 @@ export function ScientificDataExplorer({
     setResult(null)
     setRequestState('idle')
     setMessage(null)
+    setTimeError(null)
     setResultJobId(null)
     setDownloadMessage(null)
+  }
+
+  /** `date`, or the latest day with data for the instrument of `productCode` when it is later. */
+  function clampDate(
+    sourceCode: ScientificSourceCode,
+    productCode: ScientificProductCode,
+    date: string,
+  ) {
+    if (sourceCode !== 'GOES') return date
+    const instrument = findScientificProduct(sourceCode, productCode, sources)?.instrument.code
+    if (!instrument) return date
+    const latest = getLatestAvailableDate(instrument, goesAvailability)
+    return date > latest ? latest : date
   }
 
   async function downloadResult(format: DownloadFormat) {
@@ -248,12 +302,9 @@ export function ScientificDataExplorer({
 
   function selectSource(sourceCode: ScientificSourceCode) {
     const source = sources.find((candidate) => candidate.code === sourceCode)!
-    const requestedDate =
-      sourceCode === 'GOES' && query.date > goesAvailability.today
-        ? goesAvailability.today
-        : query.date
+    const next = getDefaultQueryForSource(source, query.date)
 
-    setQuery(getDefaultQueryForSource(source, requestedDate))
+    setQuery({ ...next, date: clampDate(next.source, next.product, next.date) })
     resetResults()
   }
 
@@ -263,6 +314,7 @@ export function ScientificDataExplorer({
       ...query,
       product: productCode,
       parameter: selection.product.parameters[0]!.code,
+      date: clampDate(query.source, productCode, query.date),
     })
     resetResults()
   }
@@ -270,10 +322,11 @@ export function ScientificDataExplorer({
   function submitQuery(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
 
-    const validationMessage = getValidationMessage(query)
-    if (validationMessage) {
+    const issues = getValidationIssues(query)
+    if (issues) {
       setRequestState('idle')
-      setMessage(validationMessage)
+      setTimeError(issues.time)
+      setMessage(issues.other)
       return
     }
 
@@ -284,6 +337,10 @@ export function ScientificDataExplorer({
     )
     if (availabilityMessage) {
       setMessage(availabilityMessage)
+      return
+    }
+    if (maxDate && query.date > maxDate) {
+      setMessage(tErrors('dateNotPublished', { date: formatDate(maxDate) }))
       return
     }
 
@@ -297,6 +354,7 @@ export function ScientificDataExplorer({
       setRequestState('loading')
       setHasConsulted(true)
       setMessage(null)
+      setTimeError(null)
       setProgress(0)
       setResultJobId(null)
       setDownloadMessage(null)
@@ -345,11 +403,7 @@ export function ScientificDataExplorer({
         setResult(parsed.data)
         setResultJobId(jobId)
         setRequestState('success')
-        if (focusResults) {
-          requestAnimationFrame(() => {
-            if (!controller.signal.aborted) resultsHeading.current?.focus()
-          })
-        }
+        if (focusResults) pendingResultsFocus.current = true
       } catch {
         if (controller.signal.aborted) return
         setResult(null)
@@ -512,7 +566,14 @@ export function ScientificDataExplorer({
           />
           <div className="data-field-details" id="scientific-date-hint">
             {query.source === 'GOES' ? (
-              <span className="data-field-hint">{t('dateHint')}</span>
+              <>
+                <span className="data-field-hint">{t('dateHint')}</span>
+                {maxDate ? (
+                  <span className="data-field-hint">
+                    {t('dateLatestHint', { date: formatDate(maxDate) })}
+                  </span>
+                ) : null}
+              </>
             ) : null}
           </div>
         </div>
@@ -526,8 +587,8 @@ export function ScientificDataExplorer({
             <label htmlFor="scientific-start-time">{t('startTimeLabel')}</label>
             <input
               disabled={controlsDisabled}
-              aria-describedby={message ? 'scientific-query-message' : undefined}
-              aria-invalid={message && invalidRange ? true : undefined}
+              aria-describedby={timeDescribedBy}
+              aria-invalid={timeError ? true : undefined}
               id="scientific-start-time"
               onChange={(event) => updateQuery('startTime', event.target.value)}
               required
@@ -539,8 +600,8 @@ export function ScientificDataExplorer({
             <label htmlFor="scientific-end-time">{t('endTimeLabel')}</label>
             <input
               disabled={controlsDisabled}
-              aria-describedby={message ? 'scientific-query-message' : undefined}
-              aria-invalid={message && invalidRange ? true : undefined}
+              aria-describedby={timeDescribedBy}
+              aria-invalid={timeError ? true : undefined}
               id="scientific-end-time"
               onChange={(event) => updateQuery('endTime', event.target.value)}
               required
@@ -558,6 +619,18 @@ export function ScientificDataExplorer({
           >
             {requestState === 'loading' ? t('submitLoading') : t('submit')}
           </Button>
+        </div>
+
+        <div className="data-time-notes">
+          <p className="data-field-hint" id="scientific-time-hint">
+            {t('timeZoneHint')}
+            {rangeCrossesMidnight ? <> {t('crossesMidnightHint')}</> : null}
+          </p>
+          {timeError ? (
+            <p className="form-field-error" id="scientific-time-error" role="alert">
+              {timeError}
+            </p>
+          ) : null}
         </div>
       </form>
 
@@ -624,6 +697,14 @@ export function ScientificDataExplorer({
                   <dt>{t('intervalResultLabel')}</dt>
                   <dd>
                     {result.query.startTime}–{result.query.endTime} UTC
+                    {crossesMidnight(result.query) ? <> {t('crossesMidnightResult')}</> : null}
+                  </dd>
+                </div>
+                <div>
+                  <dt>{t('localIntervalResultLabel')}</dt>
+                  <dd>
+                    {formatLocalTime(getLocalRange(result.query).start)}–
+                    {formatLocalTime(getLocalRange(result.query).end)}
                   </dd>
                 </div>
                 <div>

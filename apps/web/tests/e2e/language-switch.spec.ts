@@ -77,6 +77,7 @@ const translatedPages = [
   },
   { path: '/investigacion', heading: 'Research areas', title: 'Research | LASCE' },
   { path: '/datos', heading: 'Data', title: 'Scientific data | LASCE' },
+  { path: '/acceso', heading: 'Portal access', title: 'Portal access | LASCE' },
 ]
 
 for (const { path, heading, title } of translatedPages) {

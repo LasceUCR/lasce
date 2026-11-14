@@ -278,10 +278,34 @@ test('opens a usable instrument menu with the trigger against the window edge', 
   await expect(page.getByRole('treeitem', { name: /Iones pesados/ })).toBeInViewport()
 })
 
-test('limits GOES dates to today and lets SUVI use historical dates', async ({ page }) => {
+/** The UTC date `daysAgo` days before today, as `YYYY-MM-DD`. */
+function utcDateDaysAgo(daysAgo: number) {
+  const date = new Date()
+  date.setUTCDate(date.getUTCDate() - daysAgo)
+  return date.toISOString().slice(0, 10)
+}
+
+test('opens on the latest day with data, so the default query is not empty', async ({ page }) => {
+  await mockObservedXrays(page)
+  await page.goto('/datos')
+
+  const date = page.getByLabel('Fecha', { exact: true })
+  // EXIS publishes with a delay, so the form does not open on today.
+  await expect(date).toHaveValue(utcDateDaysAgo(1))
+  await expect(date).toHaveAttribute('max', utcDateDaysAgo(1))
+
+  await page.getByRole('button', { name: 'Consultar datos' }).click()
+  await expect(page.getByRole('region', { name: 'Flujo solar: rayos X (SFXR)' })).toBeVisible()
+  await expect(page.getByText('No hay datos disponibles')).toHaveCount(0)
+})
+
+test('limits EXIS dates to the latest published day and lets SUVI reach today', async ({
+  page,
+}) => {
   await page.goto('/datos')
   await selectHistoricalXrays(page)
   const date = page.getByLabel('Fecha', { exact: true })
+  await expect(date).toHaveAttribute('max', utcDateDaysAgo(1))
   await expect(date).not.toHaveAttribute('min')
   await date.fill('2025-01-05')
   const product = page.getByRole('combobox', { name: 'Instrumento y producto' })
@@ -289,7 +313,7 @@ test('limits GOES dates to today and lets SUVI use historical dates', async ({ p
   await page.getByRole('treeitem', { name: /^SUVI/ }).click()
   await page.getByRole('treeitem', { name: /171 Å/ }).click()
   await expect(date).not.toHaveAttribute('min')
-  await expect(date).toHaveAttribute('max', /^\d{4}-\d{2}-\d{2}$/)
+  await expect(date).toHaveAttribute('max', utcDateDaysAgo(0))
   await expect(date).toHaveValue('2025-01-05')
   await expect(page.getByLabel('Hora de inicio')).not.toHaveAttribute('min')
   await expect(page.getByLabel('Hora de fin')).not.toHaveAttribute('max')
@@ -544,7 +568,9 @@ test('exposes ROSAC as a clearly simulated dynamic-spectrum source', async ({ pa
   await expect(page.getByText(/Datos simulados para preparar la integración/)).toBeVisible()
 })
 
-test('rejects an invalid time range without calling the public endpoint', async ({ page }) => {
+test('rejects equal start and end times beside the time fields without calling the public endpoint', async ({
+  page,
+}) => {
   await page.goto('/datos')
   await selectHistoricalXrays(page)
   let requests = 0
@@ -556,12 +582,48 @@ test('rejects an invalid time range without calling the public endpoint', async 
   await page.getByLabel('Hora de fin').fill('08:00')
   await page.getByRole('button', { name: 'Consultar datos' }).click()
 
-  await expect(
-    page
-      .getByRole('alert')
-      .filter({ hasText: 'La hora de inicio debe ser anterior a la hora de fin.' }),
-  ).toBeVisible()
+  const alert = page
+    .getByRole('alert')
+    .filter({ hasText: 'La hora de inicio y la de fin no pueden ser iguales.' })
+  await expect(alert).toBeVisible()
+  await expect(page.getByLabel('Hora de fin')).toHaveAttribute('aria-invalid', 'true')
+  await expect(page.getByLabel('Hora de fin')).toHaveAttribute(
+    'aria-describedby',
+    /scientific-time-error/,
+  )
   expect(requests).toBe(0)
+})
+
+test('queries a range across midnight and shows the Costa Rica time', async ({ page }) => {
+  await mockObservedXrays(page)
+  await page.goto('/datos')
+  await selectHistoricalXrays(page)
+  await page.getByLabel('Hora de inicio').fill('23:00')
+  await page.getByLabel('Hora de fin').fill('01:00')
+  await expect(page.getByText(/el rango termina al día siguiente/)).toBeVisible()
+
+  const request = page.waitForRequest(
+    (candidate) => new URL(candidate.url()).pathname === '/api/scientific-data',
+  )
+  await page.getByRole('button', { name: 'Consultar datos' }).click()
+
+  const parameters = new URL((await request).url()).searchParams
+  expect(parameters.get('startTime')).toBe('23:00')
+  expect(parameters.get('endTime')).toBe('01:00')
+  const results = page.getByRole('region', { name: 'Flujo solar: rayos X (SFXR)' })
+  await expect(results.getByText('23:00–01:00 UTC')).toContainText('termina al día siguiente')
+  await expect(results.getByText('17:00–19:00')).toBeVisible()
+})
+
+test('brings the results into view after a query on a phone', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 700 })
+  await mockObservedXrays(page)
+  await page.goto('/datos')
+  await page.getByRole('button', { name: 'Consultar datos' }).click()
+
+  const heading = page.getByRole('heading', { name: /Flujo solar: rayos X/ })
+  await expect(heading).toBeInViewport()
+  await expect(heading).toBeFocused()
 })
 
 test('shows the no-data state and leaves the query editable', async ({ page }) => {

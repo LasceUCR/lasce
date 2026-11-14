@@ -1099,6 +1099,41 @@ describe('createGallerySubAlbum', () => {
     )
   })
 
+  test('retries a duplicate slug once with a UUID suffix, so two sub-albums can share a title', async () => {
+    tx.galleryAlbum.findUnique.mockResolvedValue({ id: parentAlbumId, parentAlbumId: null })
+    tx.galleryAlbum.create
+      .mockRejectedValueOnce(uniqueViolation({ target: ['slug'] }))
+      .mockResolvedValueOnce(subAlbumRecord({ slug: 'cimentacion-9f3ce6d7' }))
+
+    const result = await createGallerySubAlbum(
+      parentAlbumId,
+      subAlbumCreateSchema.parse(subAlbumInput),
+      actor,
+    )
+
+    expect(result.ok).toBe(true)
+    expect(tx.galleryAlbum.create).toHaveBeenCalledTimes(2)
+    expect(tx.galleryAlbum.create.mock.calls[1]?.[0]).toMatchObject({
+      data: expect.objectContaining({
+        slug: expect.stringMatching(
+          /^cimentacion-[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/,
+        ),
+        parentAlbumId,
+      }),
+    })
+  })
+
+  test('reports duplicate-slug when the sub-album retry also collides', async () => {
+    tx.galleryAlbum.findUnique.mockResolvedValue({ id: parentAlbumId, parentAlbumId: null })
+    tx.galleryAlbum.create
+      .mockRejectedValueOnce(uniqueViolation({ target: ['slug'] }))
+      .mockRejectedValueOnce(uniqueViolation({ target: ['slug'] }))
+
+    await expect(
+      createGallerySubAlbum(parentAlbumId, subAlbumCreateSchema.parse(subAlbumInput), actor),
+    ).resolves.toEqual({ ok: false, reason: 'duplicate-slug' })
+  })
+
   test('rejects a missing or nested parent without creating an album', async () => {
     tx.galleryAlbum.findUnique.mockResolvedValueOnce(null)
 
