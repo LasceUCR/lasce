@@ -538,7 +538,8 @@
       "name": "The name is required and must contain at most 300 characters.",
       "scope": "Select National or International.",
       "acronym": "The acronym must contain at most 100 characters.",
-      "url": "Enter a valid HTTP or HTTPS URL without credentials and at most 2048 characters."
+      "url": "Enter a valid HTTP or HTTPS URL without credentials and at most 2048 characters.",
+      "logoPath": "Select a valid image for the logo."
     },
     "editor": {
       "add": "Add collaboration",
@@ -550,11 +551,20 @@
       "scope": "Classification",
       "country": "Country ({language})",
       "languages": "Country language",
+      "logo": "Logo (optional)",
+      "logoHelp": "Select or drag a PNG, JPG, WebP or GIF image up to 25 MiB.",
       "websiteUrl": "Website (optional)",
       "cancel": "Cancel",
       "save": "Confirm",
       "saving": "Saving...",
       "legacy": "This record has text in an unknown language. When changing its country, complete and review both languages."
+    },
+    "upload": {
+      "uploaded": "Logo uploaded successfully.",
+      "failed": "The logo could not be uploaded. Try again.",
+      "missing": "Select an image for the logo.",
+      "tooLarge": "The image must not exceed 25 MiB.",
+      "invalidType": "Select a valid PNG, JPG, WebP or GIF image."
     },
     "feedback": {
       "created": "Collaboration added successfully.",

@@ -19,7 +19,11 @@ stored in a private MinIO bucket, handed back as a **30-minute presigned link**,
   formats they may download; anything else is hidden, not disabled.
 - Anonymous visitors see each **graphic** format (`kind: 'graphic'` in `formats.ts`) as a
   **Inicie sesión para descargar la gráfica** button with a sign-in icon. It sends them to
-  `/acceso?next=%2Fdatos&reason=auth`. **Data** formats are not shown to them at all. Nothing is
+  `/acceso?next=…&reason=auth`, where `next` is the shown query written by `scientificDataHref`
+  (`/datos?source=…&product=…&parameter=…&date=…&startTime=…&endTime=…`). After sign-in,
+  `/datos` reads a complete, valid query back with `getRequestedScientificQuery` and runs it on
+  load (`consultOnLoad`), so the graph is shown again ready to download. An incomplete or invalid
+  query falls back to the default one. **Data** formats are not shown to them at all. Nothing is
   downloaded unless they sign in and choose the download again, so every row in the audit table
   names a user.
 - `download_resources` is held by every role by default, so in practice "signed in" is enough for

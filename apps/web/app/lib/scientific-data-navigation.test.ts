@@ -2,7 +2,12 @@ import { describe, expect, test } from 'vitest'
 
 import { rosacInstrumentsContent } from './rosac-instruments'
 import { rosacInstruments, scientificDataQuerySchema } from './scientific-data'
-import { getInitialScientificQuery } from './scientific-data-navigation'
+import {
+  getInitialScientificQuery,
+  getRequestedScientificQuery,
+  scientificDataHref,
+  withQueryReturn,
+} from './scientific-data-navigation'
 
 const today = '2026-10-01'
 const availability = { today }
@@ -63,5 +68,54 @@ describe('scientific data navigation', () => {
     expect(getInitialScientificQuery(params, availability)).toEqual(
       getInitialScientificQuery({}, availability),
     )
+  })
+})
+
+describe('restoring a query from the URL', () => {
+  const query = {
+    source: 'GOES',
+    product: 'SFXR',
+    parameter: '0.1-0.8nm',
+    date: '2025-01-05',
+    startTime: '08:00',
+    endTime: '09:00',
+  } as const
+
+  test('writes every query field to the data page URL', () => {
+    expect(scientificDataHref(query)).toBe(
+      '/datos?source=GOES&product=SFXR&parameter=0.1-0.8nm&date=2025-01-05&startTime=08%3A00&endTime=09%3A00',
+    )
+  })
+
+  test('reads back a query it wrote', () => {
+    const url = new URL(scientificDataHref(query), 'https://lasce.test')
+    expect(getRequestedScientificQuery(Object.fromEntries(url.searchParams), availability)).toEqual(
+      query,
+    )
+  })
+
+  test.each([
+    { ...query, endTime: undefined },
+    { ...query, source: ['GOES', 'ROSAC'] },
+    { ...query, product: 'ROSAC-I1' },
+    { ...query, parameter: 'unknown' },
+    { ...query, date: '2025-02-30' },
+    { ...query, date: '2026-10-02' },
+    { ...query, startTime: '08:00', endTime: '08:00' },
+  ])('ignores an incomplete, invalid or future query: %j', (params) => {
+    expect(getRequestedScientificQuery(params, availability)).toBeNull()
+  })
+
+  test('returns from sign-in to the same consultation', () => {
+    const href = withQueryReturn('/acceso?next=%2Fdatos&reason=auth', query)
+    const url = new URL(href, 'https://lasce.test')
+
+    expect(url.pathname).toBe('/acceso')
+    expect(url.searchParams.get('reason')).toBe('auth')
+    expect(url.searchParams.get('next')).toBe(scientificDataHref(query))
+  })
+
+  test('leaves a sign-in link without a return path alone', () => {
+    expect(withQueryReturn('/acceso', query)).toBe('/acceso')
   })
 })
