@@ -39,6 +39,7 @@ import {
   type ScientificSourceCode,
 } from '@/app/lib/scientific-data'
 import { describeOrigin, localizeResultNames } from '@/app/lib/scientific-data-copy'
+import { withQueryReturn } from '@/app/lib/scientific-data-navigation'
 
 import { DynamicSpectrumChart } from './DynamicSpectrumChart'
 import { InstrumentProductSelect } from './InstrumentProductSelect'
@@ -59,12 +60,14 @@ export interface ScientificDataExplorerProps {
   sources: ScientificSource[]
   initialQuery: ScientificDataQuery
   initialResult?: ScientificDataResult
+  /** Runs `initialQuery` on mount, as when a visitor returns from signing in to download it. */
+  consultOnLoad?: boolean
   goesAvailability: GoesAvailability
   /** Whether a session exists. Decides between disabled buttons and a sign-in link. */
   signedIn?: boolean
   /** The signed-in user's grants; only used to draw the download buttons, never to enforce. */
   downloadGrants?: readonly Permission[]
-  /** Where an anonymous visitor goes when choosing a download. */
+  /** Where an anonymous visitor goes when choosing a download; its `next` gets the query. */
   loginHref?: string
   /** The `requestResourceDownload` Server Action. Without it no download buttons are shown. */
   requestDownload?: (
@@ -92,6 +95,7 @@ export function ScientificDataExplorer({
   sources,
   initialQuery,
   initialResult,
+  consultOnLoad = false,
   goesAvailability,
   signedIn = false,
   downloadGrants = [],
@@ -255,7 +259,7 @@ export function ScientificDataExplorer({
   async function downloadResult(format: DownloadFormat) {
     if (!result || !requestDownload) return
     if (!signedIn) {
-      navigate(loginHref)
+      navigate(withQueryReturn(loginHref, result.query))
       return
     }
 
@@ -274,7 +278,7 @@ export function ScientificDataExplorer({
         })
         navigate(outcome.url)
       } else if (outcome.reason === 'unauthenticated') {
-        navigate(loginHref)
+        navigate(withQueryReturn(loginHref, result.query))
       } else {
         setDownloadMessage({ tone: 'error', text: outcome.message })
       }
@@ -413,6 +417,10 @@ export function ScientificDataExplorer({
     },
     [tErrors],
   )
+
+  useEffect(() => {
+    if (consultOnLoad) void requestData(initialQuery, true)
+  }, [consultOnLoad, initialQuery, requestData])
 
   const seriesValues =
     result?.visualization === 'time-series' ? result.points.map((point) => point.value) : []
