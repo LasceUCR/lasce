@@ -71,6 +71,15 @@ describe('ResumenPage', () => {
     ).not.toBeInTheDocument()
   })
 
+  test('passes canViewAuditLog to the recent activity panel', () => {
+    renderWithIntl(<ResumenPage {...props} canViewAuditLog={true} />)
+
+    expect(screen.getByRole('link', { name: 'Ver todo' })).toHaveAttribute(
+      'href',
+      '/administracion/auditoria',
+    )
+  })
+
   test('speaks English when the site does', () => {
     renderWithIntl(<ResumenPage {...props} />, { locale: 'en' })
 
