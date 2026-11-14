@@ -4147,12 +4147,27 @@ a {
   font-weight: 700;
 }
 
-.concept-flow-steps span {
+.concept-flow-steps a {
   padding: 8px 14px;
   border-radius: 999px;
   background: var(--white);
   color: var(--navy-deep);
   font-size: 14px;
+}
+
+.concept-flow-steps a {
+  text-decoration: none;
+}
+
+.concept-flow-steps a:hover,
+.concept-flow-steps a:focus-visible {
+  background: #e8f6fc;
+  text-decoration: underline;
+}
+
+.concept-flow-steps a:focus-visible {
+  outline: 2px solid var(--blue-dark);
+  outline-offset: 2px;
 }
 
 .concept-flow-arrow {
@@ -4171,9 +4186,74 @@ a {
   background: #000918;
 }
 
+.solar-observation-frame {
+  width: fit-content;
+  max-width: 100%;
+  min-height: 0;
+  overflow: visible;
+  background: transparent;
+}
+
+.solar-observation-section {
+  padding-top: 24px;
+}
+
 .topic-figure-image {
-  object-fit: contain;
-  object-position: center;
+  display: block;
+  width: auto;
+  height: auto;
+  max-width: min(100%, 320px);
+  border-radius: 8px;
+}
+
+.solar-observation-figure {
+  min-width: 0;
+  margin: 0;
+}
+
+.solar-observation-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 320px) minmax(0, 1fr);
+  gap: clamp(24px, 5vw, 64px);
+}
+
+.solar-data-cta {
+  display: flex;
+  flex-direction: column;
+  padding: 24px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--white);
+}
+
+.solar-data-cta h3 {
+  margin: 0;
+  font-size: 20px;
+}
+
+.solar-data-cta p {
+  margin: 8px 0 18px;
+  color: var(--muted);
+}
+
+.solar-observation-placeholder {
+  width: min(560px, 100%);
+  min-height: 180px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 24px;
+  border-radius: 12px;
+  background: #000918;
+  color: var(--white);
+  text-align: center;
+}
+
+.solar-observation-placeholder p {
+  margin: 0;
+  color: inherit;
 }
 
 .topic-figure figcaption {
@@ -4181,6 +4261,20 @@ a {
   color: var(--muted);
   font-size: 14px;
   line-height: 1.5;
+}
+
+.solar-observation-caption {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 20px;
+  margin: auto 0 18px;
+}
+
+.solar-next-steps {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 18px;
 }
 
 .info-card-more {
@@ -4357,6 +4451,15 @@ a {
 
   .topic-figure-frame {
     min-height: 220px;
+  }
+
+  .solar-observation-frame {
+    min-height: 0;
+  }
+
+  .solar-observation-layout {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 20px;
   }
 
   .info-card {

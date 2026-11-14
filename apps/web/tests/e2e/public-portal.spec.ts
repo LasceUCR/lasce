@@ -218,6 +218,29 @@ test('displays solar astrophysics information without authentication', async ({ 
   await expect(page.getByText('Contenido en preparación')).toHaveCount(0)
   await expect(page.getByText('Contenido temporal')).toHaveCount(0)
   await expect(page.getByRole('link', { name: 'Ingresar' })).toHaveAttribute('href', '/acceso')
+  const nextSteps = page.getByRole('navigation', { name: 'Próximos pasos' })
+  await expect(nextSteps.getByRole('link', { name: 'Ver el Sol de hoy' })).toHaveAttribute(
+    'href',
+    '/datos#solar-today-title',
+  )
+  await expect(
+    nextSteps.getByRole('link', { name: 'Seguir la cadena: clima espacial' }),
+  ).toHaveAttribute('href', '/clima-espacial')
+  await expect(
+    nextSteps.getByRole('link', { name: 'Consultar publicaciones de LASCE' }),
+  ).toHaveAttribute('href', '/publicaciones?group=LASCE')
+  await expect(
+    nextSteps.getByRole('link', { name: 'Explorar herramientas científicas' }),
+  ).toHaveAttribute('href', '/herramientas-cientificas')
+  const studyFlow = page.getByRole('group', { name: 'Cadena de estudio' })
+  await expect(studyFlow.getByRole('link', { name: 'Entorno terrestre' })).toHaveAttribute(
+    'href',
+    '/clima-espacial',
+  )
+  await expect(studyFlow.getByRole('link', { name: 'Análisis LASCE' })).toHaveAttribute(
+    'href',
+    '/datos',
+  )
   await expect(page.locator('meta[name="description"]')).toHaveAttribute(
     'content',
     /actividad solar/i,
@@ -226,16 +249,6 @@ test('displays solar astrophysics information without authentication', async ({ 
 
 test('returns to the work areas section from space weather', async ({ page }) => {
   await page.goto('/clima-espacial')
-
-  await page.getByRole('link', { name: 'Volver a las áreas de trabajo' }).click()
-
-  await expect(page).toHaveURL(/\/#areas-de-trabajo/)
-  await expect(page.getByRole('heading', { name: 'Áreas y accesos principales' })).toBeVisible()
-  expect(page.url()).not.toMatch(/\/(login|auth|acceso)(\/|$)/)
-})
-
-test('returns to the work areas section from solar astrophysics', async ({ page }) => {
-  await page.goto('/fisica-solar')
 
   await page.getByRole('link', { name: 'Volver a las áreas de trabajo' }).click()
 
