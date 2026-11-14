@@ -13,6 +13,8 @@
      above 1400px and the compact header applies at 760px and below. Anything
      pinned under the header (the admin sidebar) offsets by this token. */
   --header-height: 82px;
+  /* The cyan strip along the top of the header. The page-load bar (NavigationProgress) fills it. */
+  --header-stripe-height: 8px;
 
   /* Existing UI aliases keep components connected to the brand palette. */
   --navy-deep: var(--deep-space-blue);
@@ -222,7 +224,7 @@ a {
   top: 0;
   right: 0;
   left: 0;
-  height: 8px;
+  height: var(--header-stripe-height);
   background: var(--cyan);
 }
 

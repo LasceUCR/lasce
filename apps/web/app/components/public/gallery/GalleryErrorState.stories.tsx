@@ -5,7 +5,11 @@ import { GalleryErrorState } from './GalleryErrorState'
 
 const meta: Meta<typeof GalleryErrorState> = {
   component: GalleryErrorState,
-  args: { onRetry: fn() },
+  args: {
+    message: 'No se pudo cargar la galería. Inténtelo de nuevo.',
+    retryLabel: 'Reintentar',
+    onRetry: fn(),
+  },
 }
 export default meta
 

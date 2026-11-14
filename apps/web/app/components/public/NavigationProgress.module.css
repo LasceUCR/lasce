@@ -1,0 +1,78 @@
+/*
+ * The page-load bar (#475), drawn over the cyan strip along the top of the header
+ * (`.site-header::before`, the same `--header-stripe-height`). While a page loads, the strip turns
+ * dark blue and the cyan fills back over it from the left. A finished bar therefore looks exactly
+ * like the resting strip, and fading it out shows no seam. The header is sticky at the top of the
+ * window, so the strip is always where the bar is. The bar never takes a click.
+ */
+
+.track {
+  position: fixed;
+  inset: 0 0 auto;
+  z-index: 60;
+  height: var(--header-stripe-height, 8px);
+  background: var(--action);
+  pointer-events: none;
+  opacity: 0;
+}
+
+.bar {
+  height: 100%;
+  background: var(--cyan);
+  transform: scaleX(0);
+  transform-origin: left center;
+}
+
+.track[data-state='loading'] {
+  opacity: 1;
+}
+
+/* Moves fast at first and then slows, so it never reaches the end on its own: only the new
+   page landing completes it. */
+.track[data-state='loading'] .bar {
+  animation: trickle 12s cubic-bezier(0.08, 0.7, 0.2, 1) forwards;
+}
+
+/* The cyan reaches the end, so the strip is plain cyan again, and then the dark track fades. */
+.track[data-state='done'] {
+  opacity: 0;
+  transition: opacity 250ms ease 150ms;
+}
+
+.track[data-state='done'] .bar {
+  transform: scaleX(1);
+  transition: transform 150ms ease-out;
+}
+
+@keyframes trickle {
+  from {
+    transform: scaleX(0.08);
+  }
+
+  to {
+    transform: scaleX(0.9);
+  }
+}
+
+/* No movement: the whole strip stays dark blue while the page loads and turns cyan once it lands. */
+@media (prefers-reduced-motion: reduce) {
+  .track[data-state='loading'] .bar {
+    animation: none;
+    transform: scaleX(0);
+  }
+
+  .track[data-state='done'],
+  .track[data-state='done'] .bar {
+    transition: none;
+  }
+}
+
+@media (forced-colors: active) {
+  .track {
+    background: CanvasText;
+  }
+
+  .bar {
+    background: Highlight;
+  }
+}
