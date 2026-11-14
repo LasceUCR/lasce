@@ -451,14 +451,61 @@
       "title": "Scientific tools",
       "intro": "LASCE tools for analysing solar activity and studying space weather."
     },
-    "tools": {
-      "swaat": "Analysis of solar events using GOES X-ray and RSTN microwave observations. Supports visualisation and comparison of their evolution over time with static and interactive charts.",
-      "swapro": "Querying and visualisation of solar events within specific time intervals to support the study of solar activity and space weather."
-    },
     "list": {
       "title": "Available tools",
       "empty": "No scientific tools are available at the moment.",
       "access": "Open {title}"
+    },
+    "editor": {
+      "add": "Add scientific tool",
+      "edit": "Edit scientific tool",
+      "editNamed": "Edit tool {title}",
+      "deleteNamed": "Delete tool {title}",
+      "name": "Name",
+      "description": "Description ({language})",
+      "languages": "Tool translations",
+      "accessUrl": "Access link",
+      "image": "Image (optional)",
+      "imageHelp": "Select or drop a PNG, JPG, WebP or GIF image of up to 25 MiB.",
+      "cancel": "Cancel",
+      "save": "Confirm",
+      "saving": "Saving…",
+      "legacy": "This tool keeps its original text. Complete both languages when you change the description."
+    },
+    "validation": {
+      "name": "The name is required.",
+      "nameTooLong": "The name must not exceed 100 characters.",
+      "accessUrl": "Enter a valid https address, without credentials.",
+      "imageUrl": "Select a valid image."
+    },
+    "upload": {
+      "uploaded": "Image uploaded successfully.",
+      "failed": "The image could not be uploaded. Please try again.",
+      "missing": "Select an image.",
+      "tooLarge": "The image must not exceed 25 MiB.",
+      "invalidType": "Select a valid PNG, JPG, WebP or GIF image."
+    },
+    "feedback": {
+      "created": "Scientific tool added successfully.",
+      "updated": "Scientific tool updated successfully.",
+      "deleted": "Scientific tool deleted successfully.",
+      "failed": "The scientific tool could not be saved. Please try again.",
+      "forbidden": "You do not have permission to perform this action. Sign in with an authorised account.",
+      "notFound": "The scientific tool no longer exists. Reload the page.",
+      "conflict": "The scientific tool has changed. Reopen the form to load the current version.",
+      "review": "Review the pending translations before saving.",
+      "fields": "Check the highlighted fields."
+    },
+    "delete": {
+      "title": "Delete scientific tool",
+      "message": "Do you want to delete this scientific tool? This action cannot be undone.",
+      "confirm": "Delete"
+    },
+    "discard": {
+      "title": "Discard unsaved changes",
+      "message": "The changes you have made will be lost.",
+      "keepEditing": "Keep editing",
+      "confirm": "Discard"
     }
   },
   "collaborations": {
@@ -2282,6 +2329,9 @@
         "collaboration_create": "Collaboration added: {name}",
         "collaboration_update": "Collaboration updated: {name}",
         "collaboration_delete": "Collaboration deleted: {name}",
+        "scientific_tool_create": "Scientific tool added: {name}",
+        "scientific_tool_update": "Scientific tool updated: {name}",
+        "scientific_tool_delete": "Scientific tool deleted: {name}",
         "contact_channel_create": "Contact channel added: {name}",
         "contact_channel_update": "Contact channel updated: {name}",
         "contact_channel_delete": "Contact channel deleted: {name}",

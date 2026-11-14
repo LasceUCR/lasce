@@ -451,14 +451,61 @@
       "title": "Herramientas científicas",
       "intro": "Herramientas del LASCE para el análisis de la actividad solar y el estudio del clima espacial."
     },
-    "tools": {
-      "swaat": "Análisis de eventos solares mediante observaciones de rayos X de GOES y microondas de RSTN. Permite visualizar y comparar su evolución temporal con gráficas estáticas e interactivas.",
-      "swapro": "Consulta y visualización de eventos solares en intervalos de tiempo específicos para apoyar el estudio de la actividad solar y el clima espacial."
-    },
     "list": {
       "title": "Herramientas disponibles",
       "empty": "No hay herramientas científicas disponibles en este momento.",
       "access": "Acceder a {title}"
+    },
+    "editor": {
+      "add": "Añadir herramienta científica",
+      "edit": "Editar herramienta científica",
+      "editNamed": "Editar herramienta {title}",
+      "deleteNamed": "Eliminar herramienta {title}",
+      "name": "Nombre",
+      "description": "Descripción ({language})",
+      "languages": "Traducciones de la herramienta",
+      "accessUrl": "Enlace de acceso",
+      "image": "Imagen (opcional)",
+      "imageHelp": "Seleccione o arrastre una imagen PNG, JPG, WebP o GIF de hasta 25 MiB.",
+      "cancel": "Cancelar",
+      "save": "Confirmar",
+      "saving": "Guardando…",
+      "legacy": "Esta herramienta conserva su texto original. Complete ambos idiomas cuando modifique la descripción."
+    },
+    "validation": {
+      "name": "El nombre es obligatorio.",
+      "nameTooLong": "El nombre no debe superar los 100 caracteres.",
+      "accessUrl": "Ingrese una dirección https válida, sin credenciales.",
+      "imageUrl": "Seleccione una imagen válida."
+    },
+    "upload": {
+      "uploaded": "Imagen cargada correctamente.",
+      "failed": "No se pudo subir la imagen. Inténtelo de nuevo.",
+      "missing": "Seleccione una imagen.",
+      "tooLarge": "La imagen no debe superar los 25 MiB.",
+      "invalidType": "Seleccione una imagen PNG, JPG, WebP o GIF válida."
+    },
+    "feedback": {
+      "created": "Herramienta científica agregada correctamente.",
+      "updated": "Herramienta científica actualizada correctamente.",
+      "deleted": "Herramienta científica eliminada correctamente.",
+      "failed": "No se pudo guardar la herramienta científica. Inténtelo de nuevo.",
+      "forbidden": "No tiene permisos para realizar esta acción. Inicie sesión con una cuenta autorizada.",
+      "notFound": "La herramienta científica ya no existe. Vuelva a cargar la página.",
+      "conflict": "La herramienta científica cambió. Vuelva a abrir el formulario para cargar la versión actual.",
+      "review": "Revise las traducciones pendientes antes de guardar.",
+      "fields": "Revise los campos marcados."
+    },
+    "delete": {
+      "title": "Eliminar herramienta científica",
+      "message": "¿Desea eliminar esta herramienta científica? Esta acción no se puede deshacer.",
+      "confirm": "Eliminar"
+    },
+    "discard": {
+      "title": "Descartar cambios no guardados",
+      "message": "Los cambios que ha realizado se perderán.",
+      "keepEditing": "Seguir editando",
+      "confirm": "Descartar"
     }
   },
   "collaborations": {
@@ -2282,6 +2329,9 @@
         "collaboration_create": "Colaboración agregada: {name}",
         "collaboration_update": "Colaboración actualizada: {name}",
         "collaboration_delete": "Colaboración eliminada: {name}",
+        "scientific_tool_create": "Herramienta científica agregada: {name}",
+        "scientific_tool_update": "Herramienta científica actualizada: {name}",
+        "scientific_tool_delete": "Herramienta científica eliminada: {name}",
         "contact_channel_create": "Canal de contacto agregado: {name}",
         "contact_channel_update": "Canal de contacto actualizado: {name}",
         "contact_channel_delete": "Canal de contacto eliminado: {name}",
