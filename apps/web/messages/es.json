@@ -1,7 +1,8 @@
 {
   "metadata": {
     "title": "LASCE | Universidad de Costa Rica",
-    "description": "Laboratorio de Ciencias Espaciales de la Universidad de Costa Rica: observación solar, radioastronomía, instrumentación y clima espacial."
+    "description": "Laboratorio de Astrofísica Solar y Clima Espacial de la Universidad de Costa Rica: observación solar, radioastronomía, instrumentación y clima espacial.",
+    "openGraphImageAlt": "Erupción solar observada en rayos X con fórmulas de análisis de actividad solar"
   },
   "shell": {
     "skipToContent": "Saltar al contenido principal",
@@ -11,6 +12,12 @@
       "retry": "Reintentar",
       "home": "Volver al inicio"
     }
+  },
+  "brand": {
+    "ucr": "Universidad de Costa Rica",
+    "ucrLogo": "Logotipo de la Universidad de Costa Rica",
+    "cinespa": "Centro de Investigaciones Espaciales",
+    "lasce": "Laboratorio de Astrofísica Solar y Clima Espacial"
   },
   "notFound": {
     "metaTitle": "Página no encontrada | LASCE",
@@ -61,7 +68,6 @@
     },
     "indicators": {
       "title": "Índices geomagnéticos de Costa Rica",
-      "demoNotice": "Datos de demostración",
       "kp": {
         "label": "Índice Kp",
         "value": "2",

@@ -1,7 +1,8 @@
 {
   "metadata": {
     "title": "LASCE | University of Costa Rica",
-    "description": "Space Sciences Laboratory of the University of Costa Rica: solar observation, radio astronomy, instrumentation and space weather."
+    "description": "Solar Astrophysics and Space Weather Laboratory of Universidad de Costa Rica: solar observation, radio astronomy, instrumentation and space weather.",
+    "openGraphImageAlt": "Solar flare observed in X-rays with formulas for analyzing solar activity"
   },
   "shell": {
     "skipToContent": "Skip to main content",
@@ -11,6 +12,12 @@
       "retry": "Try again",
       "home": "Back to home"
     }
+  },
+  "brand": {
+    "ucr": "Universidad de Costa Rica",
+    "ucrLogo": "Logo of Universidad de Costa Rica",
+    "cinespa": "Centro de Investigaciones Espaciales",
+    "lasce": "Laboratorio de Astrofísica Solar y Clima Espacial"
   },
   "notFound": {
     "metaTitle": "Page not found | LASCE",
@@ -61,7 +68,6 @@
     },
     "indicators": {
       "title": "Geomagnetic indices for Costa Rica",
-      "demoNotice": "Demonstration data",
       "kp": {
         "label": "Kp index",
         "value": "2",

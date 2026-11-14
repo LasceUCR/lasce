@@ -9,7 +9,7 @@
 export const galeriaMeta = {
   title: 'Galería | LASCE',
   description:
-    'Fotografías y video de las actividades del Laboratorio de Ciencias Espaciales: construcción e instrumentación, observación y vida cotidiana del equipo.',
+    'Fotografías y video de las actividades del Laboratorio de Astrofísica Solar y Clima Espacial: construcción e instrumentación, observación y vida cotidiana del equipo.',
 } as const
 
 export const galeriaHero = {
