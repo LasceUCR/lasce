@@ -48,7 +48,9 @@ also has an English translation in `auth.registration.labels`
 | `password`             | Contraseña         | 8 to 128 characters, not trimmed                            |
 | `passwordConfirmation` | Repetir contraseña | equal to `password`; reported only when it is not empty     |
 
-Every rule lives in `registration.ts`; its default messages are Spanish, and `getRegistrationSchema`
+Every rule lives in `registration.ts`, except the password rule, which lives in
+`password-rules.ts` so the password reset form ([password-reset.md](password-reset.md)) applies
+exactly the same one; its default messages are Spanish, and `getRegistrationSchema`
 builds the same schema in the visitor's own language from the Server Action (see
 [internationalization.md](internationalization.md#translated)). The form sets `noValidate`, so the
 browser never shows its own (locale-dependent) validation bubbles: what the visitor sees is always

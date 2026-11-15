@@ -276,7 +276,7 @@ sessions live in `sessions` below, never in columns here.
 > `role` is never taken from the registration request. The database default is the only way a
 > self-registered account gets its role; changing it is LASCE-ADM #80.
 
-Relationships: has many `sessions` (deleted with the account).
+Relationships: has many `sessions` and `password_reset_tokens` (both deleted with the account).
 
 ### `sessions`
 
@@ -292,6 +292,24 @@ login, with no sliding renewal. The worker never writes here. See `docs/sessions
 | `token_hash` | `String`    | `text`           | `UNIQUE`, not null; base64url SHA-256 of the cookie token |
 | `expires_at` | `DateTime`  | `timestamptz(3)` | not null                                                  |
 | `created_at` | `DateTime`  | `timestamptz(3)` | not null, default `now()`                                 |
+
+Relationships: belongs to one `users` row.
+
+### `password_reset_tokens`
+
+A single-use link to choose a new password (LASCE-CON-0012-448). The email carries a random 32-byte
+token; only its SHA-256 is stored. A token works for 30 minutes and only while `used_at` is null;
+asking for a new link deletes the account's unused ones. Written only by the web app; the worker
+mirrors it by convention. See `docs/password-reset.md`.
+
+| Column       | Prisma type | Postgres type    | Constraints                                                |
+| ------------ | ----------- | ---------------- | ---------------------------------------------------------- |
+| `id`         | `String`    | `uuid`           | PK, `gen_random_uuid()`                                    |
+| `user_id`    | `String`    | `uuid`           | FK → `users.id`, `ON DELETE CASCADE`, not null; indexed    |
+| `token_hash` | `String`    | `text`           | `UNIQUE`, not null; base64url SHA-256 of the emailed token |
+| `expires_at` | `DateTime`  | `timestamptz(3)` | not null                                                   |
+| `used_at`    | `DateTime?` | `timestamptz(3)` | nullable; set when the token changed the password          |
+| `created_at` | `DateTime`  | `timestamptz(3)` | not null, default `now()`                                  |
 
 Relationships: belongs to one `users` row.
 
@@ -585,6 +603,26 @@ worker does not mirror this table in `apps/worker/app/db/models.py`.
 Indexes: `(created_at)` for the recent list, `(actor_id, created_at)` for one account's history,
 `(entity_type, entity_id, created_at)` for one record's history. `action` is a plain string, as in
 `role_permissions`, so a new kind of event needs no migration. Rows are never updated.
+
+### `smtp_settings`
+
+The SMTP server the portal sends email through, managed on `/administracion/correo`
+(`docs/password-reset.md`). One row at most. Only the web app reads it; the worker does not mirror
+it. The password is stored encrypted (AES-256-GCM, key derived from `CRON_SECRET`), never in clear.
+
+| Column                | Prisma type | Postgres type    | Constraints                                                    |
+| --------------------- | ----------- | ---------------- | -------------------------------------------------------------- |
+| `id`                  | `String`    | `uuid`           | PK, `gen_random_uuid()`                                        |
+| `singleton`           | `Boolean`   | `boolean`        | `UNIQUE`, default `true`, `CHECK (singleton)`: one row at most |
+| `host`                | `String`    | `text`           | not null                                                       |
+| `port`                | `Int`       | `integer`        | not null; `CHECK` 1 to 65535                                   |
+| `security`            | `String`    | `text`           | not null; `CHECK` in `('tls', 'starttls', 'none')`             |
+| `username`            | `String?`   | `text`           | nullable; null means no authentication                         |
+| `password_ciphertext` | `String?`   | `text`           | nullable; `v1.<iv>.<tag>.<ciphertext>`                         |
+| `from_address`        | `String`    | `text`           | not null                                                       |
+| `from_name`           | `String`    | `text`           | not null                                                       |
+| `created_at`          | `DateTime`  | `timestamptz(3)` | not null, default `now()`                                      |
+| `updated_at`          | `DateTime`  | `timestamptz(3)` | not null, default `now()`, `@updatedAt`                        |
 
 ### `solar_physics_sections`
 

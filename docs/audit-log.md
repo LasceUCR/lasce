@@ -30,6 +30,8 @@ nothing either. The summaries are written in Spanish when the event happens.
 | `home_hero.update`, `geomagnetic_index.update`, `geomagnetic_index.reorder` | `home.ts`                                         | `fields`, `order`                             |
 | `space_weather_section.update`                                              | `space-weather-section.ts`                        | `fields`                                      |
 | `solar_physics_section.update`                                              | `solar-physics-section.ts`                        | `fields`                                      |
+| `smtp_settings.update`                                                      | `services/mail/smtpSettings.ts`                   | `fields` (names only, never values)           |
+| `user.password_reset` (the account itself is the actor)                     | `auth/password-reset-store.ts`                    | none                                          |
 
 Download history is not here: it lives in `resource_downloads`. Worker and pipeline events are out
 of scope. Metadata names the fields that changed, never their values, and never holds a secret.

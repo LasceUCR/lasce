@@ -66,6 +66,10 @@ else, including `//host`, schemes and `/acceso` itself (which would loop); the f
 page.
 `loginRedirectPath(returnTo)` builds `/acceso?next=<encoded>&reason=auth` for protected pages.
 
+The login card links "¿Olvidaste tu contraseña?" to `/recuperar-contrasena`; recovering a
+password is covered in [password-reset.md](password-reset.md). After a reset the visitor lands on
+`/acceso?restablecida=1`, which shows a success toast.
+
 To try any of this locally, `pnpm accounts:create` creates one account per role and prints their
 shared password; see
 [user-administration.md](user-administration.md#optional-local-test-accounts).
@@ -188,7 +192,10 @@ correctness; the admin panel gate (#83) may add one for a faster redirect.
 
 ## Known gaps
 
-- No rate limiting or lockout on login; the placeholder hash only evens out the KDF time.
-- No "log out everywhere", no sliding renewal, no cleanup of expired rows.
+- No rate limiting or lockout on login; the placeholder hash only evens out the KDF time. The
+  forgot-password request is rate limited ([password-reset.md](password-reset.md#rate-limits)).
+- No "log out everywhere" control. A password reset does revoke every session of the account
+  ([password-reset.md](password-reset.md#tokens)).
+- No sliding renewal, no cleanup of expired rows.
 - The display-name cookie can lag in other tabs (see above); it never grants anything.
 - The registration card's success link reloads the page on the login tab rather than prefilling it.
