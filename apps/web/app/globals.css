@@ -6493,6 +6493,26 @@ a.acknowledgments-card:focus-visible {
   line-height: 1.45;
 }
 
+/* "¿Olvidaste tu contraseña?" under the password field of the login card. */
+.login-forgot {
+  margin: -10px 0 0;
+  text-align: right;
+  font-size: 14px;
+}
+
+.login-forgot a {
+  color: var(--blue-dark);
+  font-weight: 700;
+}
+
+/* The two buttons under the password recovery confirmation. */
+.password-reset-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 12px;
+}
+
 .login-alt {
   margin: 22px 0 0;
   color: var(--muted);

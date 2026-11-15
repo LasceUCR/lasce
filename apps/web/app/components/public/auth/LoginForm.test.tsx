@@ -10,7 +10,9 @@ import {
   loginMessages,
   type LoginState,
 } from '@/app/lib/auth/login'
+import { PASSWORD_RECOVERY_PATH } from '@/app/lib/auth/password-reset'
 import { renderWithIntl } from '@/app/lib/i18n/testing'
+import es from '@/messages/es.json' with { type: 'json' }
 
 import { LoginForm, type LoginFormProps } from './LoginForm'
 import {
@@ -54,6 +56,24 @@ describe('LoginForm', () => {
     expect(screen.getByText(loginFormCopy.footnote)).toBeInTheDocument()
     expect(screen.queryByRole('alert')).not.toBeInTheDocument()
     expect(screen.queryByRole('status')).not.toBeInTheDocument()
+  })
+
+  test('links to password recovery from the login card', () => {
+    renderWithIntl(<LoginForm {...defaultArgs} />)
+
+    expect(screen.getByRole('link', { name: es.auth.login.forgotPassword })).toHaveAttribute(
+      'href',
+      PASSWORD_RECOVERY_PATH,
+    )
+  })
+
+  test('points the recovery link wherever the page asks', () => {
+    renderWithIntl(<LoginForm {...defaultArgs} forgotPasswordHref="/otra" />)
+
+    expect(screen.getByRole('link', { name: es.auth.login.forgotPassword })).toHaveAttribute(
+      'href',
+      '/otra',
+    )
   })
 
   test('submits the email, the password and the return path to the action', async () => {

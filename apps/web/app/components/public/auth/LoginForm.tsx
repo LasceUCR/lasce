@@ -10,6 +10,7 @@ import {
   type LoginAction,
   type LoginState,
 } from '@/app/lib/auth/login'
+import { PASSWORD_RECOVERY_PATH } from '@/app/lib/auth/password-reset'
 
 import { Button } from '../Button'
 import { FormField } from './FormField'
@@ -28,6 +29,8 @@ export interface LoginFormProps {
   notice?: string
   /** Where "Crear cuenta" points; the registration card on the same page by default. */
   registerHref?: string
+  /** Where "¿Olvidaste tu contraseña?" points; the password recovery page by default. */
+  forgotPasswordHref?: string
   /** Card heading for pages that show this card beside others. */
   heading?: LoginFormHeading
   /** Element id, so links can target the card on a page that shows several. */
@@ -47,6 +50,7 @@ export function LoginForm({
   next,
   notice,
   registerHref = REGISTRATION_HREF,
+  forgotPasswordHref = PASSWORD_RECOVERY_PATH,
   heading,
   id,
   initialState,
@@ -104,6 +108,9 @@ export function LoginForm({
           type="password"
         />
         <input defaultValue={next ?? ''} name={NEXT_FIELD} type="hidden" />
+        <p className="login-forgot">
+          <a href={forgotPasswordHref}>{t('forgotPassword')}</a>
+        </p>
 
         <div className="form-actions">
           <Button className="button-block" disabled={isPending} type="submit" variant="brand">
