@@ -423,6 +423,25 @@ class UserSession(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
 
 
+class PasswordResetToken(Base):
+    """A single-use password reset link; mirrors the Prisma ``PasswordResetToken`` model
+    (table ``auth.password_reset_tokens``). Only the web app issues and uses these; it is
+    mirrored by convention. Never log ``token_hash``.
+    """
+
+    __tablename__ = "password_reset_tokens"
+    __table_args__ = {"schema": "auth"}  # noqa: RUF012 -- SQLAlchemy reads this as a class var
+
+    id: Mapped[uuid.UUID] = _uuid_pk()
+    user_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("auth.users.id", ondelete="CASCADE"), index=True
+    )
+    token_hash: Mapped[str] = mapped_column(Text, unique=True)
+    expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    used_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+
+
 class GalleryAlbum(Base):
     """A top-level gallery album or, when ``parent_album_id`` is set, a sub-album
     nested one level under one. Lives in the ``gallery`` Postgres schema. No job
