@@ -146,7 +146,7 @@ jobs:
   e2e-shard:
     # Playwright split across four runners. Specs share one database and mutate
     # global rows, so each runner keeps `workers: 1`; the speed comes from the
-    # runners, each with its own Postgres and Redis. The required `e2e` check is
+    # runners, each with its own Postgres, Redis and Mailpit. The required `e2e` check is
     # the job below, which merges the shards' reports.
     name: e2e-shard (${{ matrix.shard }}/${{ strategy.job-total }})
     runs-on: ubuntu-latest
@@ -179,6 +179,13 @@ jobs:
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
+      # SMTP sink for password-reset.spec.ts: the spec saves it as the portal's SMTP server on
+      # /administracion/correo and reads the reset email through its HTTP API.
+      mailpit:
+        image: axllent/mailpit:v1.21.0
+        ports:
+          - 1025:1025
+          - 8025:8025
     steps:
       - uses: actions/checkout@v7.0.1
       - uses: ./.github/actions/setup
