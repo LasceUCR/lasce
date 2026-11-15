@@ -36,6 +36,7 @@ describe('admin-sections', () => {
       ['usuarios', 'manage_users'],
       ['permisos', 'manage_permissions'],
       ['auditoria', 'view_audit_log'],
+      ['correo', 'manage_email_settings'],
     ])
   })
 
@@ -46,6 +47,7 @@ describe('admin-sections', () => {
       '/administracion/usuarios',
       '/administracion/permisos',
       '/administracion/auditoria',
+      '/administracion/correo',
     ])
   })
 
@@ -62,6 +64,7 @@ describe('admin-sections', () => {
       'Usuarios',
       'Permisos',
       'Auditoría',
+      'Correo',
     ])
     expect(visibleLabels(PERMISSIONS)).toHaveLength(adminMenu.length)
   })

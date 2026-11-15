@@ -21,6 +21,7 @@ export const PERMISSIONS = [
   'manage_permissions',
   'view_audit_log',
   'view_download_history',
+  'manage_email_settings',
 ] as const
 
 export type Permission = (typeof PERMISSIONS)[number]
@@ -35,6 +36,7 @@ export const PERMISSION_LABELS: Record<Permission, string> = {
   manage_permissions: 'Configurar permisos',
   view_audit_log: 'Consultar la auditoría',
   view_download_history: 'Consultar el historial de descargas',
+  manage_email_settings: 'Configurar el correo',
 }
 
 export const PERMISSION_DESCRIPTIONS: Record<Permission, string> = {
@@ -47,6 +49,7 @@ export const PERMISSION_DESCRIPTIONS: Record<Permission, string> = {
   manage_permissions: 'Ver y cambiar los permisos asociados a cada rol.',
   view_audit_log: 'Consultar el registro de acciones administrativas del portal.',
   view_download_history: 'Consultar quién descargó qué recursos del laboratorio y cuándo.',
+  manage_email_settings: 'Configurar el servidor SMTP que envía los correos del portal.',
 }
 
 export const PERMISSION_DENIED: Record<Permission, string> = {
@@ -59,6 +62,7 @@ export const PERMISSION_DENIED: Record<Permission, string> = {
   manage_permissions: 'No tienes autorización para configurar los permisos de los roles.',
   view_audit_log: 'No tienes autorización para consultar la auditoría.',
   view_download_history: 'No tienes autorización para consultar el historial de descargas.',
+  manage_email_settings: 'No tienes autorización para configurar el correo del portal.',
 }
 
 /** Seeded by the role-permissions migration; administrators can change it later. */
@@ -75,6 +79,7 @@ export const DEFAULT_ROLE_PERMISSIONS: Record<UserRole, readonly Permission[]> =
     'manage_permissions',
     'view_audit_log',
     'view_download_history',
+    'manage_email_settings',
   ],
 }
 

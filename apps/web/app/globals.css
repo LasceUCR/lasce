@@ -5919,6 +5919,17 @@ a.acknowledgments-card:focus-visible {
   font-size: 16px;
 }
 
+/* The Correo section (EmailSettingsForm): its notices, and a form no wider than it reads well. */
+.email-settings-notices {
+  display: grid;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.email-settings-form {
+  max-width: 560px;
+}
+
 .admin-activity-header {
   display: flex;
   align-items: center;
