@@ -299,7 +299,7 @@ Relationships: belongs to one `users` row.
 
 A single-use link to choose a new password (LASCE-CON-0012-448). The email carries a random 32-byte
 token; only its SHA-256 is stored. A token works for 30 minutes and only while `used_at` is null;
-asking for a new link deletes the account's unused ones. Written only by the web app; the worker
+asking for a new link, or completing a reset, deletes the account's other rows. Written only by the web app; the worker
 mirrors it by convention. See `docs/password-reset.md`.
 
 | Column       | Prisma type | Postgres type    | Constraints                                                |

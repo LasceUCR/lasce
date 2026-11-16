@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, test, vi } from 'vitest'
 
 const mocks = vi.hoisted(() => {
   const tx = {
-    passwordResetToken: { updateMany: vi.fn(), findUnique: vi.fn() },
+    passwordResetToken: { updateMany: vi.fn(), findUnique: vi.fn(), deleteMany: vi.fn() },
     user: { update: vi.fn() },
     session: { deleteMany: vi.fn() },
     auditEvent: { create: vi.fn() },
@@ -60,16 +60,14 @@ describe('issuePasswordResetToken', () => {
     )
   })
 
-  test('voids older unused tokens and stores only the hash of a new one', async () => {
+  test('replaces every older token and stores only the hash of a new one', async () => {
     mocks.userFindUnique.mockResolvedValue(user)
 
     const issued = await issuePasswordResetToken(user.email, now)
 
     expect(issued?.user).toEqual(user)
     expect(isResetToken(issued?.token)).toBe(true)
-    expect(mocks.tokenDeleteMany).toHaveBeenCalledWith({
-      where: { userId: user.id, usedAt: null },
-    })
+    expect(mocks.tokenDeleteMany).toHaveBeenCalledWith({ where: { userId: user.id } })
     expect(mocks.tokenCreate).toHaveBeenCalledWith({
       data: {
         userId: user.id,
@@ -161,6 +159,9 @@ describe('resetPasswordWithToken', () => {
       data: { passwordHash: 'scrypt$hash', updatedAt: now },
     })
     expect(mocks.tx.session.deleteMany).toHaveBeenCalledWith({ where: { userId: user.id } })
+    expect(mocks.tx.passwordResetToken.deleteMany).toHaveBeenCalledWith({
+      where: { userId: user.id },
+    })
     expect(mocks.tx.auditEvent.create).toHaveBeenCalledWith({
       data: expect.objectContaining({
         action: 'user.password_reset',

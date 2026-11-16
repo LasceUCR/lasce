@@ -14,7 +14,10 @@ import {
   validateReset,
   type ResetState,
 } from '@/app/lib/auth/password-reset'
-import { resetPasswordWithToken } from '@/app/lib/auth/password-reset-store'
+import {
+  isPasswordResetTokenUsable,
+  resetPasswordWithToken,
+} from '@/app/lib/auth/password-reset-store'
 import { isResetToken } from '@/app/lib/auth/password-reset-token'
 import { SESSION_COOKIE } from '@/app/lib/auth/session-token'
 
@@ -49,6 +52,9 @@ export async function resetPassword(
   }
 
   try {
+    // One indexed lookup before the costly hash, so a made-up token costs the server nothing.
+    // The transaction below checks the token again; this is only the cheap early exit.
+    if (!(await isPasswordResetTokenUsable(input.token))) return invalidTokenState
     const passwordHash = await hashPassword(validation.password)
     const result = await resetPasswordWithToken(input.token, passwordHash)
     if (!result.ok) return invalidTokenState

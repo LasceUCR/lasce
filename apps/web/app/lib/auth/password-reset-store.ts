@@ -28,8 +28,8 @@ export interface IssuedResetToken {
 
 /**
  * Issues a token for the account behind `email`, or returns `null` when there is none, in which
- * case nothing is written. The account's earlier unused tokens are deleted in the same
- * transaction, so only the newest link works.
+ * case nothing is written. The account's earlier tokens, used or not, are deleted in the same
+ * transaction, so only the newest link works and an account never holds more than one row.
  */
 export async function issuePasswordResetToken(
   email: string,
@@ -43,7 +43,7 @@ export async function issuePasswordResetToken(
 
   const token = generateResetToken()
   await prisma.$transaction([
-    prisma.passwordResetToken.deleteMany({ where: { userId: user.id, usedAt: null } }),
+    prisma.passwordResetToken.deleteMany({ where: { userId: user.id } }),
     prisma.passwordResetToken.create({
       data: { userId: user.id, tokenHash: hashResetToken(token), expiresAt: resetTokenExpiry(now) },
     }),
@@ -72,7 +72,8 @@ export type ResetPasswordResult = { ok: true; userId: string } | { ok: false; re
  * 1. marks the token used, only if it is still unused and unexpired (a compare-and-set, so two
  *    simultaneous submissions of the same link cannot both succeed);
  * 2. stores `passwordHash` (already produced by `hashPassword`);
- * 3. deletes every session of the account, so whoever was signed in has to sign in again;
+ * 3. deletes every session of the account, so whoever was signed in has to sign in again, and
+ *    every reset token of the account, the one just used included;
  * 4. records `user.password_reset` in the audit trail.
  *
  * Any failure rolls all of it back. An unknown, used or expired token changes nothing.
@@ -104,6 +105,8 @@ export async function resetPasswordWithToken(
       data: { passwordHash, updatedAt: now },
     })
     await tx.session.deleteMany({ where: { userId: user.id } })
+    // The claimed token has done its job; a reuse finds no row, which is just as invalid.
+    await tx.passwordResetToken.deleteMany({ where: { userId: user.id } })
     await recordUserAuditEvent(tx, user, {
       action: 'user.password_reset',
       summary: `Contraseña restablecida: ${user.fullName}`,

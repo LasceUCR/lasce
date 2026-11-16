@@ -58,7 +58,8 @@ email link ──▶ /restablecer-contrasena?token=…
 - Only the base64url SHA-256 is stored, in `auth.password_reset_tokens.token_hash`, so a database
   read yields no working link.
 - Valid for **30 minutes** (`RESET_TOKEN_TTL_MINUTES`) and only while `used_at` is null.
-- Asking again deletes the account's earlier unused tokens, so only the newest link works.
+- Asking again deletes the account's earlier tokens, used or not, so only the newest link works
+  and an account never holds more than one row.
 - Opening the link checks the token without using it. Only a successful submission uses it.
 - The link is built on `NEXT_PUBLIC_APP_URL` (`siteUrl`), never on the request's Host header, which
   a caller could forge to receive a working token on another domain.
@@ -71,13 +72,15 @@ email link ──▶ /restablecer-contrasena?token=…
    This compare-and-set is what makes the token single use, even for two simultaneous submissions.
 2. Store the new scrypt hash in `auth.users.password_hash`.
 3. Delete every row of the account in `auth.sessions`: every browser that was signed in, including
-   an attacker's, has to sign in again.
+   an attacker's, has to sign in again. Delete the account's reset tokens too; a reuse of the link
+   then finds no row, which is just as invalid.
 4. Record `user.password_reset` in the audit trail (no hash, no token).
 
 The visitor is not signed in afterwards. The action clears this browser's cookies and redirects to
 `/acceso?restablecida=1`, where `FlashToast` shows "Contraseña actualizada correctamente…" and
 removes the parameter from the address bar. An expired, used or unknown token shows "El enlace no
-es válido" with a link to request a new one, on the page and on submit alike.
+es válido" with a link to request a new one, on the page and on submit alike. The action looks
+the token up before hashing the password, so a made-up token costs no scrypt work.
 
 ## The password rule
 
@@ -96,9 +99,10 @@ TTL on the first hit:
 | Per IP      | 5 / 15 min | `lasce:rate:password-reset:ip:<ip>`               |
 | Per account | 3 / 60 min | `lasce:rate:password-reset:email:<sha256(email)>` |
 
-The address is keyed by its hash, never in clear. The IP is the first `X-Forwarded-For` entry (set
-by Traefik in the deployed environments), else `X-Real-IP`; without either only the per-account
-window applies. A limited request gets the same confirmation and sends nothing. If Redis fails or
+The address is keyed by its hash, never in clear. The IP is `X-Real-IP` (set by Traefik in the
+deployed environments to the peer it accepted), else the last `X-Forwarded-For` entry, the one the
+nearest proxy appended; the client-supplied first entries are never trusted. Without either header
+only the per-account window applies. A limited request gets the same confirmation and sends nothing. If Redis fails or
 does not answer within 2 seconds the request is allowed and the failure logged: an outage of the
 limiter must not become an outage of password recovery.
 
@@ -117,7 +121,10 @@ page says so.
 | Correo / Nombre del remitente | The `From` of every message                                     |
 
 - The password never reaches the browser. The page only says whether one is stored; leaving the
-  field empty keeps it. Removing the username drops the stored password.
+  field empty keeps it, but only while the server, port, security mode and username stay the same
+  and the stored password still decrypts. Changing any of those asks for the password again, so a
+  saved credential is never replayed to a new host or over a downgraded connection. Removing the
+  username drops the stored password.
 - "Enviar correo de prueba" sends a message to the signed-in administrator's own address with the
   **saved** settings and reports the outcome in a toast.
 - Every change records `smtp_settings.update` in the audit trail with the names of the fields that
@@ -151,7 +158,10 @@ itself when Mailpit is not running.
 ## Known gaps
 
 - Login itself still has no rate limit or lockout ([sessions.md](sessions.md#known-gaps)).
-- Expired and used token rows are left in place, like expired sessions; a cleanup job is a
-  follow-up. They are deleted with the account, and unused ones when it asks for a new link.
+- An account that asks for a link and never comes back keeps one expired row until it asks again
+  or is deleted; a scheduled purge is a follow-up. Used tokens are deleted by the reset itself.
+- The per-account window can be used up by someone who knows the address (3 requests in an hour),
+  which delays that account's own reset by up to an hour. It is the price of limiting mail to one
+  inbox; the page cannot say so without disclosing that the account exists.
 - The email is sent from the web process (in `after()`), not through the worker queue. A web
   restart in the second between the answer and the send loses that one email; asking again works.

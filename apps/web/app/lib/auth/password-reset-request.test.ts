@@ -76,9 +76,15 @@ describe('passwordResetRateLimitRules', () => {
 describe('clientIp', () => {
   const headers = (values: Record<string, string>) => new Headers(values)
 
-  test('takes the first forwarded address, else the real IP header', () => {
-    expect(clientIp(headers({ 'x-forwarded-for': '203.0.113.7, 10.0.0.1' }))).toBe('203.0.113.7')
-    expect(clientIp(headers({ 'x-real-ip': '2001:db8::1' }))).toBe('2001:db8::1')
+  test('prefers the real IP header, else the address the nearest proxy appended', () => {
+    expect(
+      clientIp(headers({ 'x-real-ip': '2001:db8::1', 'x-forwarded-for': '198.51.100.1' })),
+    ).toBe('2001:db8::1')
+    expect(clientIp(headers({ 'x-forwarded-for': '203.0.113.7, 10.0.0.1' }))).toBe('10.0.0.1')
+  })
+
+  test('never trusts an address the client put first in X-Forwarded-For', () => {
+    expect(clientIp(headers({ 'x-forwarded-for': '1.2.3.4, 203.0.113.7' }))).toBe('203.0.113.7')
   })
 
   test('ignores a missing or malformed address', () => {

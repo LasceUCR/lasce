@@ -37,13 +37,15 @@ export function passwordResetRateLimitRules(email: string, ip: string | null): R
 }
 
 /**
- * The client's address as the reverse proxy reports it: the first `X-Forwarded-For` entry, else
- * `X-Real-IP`. Behind Traefik these are set by the proxy. Without one the header can be forged,
- * which only changes the IP window; the per-account window still holds.
+ * The client's address as the reverse proxy reports it: `X-Real-IP`, which Traefik sets to the
+ * peer it accepted the connection from, else the **last** `X-Forwarded-For` entry, the one the
+ * nearest proxy appended. The first entries come from the client and are never trusted. Without
+ * either header only the per-account window applies.
  */
 export function clientIp(headers: { get(name: string): string | null }): string | null {
-  const forwarded = headers.get('x-forwarded-for')?.split(',')[0]?.trim()
-  const ip = forwarded || headers.get('x-real-ip')?.trim()
+  const realIp = headers.get('x-real-ip')?.trim()
+  const forwarded = headers.get('x-forwarded-for')?.split(',').at(-1)?.trim()
+  const ip = realIp || forwarded
   return ip && /^[0-9A-Fa-f:.]{2,45}$/.test(ip) ? ip : null
 }
 
