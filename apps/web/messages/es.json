@@ -2513,7 +2513,7 @@
       },
       "hints": {
         "username": "Déjalo vacío si el servidor no pide autenticación.",
-        "passwordKeep": "Hay una contraseña guardada. Deja el campo vacío para conservarla.",
+        "passwordKeep": "Hay una contraseña guardada. Deja el campo vacío para conservarla; si cambias el servidor, el puerto, la seguridad o el usuario, escríbela de nuevo.",
         "passwordNew": "Se guarda cifrada y nunca se vuelve a mostrar."
       },
       "save": "Guardar configuración",

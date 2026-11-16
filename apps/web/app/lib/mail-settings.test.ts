@@ -88,7 +88,7 @@ describe('SMTP settings validation', () => {
   })
 
   test('rejects a port that is not a whole number', () => {
-    for (const port of ['25.5', 'abc', '0']) {
+    for (const port of ['25.5', 'abc', '0', '0x24B', '5.87e2', '0b1001001011', '1e3']) {
       expect(validateSmtpSettings({ ...valid, port })).toEqual({
         ok: false,
         fieldErrors: { port: smtpSettingsMessages.portInvalid },

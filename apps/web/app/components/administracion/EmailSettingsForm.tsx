@@ -57,7 +57,8 @@ export function EmailSettingsForm({
   const [saving, setSaving] = useState(false)
   const [testing, setTesting] = useState(false)
 
-  const passwordStored = settings?.passwordConfigured ?? false
+  // A stored password that no longer decrypts is as good as none.
+  const passwordStored = Boolean(settings?.passwordConfigured && !settings.passwordUnreadable)
 
   function update(field: SmtpSettingsField) {
     return (event: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
@@ -73,7 +74,15 @@ export function EmailSettingsForm({
     )
     const found = validation.ok ? {} : { ...validation.fieldErrors }
     if (!found.password && values.username.trim() !== '' && values.password === '') {
-      if (!passwordStored) found.password = t('validation.passwordRequired')
+      // The server keeps the stored password only for the same server, port, security and user,
+      // so it is never sent somewhere new without being typed again.
+      const sameConnection =
+        settings !== null &&
+        values.host.trim() === settings.host &&
+        values.port.trim() === String(settings.port) &&
+        values.security === settings.security &&
+        values.username.trim() === (settings.username ?? '')
+      if (!passwordStored || !sameConnection) found.password = t('validation.passwordRequired')
     }
     return found
   }

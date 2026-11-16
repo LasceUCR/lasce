@@ -2513,7 +2513,7 @@
       },
       "hints": {
         "username": "Leave it empty if the server does not require authentication.",
-        "passwordKeep": "A password is saved. Leave the field empty to keep it.",
+        "passwordKeep": "A password is saved. Leave the field empty to keep it; if you change the server, port, security or username, type it again.",
         "passwordNew": "It is stored encrypted and never shown again."
       },
       "save": "Save settings",

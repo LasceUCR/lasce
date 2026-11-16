@@ -104,10 +104,16 @@ export type SaveSmtpSettingsResult =
 
 const PLAIN_FIELDS = ['host', 'port', 'security', 'username', 'fromAddress', 'fromName'] as const
 
+/** The fields that decide where, and how, the stored password is sent. */
+const CONNECTION_FIELDS = ['host', 'port', 'security', 'username'] as const
+
 /**
  * Saves the settings and records `smtp_settings.update` in the same transaction. An empty
- * `password` keeps the stored one; an empty `username` means no authentication and drops any
- * stored password. Nothing is written, and nothing recorded, when no field changed.
+ * `password` keeps the stored one, but only for the same server, port, security mode and user,
+ * and only while it still decrypts: otherwise a changed host (or a downgrade to no encryption)
+ * would replay the saved credential somewhere new, so the password has to be typed again. An
+ * empty `username` means no authentication and drops any stored password. Nothing is written,
+ * and nothing recorded, when no field changed.
  */
 export async function saveSmtpSettings(
   input: SmtpSettingsInput,
@@ -126,8 +132,14 @@ export async function saveSmtpSettings(
       passwordCiphertext = null
     } else if (input.password !== '' && key) {
       passwordCiphertext = encryptSecret(input.password, key)
+    } else if (
+      existing?.passwordCiphertext &&
+      CONNECTION_FIELDS.every((field) => existing[field] === input[field]) &&
+      readPassword(existing.passwordCiphertext, key) !== null
+    ) {
+      passwordCiphertext = existing.passwordCiphertext
     } else {
-      passwordCiphertext = existing?.passwordCiphertext ?? null
+      passwordCiphertext = null
     }
     if (input.username !== null && passwordCiphertext === null) {
       return { ok: false, reason: 'password-required' }

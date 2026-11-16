@@ -80,7 +80,10 @@ export function getSmtpSettingsSchema(messages: SmtpSettingsValidationMessages) 
       .regex(HOST_PATTERN, { error: messages.hostInvalid }),
     port: z
       .union([z.string(), z.number()])
-      .transform((value) => (typeof value === 'number' ? value : Number(value.trim() || NaN)))
+      // Decimal digits only: `Number()` alone would also accept "0x24B" or "5.87e2".
+      .transform((value) =>
+        typeof value === 'number' ? value : /^\d{1,5}$/.test(value.trim()) ? Number(value) : NaN,
+      )
       .pipe(
         z
           .number({ error: messages.portInvalid })

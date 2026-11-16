@@ -113,6 +113,43 @@ describe('EmailSettingsForm', () => {
     expect(fetchMock).not.toHaveBeenCalled()
   })
 
+  test('asks for the password again when the server changes', async () => {
+    const user = renderForm(args(Configured))
+
+    await user.clear(field(copy.labels.host))
+    await user.type(field(copy.labels.host), 'otro.servidor.example')
+    await user.click(screen.getByRole('button', { name: copy.save }))
+
+    expect(field(copy.labels.password)).toHaveAccessibleDescription(
+      `${copy.hints.passwordKeep} ${copy.validation.passwordRequired}`,
+    )
+    expect(fetchMock).not.toHaveBeenCalled()
+  })
+
+  test('treats a password that no longer decrypts as missing', async () => {
+    const user = renderForm(args(PasswordUnreadable))
+
+    expect(field(copy.labels.password)).toHaveAccessibleDescription(copy.hints.passwordNew)
+    await user.click(screen.getByRole('button', { name: copy.save }))
+
+    expect(field(copy.labels.password)).toHaveAttribute('aria-invalid', 'true')
+    expect(fetchMock).not.toHaveBeenCalled()
+  })
+
+  test('keeps the stored password when only the sender changes', async () => {
+    fetchMock.mockResolvedValue(answer(200, { changed: ['fromName'] }))
+    const user = renderForm(args(Configured))
+
+    await user.clear(field(copy.labels.fromName))
+    await user.type(field(copy.labels.fromName), 'Portal LASCE')
+    await user.click(screen.getByRole('button', { name: copy.save }))
+
+    expect(await screen.findByText(copy.saved)).toBeInTheDocument()
+    expect(
+      JSON.parse(String((fetchMock.mock.calls[0] as [string, RequestInit])[1].body)),
+    ).toMatchObject({ password: '', fromName: 'Portal LASCE' })
+  })
+
   test('saves the values, reports success and refreshes the page', async () => {
     fetchMock.mockResolvedValue(answer(200, { changed: ['host'] }))
     const user = renderForm(args(Configured))

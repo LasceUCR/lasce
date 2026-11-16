@@ -141,13 +141,52 @@ describe('saveSmtpSettings', () => {
   test('keeps the stored password when the field is left empty', async () => {
     mocks.tx.smtpSettings.findUnique.mockResolvedValue(stored)
 
-    const result = await saveSmtpSettings({ ...input, host: 'mail.ucr.ac.cr' }, actor)
+    const result = await saveSmtpSettings({ ...input, fromName: 'Portal LASCE' }, actor)
 
-    expect(result).toEqual({ ok: true, changed: ['host'] })
+    expect(result).toEqual({ ok: true, changed: ['fromName'] })
     const [{ update }] = mocks.tx.smtpSettings.upsert.mock.calls[0] as [
       { update: { passwordCiphertext: string } },
     ]
     expect(update.passwordCiphertext).toBe(stored.passwordCiphertext)
+  })
+
+  test.each([
+    ['host', { host: 'atacante.example' }],
+    ['port', { port: 2525 }],
+    ['security', { security: 'none' as const }],
+    ['username', { username: 'otra-cuenta' }],
+  ])(
+    'asks for the password again when the %s changes, so it is never replayed elsewhere',
+    async (_field, change) => {
+      mocks.tx.smtpSettings.findUnique.mockResolvedValue(stored)
+
+      expect(await saveSmtpSettings({ ...input, ...change }, actor)).toEqual({
+        ok: false,
+        reason: 'password-required',
+      })
+      expect(mocks.tx.smtpSettings.upsert).not.toHaveBeenCalled()
+    },
+  )
+
+  test('accepts a changed host together with a newly typed password', async () => {
+    mocks.tx.smtpSettings.findUnique.mockResolvedValue(stored)
+
+    const result = await saveSmtpSettings(
+      { ...input, host: 'mail.ucr.ac.cr', password: 'nuevo' },
+      actor,
+    )
+
+    expect(result).toEqual({ ok: true, changed: ['host', 'password'] })
+  })
+
+  test('does not keep a stored password that no longer decrypts', async () => {
+    mocks.tx.smtpSettings.findUnique.mockResolvedValue(stored)
+    mocks.serverEnv.mockReturnValue({ CRON_SECRET: 'otro-cron-secret' })
+
+    expect(await saveSmtpSettings(input, actor)).toEqual({
+      ok: false,
+      reason: 'password-required',
+    })
   })
 
   test('writes and records nothing when no field changed', async () => {
