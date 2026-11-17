@@ -7,6 +7,7 @@ import { AccessTabs } from '@/app/components/public/auth/AccessTabs'
 import { LoginForm } from '@/app/components/public/auth/LoginForm'
 import { RegistrationForm } from '@/app/components/public/auth/RegistrationForm'
 import { SpaceBackdrop } from '@/app/components/public/auth/SpaceBackdrop'
+import { FlashToast } from '@/app/components/public/toast/FlashToast'
 import { TopicBackLink } from '@/app/components/public/topic/TopicBackLink'
 import { listCountries } from '@/app/lib/auth/countries'
 import {
@@ -17,6 +18,7 @@ import {
   REGISTRATION_CARD_ID,
   accessTabFromParam,
 } from '@/app/lib/auth/login'
+import { RESET_DONE_PARAM } from '@/app/lib/auth/password-reset'
 import { getSessionUser } from '@/app/lib/auth/session'
 import {
   DEFAULT_RETURN_PATH,
@@ -55,16 +57,25 @@ interface AccesoPageProps {
  * value is validated to a path on this site.
  */
 export default async function AccesoPage({ searchParams }: AccesoPageProps) {
-  const [params, requestHeaders, locale, t, tLogin, tLoginHeading, tRegistrationHeading] =
-    await Promise.all([
-      searchParams,
-      headers(),
-      getLocale(),
-      getTranslations('auth.page'),
-      getTranslations('auth.login.validation'),
-      getTranslations('auth.login.heading'),
-      getTranslations('auth.registration.heading'),
-    ])
+  const [
+    params,
+    requestHeaders,
+    locale,
+    t,
+    tLoginCard,
+    tLogin,
+    tLoginHeading,
+    tRegistrationHeading,
+  ] = await Promise.all([
+    searchParams,
+    headers(),
+    getLocale(),
+    getTranslations('auth.page'),
+    getTranslations('auth.login'),
+    getTranslations('auth.login.validation'),
+    getTranslations('auth.login.heading'),
+    getTranslations('auth.registration.heading'),
+  ])
   const returnTo =
     params[NEXT_FIELD] !== undefined
       ? safeReturnPath(params[NEXT_FIELD])
@@ -80,6 +91,10 @@ export default async function AccesoPage({ searchParams }: AccesoPageProps) {
   return (
     <article className="registration-page space-page">
       <SpaceBackdrop />
+      {/* A password reset sends the visitor here; the toast confirms it once. */}
+      {params[RESET_DONE_PARAM] === '1' ? (
+        <FlashToast clearParam={RESET_DONE_PARAM} message={tLoginCard('resetDone')} />
+      ) : null}
 
       <header className="page-intro page-width">
         <h1>{t('title')}</h1>

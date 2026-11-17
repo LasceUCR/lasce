@@ -34,7 +34,7 @@ With the default matrix:
 | Anonymous     | Redirect to `/acceso?next=/administracion&reason=auth` |
 | Visitante     | Acceso denegado, no menu                               |
 | Asistente     | Resumen                                                |
-| Administrador | all five                                               |
+| Administrador | all six                                                |
 
 Descargas is unlocked by `view_download_history`, which only administrators hold by default.
 `download_resources` (held by every role) does not open it. Changing the matrix on

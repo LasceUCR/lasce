@@ -77,8 +77,8 @@ find the computer's IPv4 address (`ipconfig` on Windows) and browse to `http://<
 In development, `apps/web/next.config.ts` adds the computer's LAN IPv4 addresses to
 `allowedDevOrigins`; without that, Next.js blocks its dev assets and the page renders without
 hydrating. On Windows, Node must be allowed through the firewall on private networks.
-`NEXT_PUBLIC_APP_URL` only feeds page metadata, `robots.txt` and the sitemap, so it can stay on
-`localhost`.
+`NEXT_PUBLIC_APP_URL` feeds page metadata, `robots.txt`, the sitemap and the links in password
+reset emails, so it can stay on `localhost` unless you open those links from the phone.
 
 Chrome on iOS adds its own attributes to `<html>` before React hydrates. `app/layout.tsx` sets
 `suppressHydrationWarning` on that element alone, so the mismatch is not reported. It does not hide

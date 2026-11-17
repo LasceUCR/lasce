@@ -6,6 +6,7 @@ import { getLocale, getMessages, getTranslations } from 'next-intl/server'
 import { AuditTrailPage } from '@/app/components/administracion/AuditTrailPage'
 import { AccessDenied } from '@/app/components/administracion/AccessDenied'
 import { DownloadHistoryPage } from '@/app/components/administracion/DownloadHistoryPage'
+import { EmailSettingsForm } from '@/app/components/administracion/EmailSettingsForm'
 import { AdminPlaceholder } from '@/app/components/administracion/AdminPlaceholder'
 import { RolePermissionsEditor } from '@/app/components/administracion/RolePermissionsEditor'
 import { UserRoleAssignment } from '@/app/components/administracion/UserRoleAssignment'
@@ -19,6 +20,7 @@ import { requireUser } from '@/app/lib/auth/session'
 import { parsePageParam, type SearchParamValue } from '@/app/lib/pagination'
 import { getPermissionMatrix } from '@/app/lib/role-permissions'
 import { availableRoles, getUserOverview } from '@/app/lib/user-administration'
+import { canStoreSmtpPassword, getSmtpSettingsView } from '@/app/services/mail/smtpSettings'
 import { saveRolePermissions } from '../permission-actions'
 import { saveUserRole } from '../user-actions'
 
@@ -48,7 +50,7 @@ export async function generateMetadata({
     return {}
   }
 
-  // Descargas, Usuarios, Permisos and Auditoría are translated; the other sections still show Spanish.
+  // Descargas, Usuarios, Permisos, Auditoría and Correo are translated; the others still show Spanish.
   if (section === 'descargas') {
     const t = await getTranslations('administration.downloads')
     return { title: t('metaTitle'), description: t('description') }
@@ -66,6 +68,11 @@ export async function generateMetadata({
 
   if (section === 'permisos') {
     const t = await getTranslations('administration.permissions')
+    return { title: t('metaTitle'), description: t('description') }
+  }
+
+  if (section === 'correo') {
+    const t = await getTranslations('administration.email')
     return { title: t('metaTitle'), description: t('description') }
   }
 
@@ -215,6 +222,34 @@ export default async function AdministracionSectionPage({
         description={t('description')}
         pathname="/administracion/auditoria"
         trail={trail}
+      />
+    )
+  }
+
+  if (section === 'correo') {
+    const [{ user, allowed }, messages, t] = await Promise.all([
+      requirePermission('manage_email_settings', '/administracion/correo'),
+      getMessages(),
+      getTranslations('administration.email'),
+    ])
+    if (!allowed) {
+      return (
+        <AccessDenied
+          message={permissionText('manage_email_settings', messages).denied}
+          title={messages.access.accessDenied.title}
+        />
+      )
+    }
+    // The view never carries the password, so nothing secret reaches the client component.
+    const settings = await getSmtpSettingsView()
+    return (
+      <EmailSettingsForm
+        canStorePassword={canStoreSmtpPassword()}
+        description={t('description')}
+        key={JSON.stringify(settings)}
+        settings={settings}
+        testRecipient={user.email}
+        title={t('title')}
       />
     )
   }

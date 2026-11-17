@@ -43,6 +43,7 @@ Reuse the existing names when they already match:
 | `manage_permissions`      | `/administracion/permisos`            |
 | `view_audit_log`          | `/administracion/auditoria`           |
 | `view_download_history`   | `/administracion/descargas`           |
+| `manage_email_settings`   | `/administracion/correo`              |
 
 Assistant defaults include `edit_components` only. Admin defaults include create, edit and
 delete. A visitor has none of those three, so they see the public page with no tools.

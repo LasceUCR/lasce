@@ -2138,7 +2138,8 @@
         "descargas": "Downloads",
         "usuarios": "Users",
         "permisos": "Permissions",
-        "auditoria": "Audit trail"
+        "auditoria": "Audit trail",
+        "correo": "Email"
       }
     },
     "summary": {
@@ -2402,7 +2403,9 @@
         "space_weather_section_update": "Space weather card updated: {name}",
         "solar_physics_section_update": "Solar physics section updated: {name}",
         "role_permissions_update": "Permissions updated for the {role} role",
-        "user_role_change": "{name}'s role changed from {previous} to {next}"
+        "user_role_change": "{name}'s role changed from {previous} to {next}",
+        "smtp_settings_update": "Email settings updated",
+        "user_password_reset": "Password reset: {name}"
       }
     },
     "auditLabels": {
@@ -2452,7 +2455,9 @@
         "user_role_change": "Account role changed",
         "user_login": "Signed in",
         "schedule_register": "Job schedule registered",
-        "legacy_event": "Earlier event"
+        "legacy_event": "Earlier event",
+        "smtp_settings_update": "Email settings updated",
+        "user_password_reset": "Password reset"
       },
       "entities": {
         "news": "News article",
@@ -2474,9 +2479,81 @@
         "role": "Role",
         "role_permissions": "Role permissions",
         "user": "Account",
-        "schedule": "Job schedule"
+        "schedule": "Job schedule",
+        "smtp_settings": "Email settings"
       },
       "unknown": "Other"
+    },
+    "email": {
+      "metaTitle": "Email | Administration | LASCE",
+      "title": "Email",
+      "description": "Configure the SMTP server the portal sends email through, such as password reset links.",
+      "notConfigured": "No mail server is configured yet. Until one is, password reset requests send no email.",
+      "passwordUnreadable": "The saved password cannot be decrypted, probably because CRON_SECRET changed. Type it again and save the settings.",
+      "keyUnavailable": "The server has no CRON_SECRET, so it cannot store an SMTP password. Set it and restart the portal.",
+      "requiredNote": "The username and password are optional; every other field is required.",
+      "labels": {
+        "host": "SMTP server",
+        "port": "Port",
+        "security": "Security",
+        "username": "Username",
+        "password": "Password",
+        "fromAddress": "Sender email",
+        "fromName": "Sender name"
+      },
+      "placeholders": {
+        "host": "smtp.example.com",
+        "security": "Choose the connection type",
+        "fromAddress": "no-reply@example.com"
+      },
+      "security": {
+        "tls": "TLS (usually port 465)",
+        "starttls": "STARTTLS (usually port 587)",
+        "none": "No encryption (testing only)"
+      },
+      "hints": {
+        "username": "Leave it empty if the server does not require authentication.",
+        "passwordKeep": "A password is saved. Leave the field empty to keep it; if you change the server, port, security or username, type it again.",
+        "passwordNew": "It is stored encrypted and never shown again."
+      },
+      "save": "Save settings",
+      "saving": "Saving...",
+      "saved": "Email settings updated successfully.",
+      "saveFailed": "The email settings could not be saved. Try again.",
+      "test": {
+        "title": "Test email",
+        "body": "Send a message to {email} with the saved settings.",
+        "send": "Send test email",
+        "sending": "Sending...",
+        "sent": "Test email sent to {email}.",
+        "failed": "The test email could not be sent. Try again."
+      },
+      "validation": {
+        "hostRequired": "Enter the SMTP server.",
+        "hostInvalid": "Enter a valid server name, without spaces.",
+        "portInvalid": "Enter a port between 1 and 65535.",
+        "securityRequired": "Choose the connection type.",
+        "usernameTooLong": "The username cannot be longer than 254 characters.",
+        "passwordTooLong": "The password cannot be longer than 512 characters.",
+        "fromAddressRequired": "Enter the sender email.",
+        "fromAddressInvalid": "Enter a valid email address.",
+        "fromNameRequired": "Enter the sender name.",
+        "fromNameTooLong": "The name cannot be longer than 120 characters.",
+        "passwordRequired": "Enter the password of the SMTP user."
+      },
+      "errors": {
+        "invalid": "Review the email settings fields.",
+        "keyUnavailable": "The password cannot be stored because the server has no CRON_SECRET.",
+        "notConfigured": "Save the mail server settings first.",
+        "passwordUnreadable": "The saved password cannot be decrypted. Type it again and save the settings.",
+        "sendFailed": "The mail server rejected the message or did not answer. Check the server, port, security and credentials.",
+        "saveFailed": "The email settings could not be saved.",
+        "passwordRequired": "Enter the password of the SMTP user."
+      },
+      "testEmail": {
+        "subject": "LASCE portal test email",
+        "body": "This message confirms that the Solar Astrophysics and Space Weather Laboratory portal can send email with the saved settings."
+      }
     }
   },
   "access": {
@@ -2530,6 +2607,11 @@
         "label": "View the download history",
         "description": "See who downloaded which laboratory resources and when.",
         "denied": "You are not authorized to view the download history."
+      },
+      "manage_email_settings": {
+        "label": "Configure email",
+        "description": "Configure the SMTP server the portal sends email through.",
+        "denied": "You are not authorized to configure the portal email."
       }
     },
     "accessDenied": {
@@ -2576,7 +2658,9 @@
         "invalidCredentials": "Incorrect email or password.",
         "unexpected": "We could not sign you in. Try again in a few minutes.",
         "authRequired": "You must sign in to continue."
-      }
+      },
+      "forgotPassword": "Forgot your password?",
+      "resetDone": "Password updated successfully. Sign in with your new password."
     },
     "registration": {
       "heading": {
@@ -2621,6 +2705,70 @@
         "confirmationMismatch": "The passwords do not match.",
         "reviewFields": "Review the marked fields to continue.",
         "unexpected": "We could not create your account. Try again in a few minutes."
+      }
+    },
+    "passwordReset": {
+      "backLink": "Back to sign in",
+      "request": {
+        "meta": {
+          "title": "Recover password | LASCE",
+          "description": "Request a link to reset the password of your account on the Solar Astrophysics and Space Weather Laboratory portal."
+        },
+        "title": "Recover password",
+        "lead": "Enter your account's email address and we will send you a link to choose a new password.",
+        "labels": {
+          "email": "Email address"
+        },
+        "placeholders": {
+          "email": "email@example.com"
+        },
+        "submit": "Send link",
+        "submitting": "Sending...",
+        "successTitle": "Check your email",
+        "successBody": "If an account exists for that email address, we sent it a link to reset the password. The link expires in 30 minutes and can be used only once.",
+        "successHint": "Nothing arrived? Check your spam folder or request another link in a few minutes.",
+        "retry": "Request another link",
+        "backToLogin": "Back to sign in",
+        "validation": {
+          "emailRequired": "Enter your email address.",
+          "emailInvalid": "Enter a valid email address."
+        }
+      },
+      "reset": {
+        "meta": {
+          "title": "Reset password | LASCE",
+          "description": "Choose a new password for your portal account."
+        },
+        "title": "Choose a new password",
+        "lead": "Type the new password twice. Saving it signs your account out of every open session.",
+        "labels": {
+          "password": "New password",
+          "passwordConfirmation": "Repeat password"
+        },
+        "passwordHint": "At least 8 characters.",
+        "submit": "Save password",
+        "submitting": "Saving...",
+        "invalidTitle": "This link is not valid",
+        "invalidBody": "The link has expired, was already used or is not correct. Request a new one to reset your password.",
+        "requestNew": "Request a new link",
+        "validation": {
+          "passwordRequired": "Enter a password.",
+          "passwordTooShort": "The password must be at least 8 characters long.",
+          "passwordTooLong": "The password cannot be longer than 128 characters.",
+          "confirmationRequired": "Repeat your password.",
+          "confirmationMismatch": "The passwords do not match.",
+          "unexpected": "We could not save the password. Try again in a few minutes."
+        }
+      },
+      "email": {
+        "subject": "Reset your LASCE portal password",
+        "greeting": "Hello, {name}:",
+        "intro": "We received a request to reset the password of your account on the Solar Astrophysics and Space Weather Laboratory portal.",
+        "action": "Choose a new password",
+        "linkFallback": "If the button does not work, copy this link into your browser:",
+        "expiry": "The link expires in {minutes} minutes and can be used only once.",
+        "ignore": "If you did not ask for this, ignore this message: your password will not change.",
+        "signature": "Solar Astrophysics and Space Weather Laboratory, University of Costa Rica"
       }
     }
   },

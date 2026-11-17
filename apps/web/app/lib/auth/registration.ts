@@ -3,6 +3,11 @@ import { z } from 'zod'
 import es from '@/messages/es.json' with { type: 'json' }
 
 import { COUNTRY_CODES } from './countries'
+import {
+  newPasswordSchema,
+  passwordConfirmationSchema,
+  refinePasswordConfirmation,
+} from './password-rules'
 
 /**
  * The registration rules, in one place: field names, validation, user-facing
@@ -46,9 +51,6 @@ export type RegistrationValues = Record<RegistrationEchoField, string>
 /** First message per failed field. */
 export type RegistrationFieldErrors = Partial<Record<RegistrationFieldName, string>>
 
-export const PASSWORD_MIN_LENGTH = 8
-export const PASSWORD_MAX_LENGTH = 128
-
 export const registrationMessages = es.auth.registration.validation
 
 /** The parts of a message catalogue `getRegistrationSchema` reads. */
@@ -75,8 +77,8 @@ export type RegistrationValidationMessages = Pick<
  * Spanish default other, request-less call sites use.
  */
 export function getRegistrationSchema(messages: RegistrationValidationMessages) {
-  return z
-    .object({
+  return refinePasswordConfirmation(
+    z.object({
       fullName: z
         .string()
         .trim()
@@ -100,25 +102,12 @@ export function getRegistrationSchema(messages: RegistrationValidationMessages) 
         .min(1, { error: messages.institutionRequired })
         .max(160, { error: messages.institutionTooLong }),
       countryCode: z.enum(COUNTRY_CODES, { error: messages.countryRequired }),
-      // Passwords are not trimmed: a leading or trailing space is a legitimate character.
-      password: z
-        .string()
-        .min(1, { error: messages.passwordRequired })
-        .min(PASSWORD_MIN_LENGTH, { error: messages.passwordTooShort })
-        .max(PASSWORD_MAX_LENGTH, { error: messages.passwordTooLong }),
-      passwordConfirmation: z.string().min(1, { error: messages.confirmationRequired }),
-    })
-    .refine(
-      (data) => data.passwordConfirmation === '' || data.password === data.passwordConfirmation,
-      {
-        error: messages.confirmationMismatch,
-        path: ['passwordConfirmation'],
-        // Zod skips refinements once a sibling field has aborted (an unknown
-        // country does). The mismatch must still be reported next to the other
-        // errors, so this one always runs.
-        when: () => true,
-      },
-    )
+      // The shared new-password rule (`password-rules.ts`); the reset form uses the same one.
+      password: newPasswordSchema(messages),
+      passwordConfirmation: passwordConfirmationSchema(messages),
+    }),
+    messages,
+  )
 }
 
 export const registrationSchema = getRegistrationSchema(registrationMessages)

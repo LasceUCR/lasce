@@ -41,6 +41,12 @@ export const adminSections = [
     description: 'Consulta quién hizo cada cambio administrativo en el portal y cuándo.',
     permission: 'view_audit_log',
   },
+  {
+    slug: 'correo',
+    title: 'Correo',
+    description: 'Configura el servidor SMTP que envía los correos del portal.',
+    permission: 'manage_email_settings',
+  },
 ] as const satisfies readonly AdminSection[]
 
 export type AdminSectionSlug = (typeof adminSections)[number]['slug']

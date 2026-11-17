@@ -5919,6 +5919,17 @@ a.acknowledgments-card:focus-visible {
   font-size: 16px;
 }
 
+/* The Correo section (EmailSettingsForm): its notices, and a form no wider than it reads well. */
+.email-settings-notices {
+  display: grid;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.email-settings-form {
+  max-width: 560px;
+}
+
 .admin-activity-header {
   display: flex;
   align-items: center;
@@ -6480,6 +6491,26 @@ a.acknowledgments-card:focus-visible {
   color: var(--ink);
   font-size: 15px;
   line-height: 1.45;
+}
+
+/* "¿Olvidaste tu contraseña?" under the password field of the login card. */
+.login-forgot {
+  margin: -10px 0 0;
+  text-align: right;
+  font-size: 14px;
+}
+
+.login-forgot a {
+  color: var(--blue-dark);
+  font-weight: 700;
+}
+
+/* The two buttons under the password recovery confirmation. */
+.password-reset-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 12px;
 }
 
 .login-alt {

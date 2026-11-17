@@ -2138,7 +2138,8 @@
         "descargas": "Descargas",
         "usuarios": "Usuarios",
         "permisos": "Permisos",
-        "auditoria": "Auditoría"
+        "auditoria": "Auditoría",
+        "correo": "Correo"
       }
     },
     "summary": {
@@ -2402,7 +2403,9 @@
         "space_weather_section_update": "Tarjeta de clima espacial actualizada: {name}",
         "solar_physics_section_update": "Sección de física solar actualizada: {name}",
         "role_permissions_update": "Permisos actualizados para el rol {role}",
-        "user_role_change": "Rol de {name} cambiado de {previous} a {next}"
+        "user_role_change": "Rol de {name} cambiado de {previous} a {next}",
+        "smtp_settings_update": "Configuración de correo actualizada",
+        "user_password_reset": "Contraseña restablecida: {name}"
       }
     },
     "auditLabels": {
@@ -2452,7 +2455,9 @@
         "user_role_change": "Rol de cuenta cambiado",
         "user_login": "Inicio de sesión",
         "schedule_register": "Programación de tareas registrada",
-        "legacy_event": "Evento anterior"
+        "legacy_event": "Evento anterior",
+        "smtp_settings_update": "Configuración de correo actualizada",
+        "user_password_reset": "Contraseña restablecida"
       },
       "entities": {
         "news": "Noticia",
@@ -2474,9 +2479,81 @@
         "role": "Rol",
         "role_permissions": "Permisos de rol",
         "user": "Cuenta",
-        "schedule": "Programación de tareas"
+        "schedule": "Programación de tareas",
+        "smtp_settings": "Configuración de correo"
       },
       "unknown": "Otro"
+    },
+    "email": {
+      "metaTitle": "Correo | Administración | LASCE",
+      "title": "Correo",
+      "description": "Configura el servidor SMTP que envía los correos del portal, como los enlaces para restablecer contraseñas.",
+      "notConfigured": "Aún no hay un servidor de correo configurado. Mientras tanto, las solicitudes para restablecer contraseñas no envían ningún correo.",
+      "passwordUnreadable": "La contraseña guardada no se puede descifrar, probablemente porque cambió CRON_SECRET. Vuelve a escribirla y guarda la configuración.",
+      "keyUnavailable": "El servidor no tiene CRON_SECRET, así que no puede guardar una contraseña SMTP. Configúralo y reinicia el portal.",
+      "requiredNote": "El usuario y la contraseña son opcionales; el resto de los campos es obligatorio.",
+      "labels": {
+        "host": "Servidor SMTP",
+        "port": "Puerto",
+        "security": "Seguridad",
+        "username": "Usuario",
+        "password": "Contraseña",
+        "fromAddress": "Correo del remitente",
+        "fromName": "Nombre del remitente"
+      },
+      "placeholders": {
+        "host": "smtp.ejemplo.com",
+        "security": "Selecciona el tipo de conexión",
+        "fromAddress": "no-responder@ejemplo.com"
+      },
+      "security": {
+        "tls": "TLS (normalmente el puerto 465)",
+        "starttls": "STARTTLS (normalmente el puerto 587)",
+        "none": "Sin cifrado (solo para pruebas)"
+      },
+      "hints": {
+        "username": "Déjalo vacío si el servidor no pide autenticación.",
+        "passwordKeep": "Hay una contraseña guardada. Deja el campo vacío para conservarla; si cambias el servidor, el puerto, la seguridad o el usuario, escríbela de nuevo.",
+        "passwordNew": "Se guarda cifrada y nunca se vuelve a mostrar."
+      },
+      "save": "Guardar configuración",
+      "saving": "Guardando...",
+      "saved": "Configuración de correo actualizada correctamente.",
+      "saveFailed": "No se pudo guardar la configuración de correo. Inténtalo de nuevo.",
+      "test": {
+        "title": "Correo de prueba",
+        "body": "Envía un mensaje a {email} con la configuración guardada.",
+        "send": "Enviar correo de prueba",
+        "sending": "Enviando...",
+        "sent": "Correo de prueba enviado a {email}.",
+        "failed": "No se pudo enviar el correo de prueba. Inténtalo de nuevo."
+      },
+      "validation": {
+        "hostRequired": "Ingresa el servidor SMTP.",
+        "hostInvalid": "Ingresa un nombre de servidor válido, sin espacios.",
+        "portInvalid": "Ingresa un puerto entre 1 y 65535.",
+        "securityRequired": "Selecciona el tipo de conexión.",
+        "usernameTooLong": "El usuario no puede superar los 254 caracteres.",
+        "passwordTooLong": "La contraseña no puede superar los 512 caracteres.",
+        "fromAddressRequired": "Ingresa el correo del remitente.",
+        "fromAddressInvalid": "Ingresa un correo electrónico válido.",
+        "fromNameRequired": "Ingresa el nombre del remitente.",
+        "fromNameTooLong": "El nombre no puede superar los 120 caracteres.",
+        "passwordRequired": "Escribe la contraseña del usuario SMTP."
+      },
+      "errors": {
+        "invalid": "Revisa los campos de la configuración de correo.",
+        "keyUnavailable": "No se puede guardar la contraseña porque el servidor no tiene CRON_SECRET.",
+        "notConfigured": "Guarda primero la configuración del servidor de correo.",
+        "passwordUnreadable": "La contraseña guardada no se puede descifrar. Vuelve a escribirla y guarda la configuración.",
+        "sendFailed": "El servidor de correo rechazó el mensaje o no respondió. Revisa el servidor, el puerto, la seguridad y las credenciales.",
+        "saveFailed": "No se pudo guardar la configuración de correo.",
+        "passwordRequired": "Escribe la contraseña del usuario SMTP."
+      },
+      "testEmail": {
+        "subject": "Correo de prueba del portal LASCE",
+        "body": "Este mensaje confirma que el portal del Laboratorio de Astrofísica Solar y Clima Espacial puede enviar correos con la configuración guardada."
+      }
     }
   },
   "access": {
@@ -2530,6 +2607,11 @@
         "label": "Consultar el historial de descargas",
         "description": "Consultar quién descargó qué recursos del laboratorio y cuándo.",
         "denied": "No tienes autorización para consultar el historial de descargas."
+      },
+      "manage_email_settings": {
+        "label": "Configurar el correo",
+        "description": "Configurar el servidor SMTP que envía los correos del portal.",
+        "denied": "No tienes autorización para configurar el correo del portal."
       }
     },
     "accessDenied": {
@@ -2576,7 +2658,9 @@
         "invalidCredentials": "Correo o contraseña incorrectos.",
         "unexpected": "No pudimos iniciar sesión. Inténtalo de nuevo en unos minutos.",
         "authRequired": "Debes iniciar sesión para continuar."
-      }
+      },
+      "forgotPassword": "¿Olvidaste tu contraseña?",
+      "resetDone": "Contraseña actualizada correctamente. Inicia sesión con tu nueva contraseña."
     },
     "registration": {
       "heading": {
@@ -2621,6 +2705,70 @@
         "confirmationMismatch": "Las contraseñas no coinciden.",
         "reviewFields": "Revisa los campos marcados para continuar.",
         "unexpected": "No pudimos crear tu cuenta. Inténtalo de nuevo en unos minutos."
+      }
+    },
+    "passwordReset": {
+      "backLink": "Volver al acceso",
+      "request": {
+        "meta": {
+          "title": "Recuperar contraseña | LASCE",
+          "description": "Solicita un enlace para restablecer la contraseña de tu cuenta en el portal del Laboratorio de Astrofísica Solar y Clima Espacial."
+        },
+        "title": "Recuperar contraseña",
+        "lead": "Ingresa el correo electrónico de tu cuenta y te enviaremos un enlace para elegir una nueva contraseña.",
+        "labels": {
+          "email": "Correo electrónico"
+        },
+        "placeholders": {
+          "email": "correo@ejemplo.com"
+        },
+        "submit": "Enviar enlace",
+        "submitting": "Enviando...",
+        "successTitle": "Revisa tu correo",
+        "successBody": "Si existe una cuenta con ese correo electrónico, te enviamos un enlace para restablecer la contraseña. El enlace vence en 30 minutos y solo puede usarse una vez.",
+        "successHint": "¿No llegó? Revisa la carpeta de correo no deseado o solicita otro enlace en unos minutos.",
+        "retry": "Solicitar otro enlace",
+        "backToLogin": "Volver a iniciar sesión",
+        "validation": {
+          "emailRequired": "Ingresa tu correo electrónico.",
+          "emailInvalid": "Ingresa un correo electrónico válido."
+        }
+      },
+      "reset": {
+        "meta": {
+          "title": "Restablecer contraseña | LASCE",
+          "description": "Elige una nueva contraseña para tu cuenta del portal."
+        },
+        "title": "Elegir una nueva contraseña",
+        "lead": "Escribe la nueva contraseña dos veces. Al guardarla se cerrarán todas las sesiones abiertas de tu cuenta.",
+        "labels": {
+          "password": "Nueva contraseña",
+          "passwordConfirmation": "Repetir contraseña"
+        },
+        "passwordHint": "Mínimo 8 caracteres.",
+        "submit": "Guardar contraseña",
+        "submitting": "Guardando...",
+        "invalidTitle": "El enlace no es válido",
+        "invalidBody": "El enlace venció, ya se usó o no es correcto. Solicita uno nuevo para restablecer tu contraseña.",
+        "requestNew": "Solicitar un enlace nuevo",
+        "validation": {
+          "passwordRequired": "Ingresa una contraseña.",
+          "passwordTooShort": "La contraseña debe tener al menos 8 caracteres.",
+          "passwordTooLong": "La contraseña no puede superar los 128 caracteres.",
+          "confirmationRequired": "Repite tu contraseña.",
+          "confirmationMismatch": "Las contraseñas no coinciden.",
+          "unexpected": "No pudimos guardar la contraseña. Inténtalo de nuevo en unos minutos."
+        }
+      },
+      "email": {
+        "subject": "Restablece tu contraseña del portal LASCE",
+        "greeting": "Hola, {name}:",
+        "intro": "Recibimos una solicitud para restablecer la contraseña de tu cuenta en el portal del Laboratorio de Astrofísica Solar y Clima Espacial.",
+        "action": "Elegir una nueva contraseña",
+        "linkFallback": "Si el botón no funciona, copia este enlace en tu navegador:",
+        "expiry": "El enlace vence en {minutes} minutos y solo puede usarse una vez.",
+        "ignore": "Si no solicitaste este cambio, ignora este mensaje: tu contraseña no cambiará.",
+        "signature": "Laboratorio de Astrofísica Solar y Clima Espacial, Universidad de Costa Rica"
       }
     }
   },

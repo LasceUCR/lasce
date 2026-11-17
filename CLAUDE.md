@@ -64,6 +64,8 @@ working through Claude Code.
 | Who built the portal, and where is that credited?    | [`docs/development-team.md`](docs/development-team.md)                     |
 | How does a visitor register an account?              | [`docs/registration.md`](docs/registration.md)                             |
 | How do users sign in, and how is a page protected?   | [`docs/sessions.md`](docs/sessions.md)                                     |
+| How does a user reset a forgotten password?          | [`docs/password-reset.md`](docs/password-reset.md)                         |
+| How is the SMTP server configured, and stored?       | [`docs/password-reset.md`](docs/password-reset.md)                         |
 | How do I get an account to sign in locally?          | [`docs/user-administration.md`](docs/user-administration.md)               |
 | How are role permissions configured?                 | [`docs/role-permissions.md`](docs/role-permissions.md)                     |
 | How do I gate a page or a control with a grant?      | [`docs/add-permissions.md`](docs/add-permissions.md)                       |
