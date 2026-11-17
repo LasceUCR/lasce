@@ -26,6 +26,7 @@ describe('permission catalogue', () => {
       'manage_permissions',
       'view_audit_log',
       'view_download_history',
+      'manage_email_settings',
     ])
   })
 

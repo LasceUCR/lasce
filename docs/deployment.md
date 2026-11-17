@@ -253,6 +253,20 @@ The `CRON_SECRET_*` values duplicate the `CRON_SECRET` set on each Coolify
 resource. **Rotating one without the other yields silent 401s**, and the
 schedule sync at the end of a deploy is where that shows first.
 
+`CRON_SECRET` also derives the key that encrypts the SMTP password stored in the
+database. **After rotating it, an administrator must re-enter the SMTP password**
+on `/administracion/correo`; until then password reset emails are not sent and
+the page says why ([password-reset.md](password-reset.md#how-the-password-is-stored)).
+
+### Email (SMTP)
+
+There are no SMTP environment variables. After the first deploy of an
+environment, an administrator configures the mail server on
+`/administracion/correo` and checks it with "Enviar correo de prueba". Until
+then the forgot-password page still answers normally but sends nothing. Reset
+links are built on `NEXT_PUBLIC_APP_URL` (the `APP_URL_*` variables), so that
+value must be the public origin visitors use.
+
 ## 7. Build-time configuration
 
 ### Uploaded images

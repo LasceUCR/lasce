@@ -63,6 +63,7 @@ model User {
   updatedAt    DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(3)
 
   sessions            Session[]
+  passwordResetTokens PasswordResetToken[]
   resourceDownloads   ResourceDownload[]
   nosotrosActivities  NosotrosActivity[]
   researchers         Researcher[]
@@ -90,6 +91,27 @@ model Session {
 
   @@index([userId])
   @@map("sessions")
+  @@schema("auth")
+}
+
+/// A single-use link to choose a new password (LASCE-CON-0012-448). The email holds
+/// a random token and only its SHA-256 is stored, like `Session`. A token works
+/// until `expires_at` (30 minutes after it was issued) and only while `used_at` is
+/// null. Issuing a new one deletes the account's unused tokens.
+model PasswordResetToken {
+  id        String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId    String    @map("user_id") @db.Uuid
+  /// base64url SHA-256 of the token in the emailed link. Never the token itself.
+  tokenHash String    @unique @map("token_hash")
+  expiresAt DateTime  @map("expires_at") @db.Timestamptz(3)
+  /// Set when the token changed the password. A used token never works again.
+  usedAt    DateTime? @map("used_at") @db.Timestamptz(3)
+  createdAt DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("password_reset_tokens")
   @@schema("auth")
 }
 
@@ -1371,5 +1393,31 @@ model RosacAcknowledgment {
   updatedAt DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(3)
 
   @@map("rosac_acknowledgments")
+  @@schema("public")
+}
+
+/// The SMTP server the portal sends email through (password reset links and the
+/// administrator's test message). One row at most, enforced by `singleton`, managed
+/// on `/administracion/correo`. The password is never stored in clear:
+/// `password_ciphertext` is AES-256-GCM output (`v1.<iv>.<tag>.<ciphertext>`, see
+/// apps/web/app/services/mail/crypto.ts) under a key derived from `CRON_SECRET`.
+/// Only the web app reads or writes it; the worker does not mirror it.
+model SmtpSettings {
+  id                 String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  /// Always true; its unique index and a CHECK keep the table to a single row.
+  singleton          Boolean  @unique @default(true)
+  host               String
+  port               Int
+  /// "tls" (implicit TLS, usually port 465), "starttls" (usually 587) or "none".
+  security           String
+  /// Null when the server accepts mail without authentication.
+  username           String?
+  passwordCiphertext String?  @map("password_ciphertext")
+  fromAddress        String   @map("from_address")
+  fromName           String   @map("from_name")
+  createdAt          DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt          DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  @@map("smtp_settings")
   @@schema("public")
 }

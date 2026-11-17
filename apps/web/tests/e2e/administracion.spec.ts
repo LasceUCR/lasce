@@ -207,6 +207,7 @@ test('shows an administrator every section', async ({ page, context }) => {
       'Usuarios',
       'Permisos',
       'Auditoría',
+      'Correo',
     ])
   } finally {
     await fixture.cleanup()

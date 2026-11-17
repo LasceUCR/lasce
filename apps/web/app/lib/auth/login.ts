@@ -2,7 +2,8 @@ import { z } from 'zod'
 
 import es from '@/messages/es.json' with { type: 'json' }
 
-import { PASSWORD_MAX_LENGTH, registroIntro } from './registration'
+import { PASSWORD_MAX_LENGTH } from './password-rules'
+import { registroIntro } from './registration'
 
 /**
  * The login rules, in one place: field names, validation, user-facing messages

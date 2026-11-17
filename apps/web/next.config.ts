@@ -157,6 +157,17 @@ const nextConfig: NextConfig = {
     '/datos': ['./app/services/downloads/fonts/*.ttf'],
   },
 
+  // The password reset page's URL carries a working token (`docs/password-reset.md`). No request
+  // it makes, and no link followed from it, may send that URL on as a Referer.
+  async headers() {
+    return [
+      {
+        source: '/restablecer-contrasena',
+        headers: [{ key: 'Referrer-Policy', value: 'no-referrer' }],
+      },
+    ]
+  },
+
   // Sign-in and sign-up share one page. `/registro` shipped briefly as its own
   // route and the header linked to `/login` before it existed, so both keep
   // working; the query string (`next`, `reason`) travels along.

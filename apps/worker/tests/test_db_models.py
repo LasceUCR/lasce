@@ -26,6 +26,7 @@ from app.db import (
     NewsCrossAuthor,
     NewsSource,
     NewsTranslation,
+    PasswordResetToken,
     Publisher,
     Research,
     ResearchArea,
@@ -300,6 +301,31 @@ def test_session_matches_the_prisma_columns() -> None:
 
 def test_session_belongs_to_a_user_and_dies_with_it() -> None:
     (user_fk,) = UserSession.__table__.columns["user_id"].foreign_keys
+
+    assert user_fk.target_fullname == "auth.users.id"
+    assert user_fk.ondelete == "CASCADE"
+
+
+def test_password_reset_token_matches_the_prisma_columns() -> None:
+    table = PasswordResetToken.__table__
+    columns = table.columns
+
+    assert table.schema == "auth"
+    assert set(columns.keys()) == {
+        "id",
+        "user_id",
+        "token_hash",
+        "expires_at",
+        "used_at",
+        "created_at",
+    }
+    assert columns["token_hash"].unique
+    assert columns["used_at"].nullable
+    assert not columns["expires_at"].nullable
+
+
+def test_password_reset_token_belongs_to_a_user_and_dies_with_it() -> None:
+    (user_fk,) = PasswordResetToken.__table__.columns["user_id"].foreign_keys
 
     assert user_fk.target_fullname == "auth.users.id"
     assert user_fk.ondelete == "CASCADE"

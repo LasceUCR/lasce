@@ -9,15 +9,18 @@ Laboratory **resources** are a separate concern: downloading them (`download_res
 
 ## Defaults
 
-| Role          | Permissions                                                                                                                                                                                   |
-| ------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Visitante     | `download_resources`                                                                                                                                                                          |
-| Asistente     | `edit_components`, `download_resources`                                                                                                                                                       |
-| Administrador | `create_components`, `edit_components`, `delete_components`, `download_resources`, `download_goes_resources`, `manage_users`, `manage_permissions`, `view_audit_log`, `view_download_history` |
+| Role          | Permissions                                                                                                                                                                                                            |
+| ------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Visitante     | `download_resources`                                                                                                                                                                                                   |
+| Asistente     | `edit_components`, `download_resources`                                                                                                                                                                                |
+| Administrador | `create_components`, `edit_components`, `delete_components`, `download_resources`, `download_goes_resources`, `manage_users`, `manage_permissions`, `view_audit_log`, `view_download_history`, `manage_email_settings` |
 
 `view_audit_log` opens the Auditoría section (`/administracion/auditoria`, see
 [audit-log.md](audit-log.md)). Only administrators hold it by default; an assistant gets it
 from the matrix.
+
+`manage_email_settings` opens the Correo section (`/administracion/correo`), where the SMTP
+server that sends the portal's email is configured ([password-reset.md](password-reset.md)).
 
 `view_download_history` opens the Descargas section (`/administracion/descargas`, see
 [downloads.md](downloads.md#the-history-page)). It is separate from `download_resources` on
@@ -50,6 +53,7 @@ configurable without letting an administrator lock themselves out.
 | Nosotros activities                           | `/nosotros` (`create_components`, `edit_components`, `delete_components`)                 |
 | Scientific tools                              | `/herramientas-cientificas` (`create_components`, `edit_components`, `delete_components`) |
 | Download history                              | `/administracion/descargas` (`view_download_history`)                                     |
+| SMTP settings                                 | `/administracion/correo` (`manage_email_settings`)                                        |
 | `/datos` chart and data downloads             | `app/lib/downloads/policy.ts`, see [downloads.md](downloads.md)                           |
 | Table                                         | `auth.role_permissions`, see [database-definition.md](database-definition.md)             |
 
