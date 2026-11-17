@@ -38,6 +38,8 @@ describe('solar astrophysics content', () => {
     expect(english.overview.items.map((item) => item.id)).toEqual(
       solarAstrophysicsContent.overview.items.map((item) => item.id),
     )
-    expect(english.backLink.href).toBe(solarAstrophysicsContent.backLink.href)
+    expect(english.nextSteps.links.map(({ id, href }) => ({ id, href }))).toEqual(
+      solarAstrophysicsContent.nextSteps.links.map(({ id, href }) => ({ id, href })),
+    )
   })
 })

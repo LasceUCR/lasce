@@ -37,7 +37,8 @@ logos remain readable; editors no longer enter a logo URL. Blank values clear th
 
 Uploaded images use UUID filenames under `assets/initiatives/` in `MINIO_BUCKET` and are served
 through `/api/initiatives/logos/[filename]`. The handler bounds the request size and validates the
-image's MIME type and signature. The storage helper constructs its client lazily and never changes
+image's MIME type and signature. The upload reading and storage are the shared `readImageUpload()` and `createImageStore()` (see
+[`add-a-cms-feature.md`](add-a-cms-feature.md#uploading-an-image)). The storage helper constructs its client lazily and never changes
 the shared bucket's access policy or accesses worker objects. Serving through the application also
 works when MinIO is reachable only on an internal Docker hostname. No new migration is needed:
 `logo_url` stores the application's image path. MinIO must be running and configured for uploads.

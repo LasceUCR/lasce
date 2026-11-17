@@ -60,7 +60,10 @@ describe('ContactPage', () => {
     renderPage(<ContactPage {...defaultArgs} />)
 
     expect(screen.getByRole('link', { name: '@lasce_ucr' })).toHaveAttribute('target', '_blank')
-    expect(screen.getByRole('link', { name: '@lasce_ucr' })).toHaveAttribute('rel', 'noreferrer')
+    expect(screen.getByRole('link', { name: '@lasce_ucr' })).toHaveAttribute(
+      'rel',
+      'noopener noreferrer',
+    )
   })
 
   test('omits channels that are blank or still a placeholder', () => {

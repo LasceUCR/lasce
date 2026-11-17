@@ -29,6 +29,8 @@ export const SignedOutHeader: Story = {
     variant: 'header',
     account: null,
     role: null,
+    canAccessAdmin: false,
+    canEdit: false,
     pathname: '/',
     isSigningOut: false,
     onSignOut: () => {},
@@ -73,5 +75,7 @@ export const SignedInMobileAdmin: Story = {
   args: {
     ...SignedInMobile.args,
     role: 'ADMIN',
+    canAccessAdmin: true,
+    canEdit: true,
   },
 }

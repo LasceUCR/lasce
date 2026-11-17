@@ -1,28 +1,28 @@
 import type { Metadata } from 'next'
+import { getLocale, getTranslations } from 'next-intl/server'
 
-import { AccountSummary } from '@/app/components/public/auth/AccountSummary'
+import { AccountSummary, type AccountProfile } from '@/app/components/public/auth/AccountSummary'
 import { SpaceBackdrop } from '@/app/components/public/auth/SpaceBackdrop'
 import { TopicBackLink } from '@/app/components/public/topic/TopicBackLink'
-import { ROLE_LABELS, cuentaBackLink, cuentaIntro, cuentaMeta } from '@/app/lib/auth/account'
 import { countryName } from '@/app/lib/auth/countries'
 import { requireUser } from '@/app/lib/auth/session'
+import { timeZone } from '@/app/lib/i18n/config'
 
 import { logoutUser } from './actions'
 
-export const metadata: Metadata = {
-  title: cuentaMeta.title,
-  description: cuentaMeta.description,
-  // Personal to whoever is signed in: never a search result.
-  robots: { index: false, follow: false },
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getTranslations('account.meta')
+
+  return {
+    title: t('title'),
+    description: t('description'),
+    // Personal to whoever is signed in: never a search result.
+    robots: { index: false, follow: false },
+  }
 }
 
 /** Reads the session cookie, so it renders at request time and never at build. */
 export const dynamic = 'force-dynamic'
-
-const memberSince = new Intl.DateTimeFormat('es-CR', {
-  dateStyle: 'long',
-  timeZone: 'America/Costa_Rica',
-})
 
 /**
  * The first protected page (LASCE-SEC-008-072): a visitor without a live
@@ -30,14 +30,24 @@ const memberSince = new Intl.DateTimeFormat('es-CR', {
  * pages the same way, with `requireUser` (and, for roles, #73's helpers).
  */
 export default async function CuentaPage() {
-  const user = await requireUser('/cuenta')
+  const [user, locale, tAccount, tCommon] = await Promise.all([
+    requireUser('/cuenta'),
+    getLocale(),
+    getTranslations('account'),
+    getTranslations('common'),
+  ])
 
-  const profile = {
+  const memberSince = new Intl.DateTimeFormat(locale, {
+    dateStyle: 'long',
+    timeZone,
+  })
+
+  const profile: AccountProfile = {
     fullName: user.fullName,
     email: user.email,
     institution: user.institution,
-    countryName: countryName(user.countryCode),
-    roleLabel: user.role ? ROLE_LABELS[user.role] : 'Sin rol asignado',
+    countryName: countryName(user.countryCode, locale),
+    roleLabel: user.role ? tAccount(`roles.${user.role}`) : tAccount('noRole'),
     memberSince: memberSince.format(user.createdAt),
   }
 
@@ -46,8 +56,8 @@ export default async function CuentaPage() {
       <SpaceBackdrop />
 
       <header className="page-intro page-width">
-        <h1>{cuentaIntro.title}</h1>
-        <p>{cuentaIntro.lead}</p>
+        <h1>{tAccount('page.title')}</h1>
+        <p>{tAccount('page.lead')}</p>
       </header>
 
       <section className="registration-layout page-width">
@@ -55,7 +65,7 @@ export default async function CuentaPage() {
       </section>
 
       <div className="topic-page-footer page-width">
-        <TopicBackLink href={cuentaBackLink.href} label={cuentaBackLink.label} />
+        <TopicBackLink href="/" label={tCommon('backToHome')} />
       </div>
     </article>
   )

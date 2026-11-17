@@ -7,6 +7,11 @@ import {
   MAX_ASSET_BYTES,
   MinioAssetStorage,
 } from '@/app/services/storage'
+import {
+  ROSAC_IMAGE_ALLOWED_CONTENT_TYPES,
+  ROSAC_IMAGE_MAX_BYTES,
+  ROSAC_IMAGE_UPLOAD_VALIDATION,
+} from '@/app/lib/rosac-upload'
 
 const bucketExists = vi.fn()
 const makeBucket = vi.fn()
@@ -90,9 +95,54 @@ describe('MinioAssetStorage', () => {
 
       expect(() => storage.verifyAsset(file)).toThrow(InvalidFileSizeError)
     })
+
+    test('accepts only the five ROSAC image formats up to the size limit', () => {
+      const storage = new MinioAssetStorage()
+
+      for (const [index, type] of ROSAC_IMAGE_ALLOWED_CONTENT_TYPES.entries()) {
+        expect(() =>
+          storage.verifyAsset(
+            fileOf(`image-${index}`, type, ROSAC_IMAGE_MAX_BYTES),
+            ROSAC_IMAGE_UPLOAD_VALIDATION,
+          ),
+        ).not.toThrow()
+      }
+
+      expect(() =>
+        storage.verifyAsset(fileOf('image.gif', 'image/gif', 1), ROSAC_IMAGE_UPLOAD_VALIDATION),
+      ).toThrow(InvalidFileTypeError)
+      expect(() =>
+        storage.verifyAsset(
+          fileOf('image.svg', 'image/svg+xml', ROSAC_IMAGE_MAX_BYTES + 1),
+          ROSAC_IMAGE_UPLOAD_VALIDATION,
+        ),
+      ).toThrow(InvalidFileSizeError)
+    })
   })
 
   describe('createUpload', () => {
+    test('rejects invalid ROSAC images before touching storage', async () => {
+      const storage = new MinioAssetStorage()
+
+      await expect(
+        storage.createUpload(
+          fileOf('image.gif', 'image/gif'),
+          undefined,
+          ROSAC_IMAGE_UPLOAD_VALIDATION,
+        ),
+      ).rejects.toBeInstanceOf(InvalidFileTypeError)
+      await expect(
+        storage.createUpload(
+          fileOf('image.avif', 'image/avif', ROSAC_IMAGE_MAX_BYTES + 1),
+          undefined,
+          ROSAC_IMAGE_UPLOAD_VALIDATION,
+        ),
+      ).rejects.toBeInstanceOf(InvalidFileSizeError)
+
+      expect(bucketExists).not.toHaveBeenCalled()
+      expect(putObject).not.toHaveBeenCalled()
+    })
+
     test('returns a timestamped key and calls putObject with the expected args', async () => {
       vi.useFakeTimers({ shouldAdvanceTime: true })
       vi.setSystemTime(new Date('2026-01-01T00:00:00.000Z'))

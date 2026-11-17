@@ -68,7 +68,7 @@ export const MissingFields: Story = {
         password: registrationMessages.passwordRequired,
         passwordConfirmation: registrationMessages.confirmationRequired,
       },
-      formError: registrationMessages.reviewFields,
+      formError: null,
     },
   },
 }
@@ -84,7 +84,7 @@ export const InvalidFormat: Story = {
         password: registrationMessages.passwordTooShort,
         passwordConfirmation: registrationMessages.confirmationMismatch,
       },
-      formError: registrationMessages.reviewFields,
+      formError: null,
     },
   },
 }
@@ -96,7 +96,7 @@ export const DuplicateEmail: Story = {
       status: 'error',
       values: typedValues,
       fieldErrors: { email: registrationMessages.emailTaken },
-      formError: registrationMessages.reviewFields,
+      formError: null,
     },
   },
 }

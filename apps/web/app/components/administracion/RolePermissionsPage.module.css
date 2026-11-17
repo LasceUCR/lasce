@@ -85,6 +85,19 @@
   border-top: 1px solid #dce5ed;
 }
 
+/* While there are unsaved changes the bar follows the viewport, so the notice and the actions
+   stay reachable from any row of a long table. It sits over the table's own bottom edge. */
+.footerSticky {
+  position: sticky;
+  bottom: 0;
+  z-index: 5;
+  margin: 0 -18px -18px;
+  padding: 14px 18px;
+  border-radius: 0 0 10px 10px;
+  background: #ffffff;
+  box-shadow: 0 -6px 16px rgba(16, 42, 61, 0.1);
+}
+
 .pending {
   display: flex;
   align-items: flex-start;
@@ -113,4 +126,20 @@
   flex-wrap: wrap;
   gap: 12px;
   margin-left: auto;
+}
+
+/* Disabled buttons: a flat grey that cannot be mistaken for an available action. The colours are
+   solid rather than a lowered opacity so the label keeps at least 4.5:1 contrast. */
+.actions button:disabled {
+  border-color: #c6d1da;
+  background: #e8eef3;
+  color: #4a5f70;
+  cursor: not-allowed;
+  opacity: 1;
+}
+
+.actions button:disabled:hover {
+  border-color: #c6d1da;
+  background: #e8eef3;
+  color: #4a5f70;
 }

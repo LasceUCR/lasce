@@ -109,6 +109,48 @@ describe('nosotrosResearcherCreateSchema', () => {
     ])
   })
 
+  test('accepts a site path or a file on the configured upload host, and nothing else', () => {
+    const previousEndpoint = process.env.MINIO_ENDPOINT
+    const previousSsl = process.env.MINIO_USE_SSL
+    process.env.MINIO_ENDPOINT = 'files.example:9000'
+    process.env.MINIO_USE_SSL = 'false'
+
+    const parse = (src: string) =>
+      nosotrosResearcherCreateSchema.safeParse({ ...shared, src, content })
+
+    try {
+      expect(parse('/images/Researchers/Someone.jpg').success).toBe(true)
+      expect(parse('').success).toBe(true)
+      expect(parse('http://files.example:9000/lasce-files/a.png').success).toBe(true)
+      expect(parse('//files.example/a.png').success).toBe(false)
+      expect(parse('images/a.png').success).toBe(false)
+      expect(parse('javascript:alert(1)').success).toBe(false)
+      expect(parse('https://evil.example/a.png').success).toBe(false)
+      expect(parse('http://user:pass@files.example:9000/a.png').success).toBe(false)
+      expect(issuesOf(parse('javascript:alert(1)')).map((issue) => issue.message)).toContain(
+        'La foto debe ser una ruta del sitio o una imagen ya subida.',
+      )
+
+      process.env.MINIO_ENDPOINT = 'https://files.example'
+      expect(parse('https://files.example/lasce-files/a.png').success).toBe(true)
+      expect(parse('http://files.example/lasce-files/a.png').success).toBe(false)
+
+      const english = getNosotrosResearcherCreateSchema('en').safeParse({
+        ...shared,
+        src: 'https://evil.example/a.png',
+        content,
+      })
+      expect(issuesOf(english).map((issue) => issue.message)).toContain(
+        'The photo must be a site path or an already uploaded image.',
+      )
+    } finally {
+      if (previousEndpoint === undefined) delete process.env.MINIO_ENDPOINT
+      else process.env.MINIO_ENDPOINT = previousEndpoint
+      if (previousSsl === undefined) delete process.env.MINIO_USE_SSL
+      else process.env.MINIO_USE_SSL = previousSsl
+    }
+  })
+
   test('accepts a researcher with no photo, which is optional', () => {
     const { src: _src, ...withoutPhoto } = shared
 

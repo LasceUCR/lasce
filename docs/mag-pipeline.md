@@ -135,7 +135,9 @@ flags.
 
 `magReadingsDataSource.ts` queries `mag_field` through InfluxDB's SQL API, synchronously, with
 the same helper as EXIS (`goesReadingsDataSource.ts`): only `valid = true`, only the satellite
-that observed last, at most 360 points sampled inside the query for the chart, every reading for
+that observed last, at most 360 points reduced inside the query for the chart (the lowest and the
+highest reading of each stretch, see
+[`public-scientific-data.md`](public-scientific-data.md#sampling-and-summary)), every reading for
 the CSV export. A day never ingested is an empty series. See
 [`public-scientific-data.md`](public-scientific-data.md) and [`downloads.md`](downloads.md).
 

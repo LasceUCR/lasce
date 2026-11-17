@@ -2,7 +2,7 @@
 
 import { Building2 } from 'lucide-react'
 import Image from 'next/image'
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { useTranslations } from 'next-intl'
 
 import { Modal } from '@/app/components/public/Modal'
@@ -13,6 +13,7 @@ import type { RosacAcknowledgment } from '@/app/lib/rosac'
 
 import {
   RosacAcknowledgmentForm,
+  type RosacAcknowledgmentFormHandle,
   type RosacAcknowledgmentFormValues,
 } from './RosacAcknowledgmentForm'
 
@@ -35,6 +36,7 @@ export function EditableAcknowledgmentCard({
   const { editMode } = useEditMode()
   const toast = useToast()
   const [isEditing, setIsEditing] = useState(false)
+  const form = useRef<RosacAcknowledgmentFormHandle>(null)
   const [imageFailed, setImageFailed] = useState(false)
 
   const logoContent = (
@@ -105,7 +107,10 @@ export function EditableAcknowledgmentCard({
 
   const editModal = (
     <Modal
-      onClose={() => setIsEditing(false)}
+      onClose={() => {
+        if (form.current) form.current.requestCancel()
+        else setIsEditing(false)
+      }}
       open={isEditing}
       size="medium"
       title={t('acknowledgments.editModalTitle')}
@@ -114,6 +119,7 @@ export function EditableAcknowledgmentCard({
         institution={institution}
         onCancel={() => setIsEditing(false)}
         onSave={handleFormSave}
+        ref={form}
       />
     </Modal>
   )

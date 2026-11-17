@@ -27,6 +27,8 @@ export const Visitor: Story = {
   args: {
     account: 'Prueba',
     role: 'VISITOR',
+    canAccessAdmin: false,
+    canEdit: false,
     pathname: '/',
     isSigningOut: false,
     onSignOut: () => {},
@@ -38,7 +40,7 @@ export const Open: Story = {
 }
 
 export const Administrator: Story = {
-  args: { ...Visitor.args, role: 'ADMIN', defaultOpen: true },
+  args: { ...Visitor.args, role: 'ADMIN', canAccessAdmin: true, canEdit: true, defaultOpen: true },
 }
 
 export const SigningOut: Story = {

@@ -5,7 +5,6 @@ import { useTranslations } from 'next-intl'
 import type { UserRole } from '@lasce/db'
 
 import { isActivePath } from '@/app/components/public/NavGroup'
-import { canEditContent, canSeeAdminNavigation } from '@/app/lib/auth/account'
 import { ACCESS_PATH } from '@/app/lib/auth/login'
 
 import { AccountMenu } from './AccountMenu'
@@ -17,7 +16,12 @@ export interface AccountLinksProps {
   variant: 'header' | 'mobile'
   /** Display name of the signed-in account, or `null` when signed out. */
   account: string | null
+  /** Role confirmed by the server, for the label; never used to decide what to show. */
   role: UserRole | null
+  /** Offer "Administración". Server-computed by `useAccount` (`GET /api/session`). */
+  canAccessAdmin: boolean
+  /** Offer the "Modo edición" switch. Server-computed the same way. */
+  canEdit: boolean
   pathname: string
   isSigningOut: boolean
   onSignOut: () => void
@@ -40,6 +44,8 @@ export function AccountLinks({
   variant,
   account,
   role,
+  canAccessAdmin,
+  canEdit,
   pathname,
   isSigningOut,
   onSignOut,
@@ -75,6 +81,8 @@ export function AccountLinks({
     return (
       <AccountMenu
         account={account}
+        canAccessAdmin={canAccessAdmin}
+        canEdit={canEdit}
         isSigningOut={isSigningOut}
         onSignOut={onSignOut}
         pathname={pathname}
@@ -87,7 +95,7 @@ export function AccountLinks({
 
   return (
     <>
-      {canSeeAdminNavigation(role) ? (
+      {canAccessAdmin ? (
         <Link
           aria-current={isAdminActive ? 'page' : undefined}
           className={isAdminActive ? 'active' : undefined}
@@ -103,9 +111,7 @@ export function AccountLinks({
           <span>{t('myAccount')}</span>
         </span>
       </Link>
-      {canEditContent(role) ? (
-        <EditModeSwitch className="mobile-edit-mode" id="mobile-edit-mode" />
-      ) : null}
+      {canEdit ? <EditModeSwitch className="mobile-edit-mode" id="mobile-edit-mode" /> : null}
       <SignOutButton
         icon={<LogOut aria-hidden="true" size={18} strokeWidth={1.8} />}
         isSigningOut={isSigningOut}

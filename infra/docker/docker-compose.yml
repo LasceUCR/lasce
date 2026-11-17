@@ -4,8 +4,9 @@
 #   (or simply: pnpm services:up)
 #
 # By default this starts only the datastores — PostgreSQL, Redis, InfluxDB and
-# MinIO — because the usual loop is to run `pnpm dev` and `pnpm worker:dev` on the
-# host against them. Add `--profile apps` to run the application containers too.
+# MinIO — plus Mailpit, a local SMTP sink, because the usual loop is to run
+# `pnpm dev` and `pnpm worker:dev` on the host against them. Add `--profile apps`
+# to run the application containers too.
 
 name: lasce
 
@@ -97,6 +98,17 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+
+  # Catches every email the portal sends locally (password reset links, the admin
+  # test email); nothing leaves the machine. Save it on /administracion/correo as
+  # host localhost, port 1025, security "none", no username. Read the mail at
+  # http://localhost:8025. password-reset.spec.ts uses its API on the same port.
+  mailpit:
+    image: axllent/mailpit:v1.21.0
+    restart: unless-stopped
+    ports:
+      - "1025:1025"   # SMTP
+      - "8025:8025"   # web UI and API
 
   # --- application containers (opt in with `--profile apps`) -------------------
 

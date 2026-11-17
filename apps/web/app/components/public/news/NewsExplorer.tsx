@@ -221,10 +221,6 @@ export function NewsExplorer({
 
   return (
     <section aria-labelledby="news-title" className="news page-width">
-      <h2 id="news-title" ref={heading} tabIndex={-1}>
-        {t('page.recent')}
-      </h2>
-
       <SearchBar
         label={t('page.searchLabel')}
         onQueryChange={setInput}
@@ -235,6 +231,10 @@ export function NewsExplorer({
         placeholder={t('page.searchPlaceholder')}
         query={input}
       />
+
+      <h2 id="news-title" ref={heading} tabIndex={-1}>
+        {t('page.recent')}
+      </h2>
 
       <p aria-live="polite" className={summary === '' ? 'sr-only' : 'news-summary'}>
         {summary}

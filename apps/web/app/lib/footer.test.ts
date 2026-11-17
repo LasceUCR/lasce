@@ -15,7 +15,11 @@ describe('footer content', () => {
 
     expect(content.institutionsLabel).toBe('Institutions')
     expect(content.navigationLabel).toBe('Footer links')
-    expect(content.links.map((link) => link.label)).toEqual(['Contact', 'Instagram'])
+    expect(content.links.map((link) => link.label)).toEqual([
+      'Contact',
+      'Development team',
+      'Instagram',
+    ])
     expect(content.copyright.notice).toBe('All rights reserved.')
   })
 

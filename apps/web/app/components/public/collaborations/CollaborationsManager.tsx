@@ -40,6 +40,29 @@ export function CollaborationsManager({
   const createForm = useRef<CollaborationFormHandle>(null)
   const editForm = useRef<CollaborationFormHandle>(null)
 
+  async function uploadLogo(file: File, mode: 'create' | 'edit'): Promise<string | null> {
+    const data = new FormData()
+    data.set('file', file)
+    let logoUrl: string | null = null
+    await send(
+      `/api/collaborations/logos?mode=${mode}`,
+      { method: 'POST', body: data },
+      {
+        success: t('upload.uploaded'),
+        fallback: t('upload.failed'),
+        describeFailure: async (response) => {
+          if (response.status === 401 || response.status === 403) return t('feedback.forbidden')
+          return null
+        },
+        onSuccess: async (response) => {
+          const result = (await response.json()) as { logoUrl: string }
+          logoUrl = result.logoUrl
+        },
+      },
+    )
+    return logoUrl
+  }
+
   async function mutate(
     method: 'POST' | 'PATCH' | 'DELETE',
     id?: string,
@@ -108,6 +131,7 @@ export function CollaborationsManager({
                   ref={createForm}
                   busy={busy}
                   onCancel={close}
+                  onUploadLogo={(file) => uploadLogo(file, 'create')}
                   onSave={(body) => void mutate('POST', undefined, body, close)}
                 />
               )}
@@ -146,6 +170,7 @@ export function CollaborationsManager({
             collaboration={editing}
             busy={busy}
             onCancel={() => setEditing(null)}
+            onUploadLogo={(file) => uploadLogo(file, 'edit')}
             onSave={(body) => void mutate('PATCH', editing.id, body, () => setEditing(null))}
           />
         </Modal>

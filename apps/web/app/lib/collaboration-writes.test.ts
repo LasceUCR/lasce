@@ -59,6 +59,7 @@ describe('collaboration writes', () => {
         scope: 'INTERNATIONAL',
         acronym: null,
         websiteUrl: null,
+        logoPath: null,
         position: 6,
         country: 'Italia',
         translations: { create: [{ locale: 'en', country: 'Italy' }] },

@@ -7,6 +7,7 @@ import { ToastProvider } from '@/app/components/public/toast/ToastProvider'
 import { renderWithIntl } from '@/app/lib/i18n/testing'
 import { getNosotrosContent, getNosotrosResearcherFixtures } from '@/app/lib/nosotros'
 import en from '@/messages/en.json' with { type: 'json' }
+import es from '@/messages/es.json' with { type: 'json' }
 
 // `NosotrosPage.stories` pulls in `nosotrosContent` from `@/app/lib/nosotros`,
 // which imports `prisma` at module scope — this stubs it out so loading that
@@ -457,7 +458,10 @@ describe('NosotrosPage', () => {
     expect(within(dialog).getByRole('textbox', { name: /^Título \(Español\)/ })).toHaveValue(
       firstActivity?.title,
     )
-    expect(within(dialog).getByRole('combobox', { name: 'Ícono' })).toHaveValue(firstActivity?.icon)
+    const icons = es.nosotros.activities.form.icons as Record<string, string>
+    expect(within(dialog).getByRole('combobox', { name: 'Ícono' })).toHaveTextContent(
+      icons[firstActivity?.icon ?? ''] ?? '',
+    )
   })
 
   test('asks for confirmation before deleting an activity card', async () => {
@@ -766,6 +770,22 @@ describe('NosotrosPage', () => {
 
     expect(screen.queryByRole('dialog', { name: 'Añadir' })).not.toBeInTheDocument()
     expect(screen.queryByText('No tiene permisos.')).not.toBeInTheDocument()
+  })
+
+  test('asks before Escape discards an activity edit', async () => {
+    const user = userEvent.setup()
+    renderPageInEditMode()
+    const [firstActivity] = defaultArgs.content.activities.items
+
+    await user.click(screen.getByRole('button', { name: `Editar ${firstActivity?.title}` }))
+    const editDialog = screen.getByRole('dialog', { name: `Editar "${firstActivity?.title}"` })
+    await user.type(within(editDialog).getByRole('textbox', { name: /^Título \(Español\)/ }), ' x')
+    await user.keyboard('{Escape}')
+
+    expect(
+      screen.getByRole('dialog', { name: 'Descartar cambios no guardados' }),
+    ).toBeInTheDocument()
+    expect(editDialog).toBeInTheDocument()
   })
 
   test('DELETEs the activity, refreshes the page and confirms it was deleted', async () => {

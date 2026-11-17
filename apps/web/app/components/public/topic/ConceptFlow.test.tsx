@@ -30,4 +30,19 @@ describe('ConceptFlow', () => {
       expect(arrow).toHaveAttribute('aria-hidden', 'true')
     })
   })
+
+  test('renders only the linked steps as links', () => {
+    render(<ConceptFlow {...defaultArgs} stepLinks={[null, null, '/clima-espacial', '/datos']} />)
+
+    expect(screen.getByRole('link', { name: defaultArgs.steps[2] })).toHaveAttribute(
+      'href',
+      '/clima-espacial',
+    )
+    expect(screen.getByRole('link', { name: defaultArgs.steps[3] })).toHaveAttribute(
+      'href',
+      '/datos',
+    )
+    expect(screen.queryByRole('link', { name: defaultArgs.steps[0] })).not.toBeInTheDocument()
+    expect(screen.queryByRole('link', { name: defaultArgs.steps[1] })).not.toBeInTheDocument()
+  })
 })

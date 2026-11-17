@@ -26,7 +26,6 @@ function withEditMode(editMode: boolean): NonNullable<Story['decorators']> {
 
 const common = {
   title: 'Índices geomagnéticos de Costa Rica',
-  demoNotice: 'Datos de demostración',
 }
 
 /** What a visitor sees. */

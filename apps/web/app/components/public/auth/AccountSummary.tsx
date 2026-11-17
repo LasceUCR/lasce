@@ -1,4 +1,6 @@
-import { accountSummaryCopy } from '@/app/lib/auth/account'
+'use client'
+
+import { useTranslations } from 'next-intl'
 
 import { SignOutButton } from './SignOutButton'
 
@@ -21,17 +23,19 @@ export interface AccountSummaryProps {
 /**
  * The "Mi cuenta" card: the signed-in user's profile as a definition list and
  * the sign-out button, which asks for confirmation before submitting the
- * form. Presentational and server-safe: the page resolves the country name,
- * the role label and the date before rendering it.
+ * form. Presentational: reads its row labels from the `account.profile`
+ * catalogue namespace so they follow the site language.
  */
 export function AccountSummary({ profile, logoutAction }: AccountSummaryProps) {
+  const t = useTranslations('account.profile')
+
   const rows: Array<[string, string]> = [
-    [accountSummaryCopy.fullName, profile.fullName],
-    [accountSummaryCopy.email, profile.email],
-    [accountSummaryCopy.institution, profile.institution],
-    [accountSummaryCopy.country, profile.countryName],
-    [accountSummaryCopy.role, profile.roleLabel],
-    [accountSummaryCopy.memberSince, profile.memberSince],
+    [t('fullName'), profile.fullName],
+    [t('email'), profile.email],
+    [t('institution'), profile.institution],
+    [t('country'), profile.countryName],
+    [t('role'), profile.roleLabel],
+    [t('memberSince'), profile.memberSince],
   ]
 
   return (

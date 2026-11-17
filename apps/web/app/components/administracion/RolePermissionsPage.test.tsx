@@ -91,6 +91,31 @@ describe('RolePermissionsPage', () => {
     expect(screen.getByRole('columnheader', { name: 'Visitante' })).toBeInTheDocument()
   })
 
+  test('disables Guardar cambios and Descartar while nothing has changed', () => {
+    render(<RolePermissionsPage {...defaultArgs} pendingChanges={0} canSave={false} />)
+
+    expect(screen.getByRole('button', { name: 'Guardar cambios' })).toBeDisabled()
+    expect(screen.getByRole('button', { name: 'Descartar' })).toBeDisabled()
+    expect(screen.queryByText('Tienes cambios pendientes de guardar en los permisos.')).toBeNull()
+  })
+
+  test('enables both buttons and shows the unsaved-changes notice once something changed', () => {
+    render(<RolePermissionsPage {...defaultArgs} {...PendingChanges.args} />)
+
+    expect(screen.getByRole('button', { name: 'Guardar cambios' })).toBeEnabled()
+    expect(screen.getByRole('button', { name: 'Descartar' })).toBeEnabled()
+    expect(screen.getByRole('status')).toHaveTextContent('2 cambios sin guardar')
+  })
+
+  test('keeps the three component permissions and describes them without "cuando esa función esté disponible"', () => {
+    render(<RolePermissionsPage {...defaultArgs} />)
+
+    for (const label of ['Crear componentes', 'Editar componentes', 'Eliminar componentes']) {
+      expect(screen.getByRole('row', { name: new RegExp(`^${label}`) })).toBeInTheDocument()
+    }
+    expect(screen.queryByText(/cuando esa función esté disponible/)).toBeNull()
+  })
+
   test('counts a single pending change in the singular', () => {
     render(<RolePermissionsPage {...defaultArgs} pendingChanges={1} />)
 

@@ -151,11 +151,51 @@ test('keeps what was typed and the stored text when the input is invalid', async
 
     await page.reload()
     await expect(
-      card(page).getByRole('heading', { name: '¿Por qué estudiarlo desde Costa Rica?' }),
+      card(page).getByRole('heading', { name: '4. ¿Por qué estudiarlo desde Costa Rica?' }),
     ).toBeVisible()
   } finally {
     await account.cleanup()
   }
+})
+
+test('warns when the title or the text reaches its character limit, instead of silently blocking input', async ({
+  page,
+  context,
+}) => {
+  const account = await createSignedInUser(context, 'ADMIN')
+  try {
+    await openEditMode(page)
+    await page.getByRole('button', { name: EDIT_LABEL }).click()
+
+    const dialog = page.getByRole('dialog', { name: DIALOG_TITLE })
+    const title = dialog.getByRole('textbox', { name: /^Título \(Español\)/ })
+    await title.fill('a'.repeat(160))
+    await expect(dialog.getByText('Quedan 0 de 160 caracteres.')).toBeVisible()
+
+    await title.pressSequentially('b')
+    await expect(title).toHaveValue('a'.repeat(160))
+    await expect(
+      dialog.getByText('El título en español no puede superar 160 caracteres.'),
+    ).toBeVisible()
+
+    await title.press('Backspace')
+    await expect(
+      dialog.getByText('El título en español no puede superar 160 caracteres.'),
+    ).not.toBeVisible()
+
+    await dialog.getByRole('button', { name: 'Cancelar' }).click()
+    const discardDialog = page.getByRole('dialog', { name: 'Descartar cambios no guardados' })
+    await discardDialog.getByRole('button', { name: 'Descartar' }).click()
+  } finally {
+    await account.cleanup()
+  }
+})
+
+test('exposes a canonical link for the space weather page', async ({ page }) => {
+  await page.goto('/clima-espacial')
+
+  await expect(page.locator('link[rel="canonical"]')).toHaveAttribute('href', /\/clima-espacial$/)
+  await expect(page).toHaveTitle('Clima espacial | LASCE')
 })
 
 test('refuses a save over a newer version and leaves the stored text unchanged', async ({

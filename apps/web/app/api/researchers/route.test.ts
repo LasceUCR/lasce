@@ -1,10 +1,11 @@
-import { afterEach, describe, expect, test, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest'
 import type * as RosacLib from '@/app/lib/rosac'
 
 const mocks = vi.hoisted(() => ({
   getResearchers: vi.fn(),
   createResearcher: vi.fn(),
   requireApiPermission: vi.fn(),
+  getLocale: vi.fn(),
 }))
 
 // `@/app/lib/rosac` imports `prisma` at module scope, which throws if
@@ -12,6 +13,8 @@ const mocks = vi.hoisted(() => ({
 // below (via `importOriginal`) so `researcherInputSchema` stays real, but
 // with `prisma` stubbed out first so importing it never touches a client.
 vi.mock('@lasce/db', () => ({ prisma: {} }))
+
+vi.mock('next-intl/server', () => ({ getLocale: mocks.getLocale }))
 
 vi.mock('@/app/lib/rosac', async (importOriginal) => {
   const original = await importOriginal<typeof RosacLib>()
@@ -31,10 +34,12 @@ import { GET, POST } from './route'
 const adminUser = { id: 'admin-1', role: 'ADMIN' }
 const validBody = {
   src: '/images/ROSAC/team/New.jpg',
-  role: 'Investigador',
   name: 'Persona Nueva',
   institution: 'UCR',
-  description: 'Texto de prueba.',
+  content: {
+    es: { role: 'Investigador', description: 'Texto de prueba.' },
+    en: { role: 'Researcher', description: 'Test text.' },
+  },
 }
 
 function postRequest(body: unknown) {
@@ -47,6 +52,10 @@ function postRequest(body: unknown) {
 function deniedResponse() {
   return new Response(JSON.stringify({ error: 'denied' }), { status: 401 })
 }
+
+beforeEach(() => {
+  mocks.getLocale.mockResolvedValue('es')
+})
 
 afterEach(() => {
   vi.clearAllMocks()
@@ -92,6 +101,10 @@ describe('POST /api/researchers', () => {
     const response = await POST(postRequest('not json'))
 
     expect(response.status).toBe(400)
+    expect(await response.json()).toEqual({
+      error: 'El cuerpo de la solicitud no es JSON válido.',
+      code: 'invalid-json',
+    })
     expect(mocks.createResearcher).not.toHaveBeenCalled()
   })
 
@@ -102,9 +115,9 @@ describe('POST /api/researchers', () => {
 
     expect(response.status).toBe(400)
     const body = await response.json()
-    expect(body.issues).toMatchObject({
-      name: expect.any(Array),
-    })
+    expect(body.code).toBe('invalid-body')
+    expect(body.error).toBe('Faltan campos obligatorios o no son válidos.')
+    expect(body.issues).toEqual([{ path: 'name', message: 'El nombre es obligatorio.' }])
     expect(mocks.createResearcher).not.toHaveBeenCalled()
   })
 
@@ -128,5 +141,32 @@ describe('POST /api/researchers', () => {
     expect(response.status).toBe(201)
     expect(await response.json()).toEqual({ researcher: created })
     expect(mocks.createResearcher).toHaveBeenCalledWith(validBody, adminUser.id)
+  })
+
+  test('returns the invalid-body message in English when English is selected', async () => {
+    mocks.requireApiPermission.mockResolvedValue({ ok: true, user: adminUser })
+    mocks.getLocale.mockResolvedValue('en')
+
+    const response = await POST(postRequest({ ...validBody, name: ' ' }))
+
+    expect(response.status).toBe(400)
+    const body = await response.json()
+    expect(body.code).toBe('invalid-body')
+    expect(body.error).toBe('Required fields are missing or invalid.')
+    expect(body.issues).toEqual([{ path: 'name', message: 'Name is required.' }])
+  })
+
+  test('answers an unexpected failure without exposing its details', async () => {
+    mocks.requireApiPermission.mockResolvedValue({ ok: true, user: adminUser })
+    mocks.createResearcher.mockRejectedValue(new Error('connection refused'))
+    vi.spyOn(console, 'error').mockImplementation(() => {})
+
+    const response = await POST(postRequest(validBody))
+
+    expect(response.status).toBe(500)
+    expect(await response.json()).toEqual({
+      error: 'No se pudo guardar el investigador.',
+      code: 'internal-error',
+    })
   })
 })

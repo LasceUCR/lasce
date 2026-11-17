@@ -1,9 +1,10 @@
-import { act, screen, within } from '@testing-library/react'
+import { act, fireEvent, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { afterEach, describe, expect, test, vi } from 'vitest'
 
 import { renderWithIntl } from '@/app/lib/i18n/testing'
 import { getScientificSources } from '@/app/lib/scientific-data'
+import { scientificDataHref } from '@/app/lib/scientific-data-navigation'
 import en from '@/messages/en.json' with { type: 'json' }
 
 import { ScientificDataExplorer, type ScientificDataExplorerProps } from './ScientificDataExplorer'
@@ -138,6 +139,29 @@ describe('ScientificDataExplorer', () => {
     expect(within(results).queryByRole('link')).not.toBeInTheDocument()
   })
 
+  test('runs a restored query on load so its graph is ready to download', async () => {
+    const fetchMock = vi.fn().mockResolvedValue({ ok: true, json: async () => resultFixture })
+    vi.stubGlobal('fetch', fetchMock)
+    renderWithIntl(
+      <ScientificDataExplorer {...signedOutDownloadArgs} initialResult={undefined} consultOnLoad />,
+    )
+
+    const results = await screen.findByRole('region', { name: 'Flujo solar: rayos X (SFXR)' })
+    expect(fetchMock).toHaveBeenCalledTimes(1)
+    expect(within(results).getByRole('img', { name: /Gráfica de Flujo solar/ })).toBeInTheDocument()
+    expect(
+      within(results).getByRole('button', { name: 'Inicie sesión para descargar la gráfica' }),
+    ).toBeInTheDocument()
+  })
+
+  test('waits for the visitor to consult when nothing was restored', () => {
+    const fetchMock = vi.fn()
+    vi.stubGlobal('fetch', fetchMock)
+    renderWithIntl(<ScientificDataExplorer {...defaultArgs} />)
+
+    expect(fetchMock).not.toHaveBeenCalled()
+  })
+
   test('renders a ROSAC dynamic spectrum with an accessible values table', () => {
     renderWithIntl(<ScientificDataExplorer {...spectrumArgs} />)
 
@@ -149,7 +173,7 @@ describe('ScientificDataExplorer', () => {
     expect(within(results).getByText(/Datos simulados para preparar/)).toBeInTheDocument()
   })
 
-  test('rejects an equal or decreasing time range before making a request', async () => {
+  test('rejects equal start and end times beside the time fields, before making a request', async () => {
     const fetchMock = vi.fn()
     vi.stubGlobal('fetch', fetchMock)
     const user = userEvent.setup()
@@ -160,12 +184,202 @@ describe('ScientificDataExplorer', () => {
     await user.type(endTime, '08:00')
     await user.click(screen.getByRole('button', { name: 'Consultar datos' }))
 
-    expect(screen.getByRole('alert')).toHaveTextContent(
-      'La hora de inicio debe ser anterior a la hora de fin.',
-    )
-    expect(screen.getByLabelText('Hora de inicio (UTC)')).toHaveAttribute('aria-invalid', 'true')
-    expect(screen.getByLabelText('Hora de fin (UTC)')).toHaveAttribute('aria-invalid', 'true')
+    // The notes sit below the fields and the button, in the form, and are linked by aria-describedby.
+    const timeFields = screen.getByLabelText('Hora de inicio (UTC)').closest('form')!
+    const alert = within(timeFields).getByRole('alert')
+    expect(alert).toHaveTextContent('La hora de inicio y la de fin no pueden ser iguales.')
+    for (const input of [
+      screen.getByLabelText('Hora de inicio (UTC)'),
+      screen.getByLabelText('Hora de fin (UTC)'),
+    ]) {
+      expect(input).toHaveAttribute('aria-invalid', 'true')
+      expect(input.getAttribute('aria-describedby')).toContain(alert.id)
+    }
     expect(fetchMock).not.toHaveBeenCalled()
+
+    await user.clear(endTime)
+    await user.type(endTime, '09:00')
+    expect(within(timeFields).queryByRole('alert')).not.toBeInTheDocument()
+  })
+
+  test('accepts a range across midnight and says it ends on the next day', async () => {
+    const fetchMock = vi.fn().mockResolvedValue({ ok: true, json: async () => resultFixture })
+    vi.stubGlobal('fetch', fetchMock)
+    const user = userEvent.setup()
+    renderWithIntl(<ScientificDataExplorer {...defaultArgs} />)
+
+    const startTime = screen.getByLabelText('Hora de inicio (UTC)')
+    const endTime = screen.getByLabelText('Hora de fin (UTC)')
+    await user.clear(startTime)
+    await user.type(startTime, '23:00')
+    await user.clear(endTime)
+    await user.type(endTime, '01:00')
+
+    expect(screen.getByText(/el rango termina al día siguiente/)).toBeInTheDocument()
+    await user.click(screen.getByRole('button', { name: 'Consultar datos' }))
+
+    expect(fetchMock).toHaveBeenCalledWith(
+      expect.stringContaining('startTime=23%3A00&endTime=01%3A00'),
+      expect.anything(),
+    )
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument()
+  })
+
+  test('states the UTC difference next to the time fields', () => {
+    renderWithIntl(<ScientificDataExplorer {...defaultArgs} />)
+
+    // The notes sit below the fields and the button, in the form, and are linked by aria-describedby.
+    const timeFields = screen.getByLabelText('Hora de inicio (UTC)').closest('form')!
+    expect(within(timeFields).getByText(/Costa Rica está 6 horas atrás \(UTC−6\)/)).toBeVisible()
+    expect(
+      screen.getByLabelText('Hora de inicio (UTC)').getAttribute('aria-describedby'),
+    ).toContain('scientific-time-hint')
+  })
+
+  test('shows the Costa Rica equivalent of the interval in the results', () => {
+    renderWithIntl(<ScientificDataExplorer {...withResultsArgs} />)
+
+    const results = screen.getByRole('region', { name: 'Flujo solar: rayos X (SFXR)' })
+    expect(within(results).getByText('08:00–09:00 UTC')).toBeInTheDocument()
+    expect(within(results).getByText('Hora de Costa Rica (UTC−6)')).toBeInTheDocument()
+    expect(within(results).getByText('02:00–03:00')).toBeInTheDocument()
+  })
+
+  test('names the day of a local time that falls outside the UTC day', () => {
+    renderWithIntl(
+      <ScientificDataExplorer
+        {...withResultsArgs}
+        initialResult={{
+          ...resultFixture,
+          query: { ...resultFixture.query, startTime: '03:00', endTime: '04:00' },
+        }}
+      />,
+    )
+
+    expect(screen.getByText('21:00 (día anterior)–22:00 (día anterior)')).toBeInTheDocument()
+  })
+
+  test('shows a range across midnight in the results with its local equivalent', () => {
+    renderWithIntl(
+      <ScientificDataExplorer
+        {...withResultsArgs}
+        initialResult={{
+          ...resultFixture,
+          query: { ...resultFixture.query, startTime: '23:00', endTime: '01:00' },
+        }}
+      />,
+    )
+
+    expect(screen.getByText(/23:00–01:00 UTC/)).toHaveTextContent('(termina al día siguiente)')
+    expect(screen.getByText('17:00–19:00')).toBeInTheDocument()
+  })
+
+  test('does not let the calendar reach days that have no data yet', async () => {
+    const user = userEvent.setup()
+    renderWithIntl(<ScientificDataExplorer {...defaultArgs} />)
+
+    // EXIS publishes with a delay, so its latest day is the day before today (2026-09-11).
+    expect(screen.getByLabelText('Fecha')).toHaveAttribute('max', '2026-09-10')
+    expect(screen.getByText('Último día con datos: 10 de septiembre de 2026.')).toBeInTheDocument()
+
+    await user.click(screen.getByRole('combobox', { name: 'Instrumento y producto' }))
+    await user.click(screen.getByRole('treeitem', { name: /^SUVI/ }))
+    await user.click(screen.getByRole('treeitem', { name: /171 Å/ }))
+    expect(screen.getByLabelText('Fecha')).toHaveAttribute('max', '2026-09-11')
+
+    await user.click(screen.getByRole('combobox', { name: 'Fuente de datos' }))
+    await user.click(screen.getByRole('option', { name: /ROSAC/ }))
+    expect(screen.getByLabelText('Fecha')).not.toHaveAttribute('max')
+  })
+
+  test('moves a date that is too recent back to the latest day when the instrument changes', async () => {
+    const user = userEvent.setup()
+    renderWithIntl(
+      <ScientificDataExplorer
+        {...defaultArgs}
+        initialQuery={{
+          ...defaultArgs.initialQuery,
+          source: 'ROSAC',
+          product: 'ROSAC-I1',
+          parameter: 'simulated-intensity',
+          date: '2026-09-11',
+        }}
+      />,
+    )
+
+    await user.click(screen.getByRole('combobox', { name: 'Fuente de datos' }))
+    await user.click(screen.getByRole('option', { name: 'GOES' }))
+
+    expect(screen.getByLabelText('Fecha')).toHaveValue('2026-09-10')
+  })
+
+  test('refuses a date that has no published data yet, without making a request', async () => {
+    const fetchMock = vi.fn()
+    vi.stubGlobal('fetch', fetchMock)
+    const user = userEvent.setup()
+    renderWithIntl(<ScientificDataExplorer {...defaultArgs} />)
+
+    fireEvent.change(screen.getByLabelText('Fecha'), { target: { value: '2026-09-11' } })
+    await user.click(screen.getByRole('button', { name: 'Consultar datos' }))
+
+    expect(screen.getByRole('alert')).toHaveTextContent(
+      'Esa fecha todavía no tiene datos publicados. Seleccione el 10 de septiembre de 2026 o una fecha anterior.',
+    )
+    expect(fetchMock).not.toHaveBeenCalled()
+  })
+
+  describe('after a query', () => {
+    function stubScrolling(reducedMotion: boolean) {
+      const scrollIntoView = vi.fn()
+      Object.defineProperty(HTMLElement.prototype, 'scrollIntoView', {
+        configurable: true,
+        value: scrollIntoView,
+      })
+      vi.stubGlobal(
+        'matchMedia',
+        vi.fn().mockImplementation((media: string) => ({
+          matches: reducedMotion && media.includes('reduce'),
+          media,
+        })),
+      )
+      return scrollIntoView
+    }
+
+    afterEach(() => {
+      Reflect.deleteProperty(HTMLElement.prototype, 'scrollIntoView')
+    })
+
+    test('scrolls the results into view and moves focus to their heading', async () => {
+      const scrollIntoView = stubScrolling(false)
+      vi.stubGlobal(
+        'fetch',
+        vi.fn().mockResolvedValue({ ok: true, json: async () => resultFixture }),
+      )
+      const user = userEvent.setup()
+      renderWithIntl(<ScientificDataExplorer {...defaultArgs} />)
+
+      await user.click(screen.getByRole('button', { name: 'Consultar datos' }))
+
+      const heading = await screen.findByRole('heading', { name: 'Flujo solar: rayos X (SFXR)' })
+      await waitFor(() => expect(heading).toHaveFocus())
+      expect(scrollIntoView).toHaveBeenCalledWith({ behavior: 'smooth', block: 'start' })
+    })
+
+    test('scrolls without animation when the visitor prefers reduced motion', async () => {
+      const scrollIntoView = stubScrolling(true)
+      vi.stubGlobal(
+        'fetch',
+        vi.fn().mockResolvedValue({ ok: true, json: async () => resultFixture }),
+      )
+      const user = userEvent.setup()
+      renderWithIntl(<ScientificDataExplorer {...defaultArgs} />)
+
+      await user.click(screen.getByRole('button', { name: 'Consultar datos' }))
+
+      await waitFor(() =>
+        expect(scrollIntoView).toHaveBeenCalledWith({ behavior: 'auto', block: 'start' }),
+      )
+    })
   })
 
   test('keeps the form available when CITIC has no matching data', () => {
@@ -391,7 +605,9 @@ describe('ScientificDataExplorer', () => {
     )
 
     expect(requestDownload).not.toHaveBeenCalled()
-    expect(navigate).toHaveBeenCalledWith('/acceso?next=%2Fdatos&reason=auth')
+    expect(navigate).toHaveBeenCalledWith(
+      `/acceso?${new URLSearchParams({ next: scientificDataHref(resultFixture.query), reason: 'auth' })}`,
+    )
   })
 
   test('sends a visitor whose session expired to sign in', async () => {
@@ -400,7 +616,7 @@ describe('ScientificDataExplorer', () => {
     renderWithIntl(
       <ScientificDataExplorer
         {...visitorDownloadArgs}
-        loginHref="/acceso"
+        loginHref="/acceso?next=%2Fdatos&reason=auth"
         navigate={navigate}
         requestDownload={vi.fn().mockResolvedValue({
           ok: false,
@@ -412,7 +628,9 @@ describe('ScientificDataExplorer', () => {
 
     await user.click(screen.getByRole('button', { name: 'Descargar gráfica (PNG)' }))
 
-    expect(navigate).toHaveBeenCalledWith('/acceso')
+    expect(navigate).toHaveBeenCalledWith(
+      `/acceso?${new URLSearchParams({ next: scientificDataHref(resultFixture.query), reason: 'auth' })}`,
+    )
   })
 
   test('shows why a download was refused and lets the visitor try again', async () => {

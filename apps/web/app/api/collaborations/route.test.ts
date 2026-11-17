@@ -80,6 +80,7 @@ describe('collaboration API', () => {
         ...body,
         acronym: null,
         websiteUrl: null,
+        logoPath: null,
       },
       expect.objectContaining({ id: 'admin-1' }),
     )

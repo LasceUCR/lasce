@@ -13,8 +13,10 @@ test.describe('Academic Activities loading & skeleton layout', () => {
       page.getByRole('heading', { level: 1, name: 'Actividades académicas' }),
     ).toBeVisible()
 
-    // Loading region is not busy once activities are displayed
+    // The streamed fallback and the loaded list share this id until Next swaps the
+    // fallback out. Wait until only the settled region remains, and it is not busy.
     const loadingRegion = page.locator('#academic-activities-loading-region')
+    await expect(loadingRegion).toHaveCount(1)
     await expect(loadingRegion).toBeVisible()
     await expect(loadingRegion).not.toHaveAttribute('aria-busy')
 
@@ -35,22 +37,24 @@ test.describe('Academic Activities loading & skeleton layout', () => {
     await expect(page.getByRole('link', { name: 'Volver al inicio' })).toBeVisible()
   })
 
-  test('displays academic activities section on /noticias alongside news', async ({ page }) => {
+  test('keeps academic activities out of the news page', async ({ page }) => {
     const response = await page.goto('/noticias')
     expect(response?.status()).toBe(200)
 
-    // Section heading renders
     await expect(
       page.getByRole('heading', { level: 2, name: 'Actividades académicas' }),
-    ).toBeVisible()
-
-    // Section loading region is not busy when loaded
-    const sectionLoading = page.locator('#academic-activities-section-loading').last()
-    await expect(sectionLoading).toBeVisible()
-    await expect(sectionLoading).not.toHaveAttribute('aria-busy')
+    ).toHaveCount(0)
+    await expect(
+      page.getByRole('heading', {
+        name: '2026 Workshop on Machine Learning Applied to Space Weather and GNSS',
+      }),
+    ).toHaveCount(0)
+    await expect(page.getByText('Cargando actividades académicas…')).toHaveCount(0)
 
     // Rest of the news page remains usable
-    await expect(page.getByRole('heading', { level: 1, name: 'Noticias' })).toBeVisible()
+    await expect(
+      page.getByRole('heading', { level: 1, name: 'Noticias', exact: true }),
+    ).toBeVisible()
     await expect(page.getByRole('searchbox')).toBeVisible()
   })
 

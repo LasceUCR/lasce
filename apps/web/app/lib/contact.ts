@@ -6,7 +6,7 @@ import { locationMapProvider, type LocationMapLabels } from './location-map'
  * The shell of `/contacto`: hero, location section and back link.
  *
  * The laboratory is on the south side of the Planetario de la Universidad de Costa Rica.
- * The pin is the marked point on that building's roof (9.93699, -84.045073), not a surveyed
+ * The pin is the marked point on that building's roof (9.93667, -84.04515), not a surveyed
  * GPS reading. The contact cards themselves live in `contact_channels` and are loaded by
  * `getContactChannels`.
  *
@@ -62,7 +62,7 @@ export function getContactContent({ contact, common }: ContactMessages): Contact
       title: contact.location.title,
       intro: fill(contact.location.intro, { address: planetariumAddress }),
       address: planetariumAddress,
-      coordinates: { latitude: 9.93699, longitude: -84.045073 },
+      coordinates: { latitude: 9.93667, longitude: -84.04515 },
       zoom: 18,
       tileUrl: locationMapProvider.tileUrl,
       attribution: locationMapProvider.attribution,

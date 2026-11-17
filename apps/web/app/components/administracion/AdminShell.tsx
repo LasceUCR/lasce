@@ -2,7 +2,7 @@
 
 import { usePathname } from 'next/navigation'
 import { useTranslations } from 'next-intl'
-import { Download, LayoutDashboard, ScrollText, Shield, Users } from 'lucide-react'
+import { Download, LayoutDashboard, Mail, ScrollText, Shield, Users } from 'lucide-react'
 import type { ReactNode } from 'react'
 
 import { visibleAdminMenu, type AdminMenuKey } from '@/app/lib/admin-sections'
@@ -17,6 +17,7 @@ const icons: Record<AdminMenuKey, ReactNode> = {
   usuarios: <Users size={18} strokeWidth={1.8} />,
   permisos: <Shield size={18} strokeWidth={1.8} />,
   auditoria: <ScrollText size={18} strokeWidth={1.8} />,
+  correo: <Mail size={18} strokeWidth={1.8} />,
 }
 
 export interface AdminShellProps {

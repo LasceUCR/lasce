@@ -4,20 +4,23 @@ Administrators configure what each existing role may do. The roles themselves st
 `UserRole` enum (`visitor`, `assistant`, `admin`); this document is the mapping from those
 roles to a catalogue of permissions, and the checks that read it.
 
-Component create/edit/delete will gate portal components when those editors exist.
+Component create/edit/delete gate the editable content of the public pages in Modo edición.
 Laboratory **resources** are a separate concern: downloading them (`download_resources`).
 
 ## Defaults
 
-| Role          | Permissions                                                                                                                                                                                   |
-| ------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Visitante     | `download_resources`                                                                                                                                                                          |
-| Asistente     | `edit_components`, `download_resources`                                                                                                                                                       |
-| Administrador | `create_components`, `edit_components`, `delete_components`, `download_resources`, `download_goes_resources`, `manage_users`, `manage_permissions`, `view_audit_log`, `view_download_history` |
+| Role          | Permissions                                                                                                                                                                                                            |
+| ------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Visitante     | `download_resources`                                                                                                                                                                                                   |
+| Asistente     | `edit_components`, `download_resources`                                                                                                                                                                                |
+| Administrador | `create_components`, `edit_components`, `delete_components`, `download_resources`, `download_goes_resources`, `manage_users`, `manage_permissions`, `view_audit_log`, `view_download_history`, `manage_email_settings` |
 
 `view_audit_log` opens the Auditoría section (`/administracion/auditoria`, see
 [audit-log.md](audit-log.md)). Only administrators hold it by default; an assistant gets it
 from the matrix.
+
+`manage_email_settings` opens the Correo section (`/administracion/correo`), where the SMTP
+server that sends the portal's email is configured ([password-reset.md](password-reset.md)).
 
 `view_download_history` opens the Descargas section (`/administracion/descargas`, see
 [downloads.md](downloads.md#the-history-page)). It is separate from `download_resources` on
@@ -36,29 +39,32 @@ configurable without letting an administrator lock themselves out.
 
 ## The pieces
 
-| Piece                                         | File                                                                            |
-| --------------------------------------------- | ------------------------------------------------------------------------------- |
-| Permission catalogue and Spanish copy         | `apps/web/app/lib/auth/permissions.ts`                                          |
-| Role and permission names, by identifier      | `access.*` in `apps/web/messages/*.json`, `apps/web/app/lib/access-messages.ts` |
-| Session-aware checks (`requirePermission`, …) | `apps/web/app/lib/auth/authorization.ts`                                        |
-| Matrix read/write                             | `apps/web/app/lib/role-permissions.ts`                                          |
-| Save action                                   | `apps/web/app/(public)/administracion/permission-actions.ts`                    |
-| Management UI                                 | `apps/web/app/components/administracion/RolePermissions{Page,Editor}.tsx`       |
-| Access-denied copy                            | `apps/web/app/components/administracion/AccessDenied.tsx`                       |
-| Admin menu catalogue and visibility rule      | `apps/web/app/lib/admin-sections.ts`                                            |
-| JSON write guard                              | `apps/web/app/lib/auth/apiGuard.ts` (`requireApiPermission`)                    |
-| Nosotros activities                           | `/nosotros` (`create_components`, `edit_components`, `delete_components`)       |
-| Download history                              | `/administracion/descargas` (`view_download_history`)                           |
-| `/datos` chart and data downloads             | `app/lib/downloads/policy.ts`, see [downloads.md](downloads.md)                 |
-| Table                                         | `auth.role_permissions`, see [database-definition.md](database-definition.md)   |
+| Piece                                         | File                                                                                      |
+| --------------------------------------------- | ----------------------------------------------------------------------------------------- |
+| Permission catalogue and Spanish copy         | `apps/web/app/lib/auth/permissions.ts`                                                    |
+| Role and permission names, by identifier      | `access.*` in `apps/web/messages/*.json`, `apps/web/app/lib/access-messages.ts`           |
+| Session-aware checks (`requirePermission`, …) | `apps/web/app/lib/auth/authorization.ts`                                                  |
+| Matrix read/write                             | `apps/web/app/lib/role-permissions.ts`                                                    |
+| Save action                                   | `apps/web/app/(public)/administracion/permission-actions.ts`                              |
+| Management UI                                 | `apps/web/app/components/administracion/RolePermissions{Page,Editor}.tsx`                 |
+| Access-denied copy                            | `apps/web/app/components/administracion/AccessDenied.tsx`                                 |
+| Admin menu catalogue and visibility rule      | `apps/web/app/lib/admin-sections.ts`                                                      |
+| JSON write guard                              | `apps/web/app/lib/auth/apiGuard.ts` (`requireApiPermission`)                              |
+| Nosotros activities                           | `/nosotros` (`create_components`, `edit_components`, `delete_components`)                 |
+| Scientific tools                              | `/herramientas-cientificas` (`create_components`, `edit_components`, `delete_components`) |
+| Download history                              | `/administracion/descargas` (`view_download_history`)                                     |
+| SMTP settings                                 | `/administracion/correo` (`manage_email_settings`)                                        |
+| `/datos` chart and data downloads             | `app/lib/downloads/policy.ts`, see [downloads.md](downloads.md)                           |
+| Table                                         | `auth.role_permissions`, see [database-definition.md](database-definition.md)             |
 
 The administration panel admits only `ASSISTANT` and `ADMIN` (the `administracion` layout turns
 visitors away), and its menu offers only the sections whose grant the account holds, read from
 `auth.role_permissions` on each request ([admin-navigation.md](admin-navigation.md)). Hiding a
 link is still not an authorization check: every section page and every write action repeats the
 permission lookup, and the role is read from the database each request (same as user
-administration). The public header's Administración tab follows the same role rule from the
-account cookie; that is a convenience, the layout is the check.
+administration). The public header's Administración link follows the same rule, computed on the
+server by `GET /api/session` from the session, never from the account cookie (LASCE-SEC-001); it
+is a convenience, the layout is the check.
 
 ## Languages
 

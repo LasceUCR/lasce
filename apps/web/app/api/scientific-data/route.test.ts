@@ -24,7 +24,7 @@ const scientificDataMessages = vi.hoisted(() => ({
     invalidDate: 'Seleccione una fecha válida con el formato AAAA-MM-DD.',
     invalidStartTime: 'Seleccione una hora de inicio válida con el formato HH:mm.',
     invalidEndTime: 'Seleccione una hora de fin válida con el formato HH:mm.',
-    startBeforeEnd: 'La hora de inicio debe ser anterior a la hora de fin.',
+    sameStartEnd: 'La hora de inicio y la de fin no pueden ser iguales.',
     productUnavailable: 'El producto seleccionado todavía no está disponible para esta fuente.',
     invalidParameterForProduct: 'Seleccione un canal o parámetro válido para el producto.',
   },

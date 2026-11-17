@@ -171,15 +171,19 @@ export function ResearchAreasSection({
         </header>
       ) : null}
 
-      <p className="content-empty" role="status">
-        {totalItems === 0
-          ? t('empty')
-          : t('results', {
-              from: (page - 1) * PAGE_SIZE + 1,
-              to: Math.min(page * PAGE_SIZE, totalItems),
-              total: totalItems,
-            })}
-      </p>
+      {totalItems === 0 ? (
+        <p className="content-empty" role="status">
+          {t('empty')}
+        </p>
+      ) : totalPages > 1 ? (
+        <p className="research-areas-summary" role="status">
+          {t('results', {
+            from: (page - 1) * PAGE_SIZE + 1,
+            to: Math.min(page * PAGE_SIZE, totalItems),
+            total: totalItems,
+          })}
+        </p>
+      ) : null}
 
       <div className="research-area-content">
         {editMode && canCreate ? (

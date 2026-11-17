@@ -84,6 +84,21 @@ describe('renderTimeSeriesSvg', () => {
     expect(svg).not.toContain('var(--')
   })
 
+  test('draws X-ray flux on a log scale with the flare classes, as the page does', () => {
+    const svg = renderTimeSeriesSvg({
+      ...series,
+      points: [
+        { timestamp: '2026-09-27T08:00:00Z', value: 2e-7 },
+        { timestamp: '2026-09-27T08:30:00Z', value: 3.35e-5 },
+        { timestamp: '2026-09-27T09:00:00Z', value: 4e-7 },
+      ],
+    })
+
+    expect(svg).toContain('>M3.4</text>')
+    for (const letter of ['B', 'C', 'M']) expect(svg).toContain(`>${letter}</text>`)
+    expect(svg).not.toContain('>X</text>')
+  })
+
   test('escapes the text it draws', () => {
     const svg = renderTimeSeriesSvg(series, { ...exportCopy(), origins: () => 'A & <B>' })
 

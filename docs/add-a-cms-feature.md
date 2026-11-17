@@ -106,3 +106,19 @@ building blocks:
   mapping. These are useful to a single-language feature too.
 
 Publications (`/publicaciones`) are the reference implementation.
+
+## Uploading an image
+
+A card image the editor picks with `FileDropInput` is uploaded before the record is saved, and the
+record stores the path that serves it. Two shared pieces do the work:
+
+- `readImageUpload()` (`apps/web/app/lib/cms/image-upload.ts`) reads the multipart `file` of an
+  upload route with the body size bounded before parsing, and checks the declared type against
+  the accepted list and the file's signature. It returns the bytes or a failure code and status.
+- `createImageStore()` (`apps/web/app/services/cms-images/imageStorage.ts`) stores the image under
+  its own MinIO prefix with a UUID filename, and reads back only filenames that match the
+  feature's pattern. A route under `/api/<feature>/images/[filename]` serves it.
+
+Each feature keeps its own prefix, size limit, filename pattern and routes. Initiative logos
+([`initiatives.md`](initiatives.md)) and scientific tool images
+([`scientific-tools.md`](scientific-tools.md)) are the working examples.

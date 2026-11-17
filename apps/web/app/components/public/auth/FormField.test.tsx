@@ -1,5 +1,6 @@
 import { render, screen } from '@testing-library/react'
-import { describe, expect, test } from 'vitest'
+import userEvent from '@testing-library/user-event'
+import { describe, expect, test, vi } from 'vitest'
 
 import { FormField, type FormFieldProps } from './FormField'
 import { Default, Select, WithError, WithHint } from './FormField.stories'
@@ -70,5 +71,16 @@ describe('FormField', () => {
     rerender(<FormField {...selectArgs} defaultValue="CR" />)
 
     expect(screen.getByRole('combobox', { name: selectArgs.label })).toHaveValue('CR')
+  })
+
+  test('supports controlled input with value and onChange', async () => {
+    const user = userEvent.setup()
+    const onChange = vi.fn()
+    render(<FormField {...defaultArgs} onChange={onChange} value="test" />)
+
+    const input = screen.getByLabelText(defaultArgs.label)
+    expect(input).toHaveValue('test')
+    await user.type(input, 'a')
+    expect(onChange).toHaveBeenCalled()
   })
 })

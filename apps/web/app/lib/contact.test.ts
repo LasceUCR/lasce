@@ -12,8 +12,8 @@ describe('contact content', () => {
       'El Laboratorio de Astrofísica Solar y Clima Espacial se encuentra al costado sur del Planetario de la Universidad de Costa Rica, Ciudad de la Investigación, San Pedro de Montes de Oca, San José, Costa Rica.',
     )
     expect(contactContent.location.coordinates).toEqual({
-      latitude: 9.93699,
-      longitude: -84.045073,
+      latitude: 9.93667,
+      longitude: -84.04515,
     })
     expect(contactContent.location.markerLabel).toBe('LASCE')
     expect(contactContent.location.zoom).toBe(18)

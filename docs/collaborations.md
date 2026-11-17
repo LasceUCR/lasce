@@ -59,8 +59,9 @@ and their existing Spanish/English country labels in one transaction. No separat
 needed. The media migration originally added nullable `logo_url` and `website_url` columns.
 The follow-up migration removes the unused `logo_url` column while retaining `website_url`.
 It also removes any values stored in that placeholder column. The earlier migration remains
-unchanged to preserve migration history; collaboration logo uploads are deferred.
-LASCE-PUB-002 adds a nullable `logo_path` for the supplied, bundled institutional images.
+unchanged to preserve migration history.
+LASCE-PUB-002 adds a nullable `logo_path` for institutional logos, initially populated with
+bundled institutional images and extended in the collaboration CMS to support image uploads.
 Its data migration matches the eight original partners by name, acronym and scope once, sets
 their local logo paths, and fills only empty website URLs. Thereafter media belongs to the
 record's UUID, so renaming or reordering a partner keeps its logo. Existing non-empty editor
@@ -157,13 +158,12 @@ The directory reads `Collaboration` records. An organization has:
 - `position`: display order, independent of language.
 - `acronym`: optional. A null value omits the "Siglas" line.
 - `websiteUrl`: optional HTTP(S) URL; empty values are stored as null.
-- `logoPath`: optional path to a bundled institutional image. This is public presentation data,
-  populated by the migration, not an editable upload or a form field.
+- `logoPath`: optional path to an institutional logo image. It accepts uploaded logo endpoint paths
+  (`/api/collaborations/logos/[filename]`) or bundled institutional marks (`/brand/collaborations/[file]`).
+  Arbitrary external URLs are not permitted.
 
-Managing organization logos is deferred. A later implementation may allow image uploads
-(such as PNG); the current editor does not accept a logo URL or alter `logoPath`.
-The existing gallery storage pattern keeps the file in MinIO and stores its object key as text
-in the database. That key identifies an uploaded file; it is not a URL entered by an editor.
+Organization logos can be uploaded or changed through the editor form via `FileDropInput`. The upload
+stores the image in MinIO and points `logoPath` to the local serving route.
 
 New organizations and changed translations appear on the next request without editing the
 catalogues or deploying. Management follows the bilingual write, permission, transaction and review rules in
@@ -183,9 +183,36 @@ before discarding; a failed request leaves its values intact and reports the rea
 The editor labels, validation and feedback follow the site's language. Countries are entered
 in Spanish and English; official organization names and acronyms are shared.
 
-`/api/collaborations` provides public GET and guarded POST; `/api/collaborations/[id]` provides
-guarded PATCH and DELETE. Server validation rejects blank required values, invalid scope,
-unsupported properties, and URLs outside HTTP(S) or containing credentials. A shared-only PATCH
+Text fields stop accepting input at their limit, the same way as the initiative form: the
+organization name at 300 characters (`COLLABORATION_NAME_MAX_LENGTH`), the acronym at 100
+(`COLLABORATION_ACRONYM_MAX_LENGTH`) and each country at 150
+(`collaborationContent.specs.country.maxLength`). The form reads these limits from the same
+constants as `collaboration-schema.ts`, so `maxlength` and the server validation cannot drift
+apart; the validation messages remain for requests that bypass the form.
+
+### Logo upload flow and limits
+
+The organization form includes a logo field backed by `FileDropInput`:
+
+- **Allowed formats:** PNG, JPEG, WebP, GIF (`image/png`, `image/jpeg`, `image/webp`, `image/gif`).
+- **Maximum file size:** 25 MiB (`COLLABORATION_LOGO_MAX_BYTES`).
+- **Upload flow:** Selecting or dropping an image triggers an immediate upload via `POST /api/collaborations/logos?mode=create` or `?mode=edit`. The endpoint validates the user's permission (`create_components` or `edit_components`), bounds request body size, and verifies the image's magic bytes.
+- **Storage:** Successfully uploaded logos are stored in MinIO under the bucket key `assets/collaborations/<uuid>.<ext>`.
+- **Serving:** Images are served through `GET /api/collaborations/logos/[filename]`, ensuring accessibility even when MinIO is reachable only on internal networks.
+- **Card rendering:** `CollaborationCard` renders logos via Next.js `Image` with `unoptimized` enabled, preventing hostname configuration errors and supporting both local `/brand/...` marks and `/api/collaborations/logos/...` uploaded assets.
+
+| Endpoint                                     | Permission          | Result                                              |
+| -------------------------------------------- | ------------------- | --------------------------------------------------- |
+| `GET /api/collaborations`                    | Public              | Organization directory, no editing metadata         |
+| `POST /api/collaborations`                   | `create_components` | Bilingual create, 201                               |
+| `PATCH /api/collaborations/[id]`             | `edit_components`   | Changed fields plus required `version`, 200         |
+| `DELETE /api/collaborations/[id]`            | `delete_components` | Cascading delete, 204                               |
+| `POST /api/collaborations/logos?mode=create` | `create_components` | Multipart image upload, 201                         |
+| `POST /api/collaborations/logos?mode=edit`   | `edit_components`   | Multipart image upload, 201                         |
+| `GET /api/collaborations/logos/[filename]`   | Public              | Image bytes, restricted to the collaboration prefix |
+
+Server validation rejects blank required values, invalid scope, unsupported properties, arbitrary
+external logo URLs, and website URLs outside HTTP(S) or containing credentials. A shared-only PATCH
 leaves omitted fields and translations untouched. Empty optional fields clear the stored value.
 Creates and edits are transactional, edits require the loaded `updatedAt` version, and one-sided
 country changes require review. Deletion cascades to translations, with confirmation in the UI.

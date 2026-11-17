@@ -91,7 +91,7 @@ function channelBody(card: ContactCard): ReactNode {
     <p className={styles.description} lang={card.lang}>
       <a
         href={link.href}
-        rel={link.external ? 'noreferrer' : undefined}
+        rel={link.external ? 'noopener noreferrer' : undefined}
         target={link.external ? '_blank' : undefined}
       >
         {card.description}

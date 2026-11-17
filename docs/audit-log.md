@@ -21,13 +21,17 @@ nothing either. The summaries are written in Spanish when the event happens.
 | `publication.create` `.update` `.delete`                                    | `publications.ts`                                 | `fields` on update                            |
 | `research_area.create` `.update` `.delete`                                  | `research-areas.ts`                               | `fields` on update                            |
 | `collaboration.create` `.update` `.delete`                                  | `collaboration-writes.ts`                         | `fields` on update                            |
+| `scientific_tool.create` `.update` `.delete`                                | `scientific-tool-writes.ts`                       | `fields` on update                            |
 | `contact_channel.create` `.update` `.delete`                                | `contact-channels.ts`                             | `fields` on update                            |
+| `academic_activity.create` `.update` `.delete`                              | `academic-activities.ts`                          | `fields` on update                            |
 | `nosotros_activity.*`, `nosotros_researcher.*` (`create` `update` `delete`) | `nosotros.ts`                                     | `fields` on update                            |
 | `rosac_researcher.create` `.update` `.delete`                               | `rosac.ts`                                        | `fields` on update                            |
 | `gallery_album.*`, `gallery_sub_album.*`, `gallery_media.*`                 | `gallery.ts`                                      | `fields` on update, `albumId` on media create |
 | `home_hero.update`, `geomagnetic_index.update`, `geomagnetic_index.reorder` | `home.ts`                                         | `fields`, `order`                             |
 | `space_weather_section.update`                                              | `space-weather-section.ts`                        | `fields`                                      |
 | `solar_physics_section.update`                                              | `solar-physics-section.ts`                        | `fields`                                      |
+| `smtp_settings.update`                                                      | `services/mail/smtpSettings.ts`                   | `fields` (names only, never values)           |
+| `user.password_reset` (the account itself is the actor)                     | `auth/password-reset-store.ts`                    | none                                          |
 
 Download history is not here: it lives in `resource_downloads`. Worker and pipeline events are out
 of scope. Metadata names the fields that changed, never their values, and never holds a secret.
@@ -110,10 +114,23 @@ falls back to the stored summary, so a new action still shows something before i
 When you record a new action, add its message to `es.json` and `en.json`, and keep the summary in
 the form `<Noun> <verb>: <name>` so the name can be read back.
 
+## Labels for the codes
+
+The Auditoría table and its filters also show the stored codes as words. `useAuditLabels()`
+(`components/administracion/`) turns an `action` (`research_area.delete` → "Área de investigación
+eliminada" / "Research area deleted") and an `entityType` (`research_area` → "Área de investigación")
+into text from `administration.auditLabels` in the catalogues. The filters still submit the stored
+codes, so the URL and the query do not change. A code with no label falls back to its own words
+("New thing archive"), so a new kind of event never breaks the page. When you record a new action
+or entity type, add its label to `administration.auditLabels` in `es.json` and `en.json`.
+
 ## The panel
 
 `getRecentActivity()` reads the newest `RECENT_ACTIVITY_LIMIT` (5) events, and
 `(public)/administracion/page.tsx` passes them to `RecentActivityPanel`, which shows each event's
-summary, how long ago it happened and who did it. With no events it says "Aún no hay actividad
-registrada.". The list area keeps the height of five rows (`.admin-activity-body` in
-`globals.css`), so the card does not change size with fewer events or none; change both together.
+summary, how long ago it happened and who did it. For accounts holding the `view_audit_log`
+permission, the card header shows a "Ver todo" / "View all" link to `/administracion/auditoria`, and
+each event's summary links directly to the audit trail (filtered to its entity or action). With no
+events it says "Aún no hay actividad registrada.". The list area keeps the height of five rows
+(`.admin-activity-body` in `globals.css`), so the card does not change size with fewer events or none;
+change both together.

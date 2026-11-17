@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from '@testing-library/react'
+import { screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, expect, test, vi } from 'vitest'
 
@@ -10,6 +10,9 @@ import {
   loginMessages,
   type LoginState,
 } from '@/app/lib/auth/login'
+import { PASSWORD_RECOVERY_PATH } from '@/app/lib/auth/password-reset'
+import { renderWithIntl } from '@/app/lib/i18n/testing'
+import es from '@/messages/es.json' with { type: 'json' }
 
 import { LoginForm, type LoginFormProps } from './LoginForm'
 import {
@@ -35,7 +38,7 @@ const submitButton = () => screen.getByRole('button', { name: loginFormCopy.subm
 
 describe('LoginForm', () => {
   test('renders the two fields in order, the submit button and the registration link', () => {
-    render(<LoginForm {...defaultArgs} />)
+    renderWithIntl(<LoginForm {...defaultArgs} />)
 
     const labels = screen
       .getAllByText((_, element) => element?.tagName === 'LABEL')
@@ -55,6 +58,24 @@ describe('LoginForm', () => {
     expect(screen.queryByRole('status')).not.toBeInTheDocument()
   })
 
+  test('links to password recovery from the login card', () => {
+    renderWithIntl(<LoginForm {...defaultArgs} />)
+
+    expect(screen.getByRole('link', { name: es.auth.login.forgotPassword })).toHaveAttribute(
+      'href',
+      PASSWORD_RECOVERY_PATH,
+    )
+  })
+
+  test('points the recovery link wherever the page asks', () => {
+    renderWithIntl(<LoginForm {...defaultArgs} forgotPasswordHref="/otra" />)
+
+    expect(screen.getByRole('link', { name: es.auth.login.forgotPassword })).toHaveAttribute(
+      'href',
+      '/otra',
+    )
+  })
+
   test('submits the email, the password and the return path to the action', async () => {
     const user = userEvent.setup()
     const result: LoginState = {
@@ -64,7 +85,7 @@ describe('LoginForm', () => {
       formError: loginMessages.invalidCredentials,
     }
     const action = vi.fn().mockResolvedValue(result)
-    render(<LoginForm {...withNextArgs} action={action} />)
+    renderWithIntl(<LoginForm {...withNextArgs} action={action} />)
 
     await user.type(control(LOGIN_LABELS.email), 'ana@ucr.ac.cr')
     await user.type(control(LOGIN_LABELS.password), 'una contraseña')
@@ -86,7 +107,7 @@ describe('LoginForm', () => {
   test('disables the button and announces the pending state while the action runs', async () => {
     const user = userEvent.setup()
     const action = vi.fn(() => new Promise<LoginState>(() => {}))
-    render(<LoginForm {...defaultArgs} action={action} />)
+    renderWithIntl(<LoginForm {...defaultArgs} action={action} />)
 
     await user.click(submitButton())
 
@@ -96,14 +117,14 @@ describe('LoginForm', () => {
   })
 
   test('shows the notice as a status message, not an alert', () => {
-    render(<LoginForm {...withNoticeArgs} />)
+    renderWithIntl(<LoginForm {...withNoticeArgs} />)
 
     expect(screen.getByRole('status')).toHaveTextContent(loginMessages.authRequired)
     expect(screen.queryByRole('alert')).not.toBeInTheDocument()
   })
 
   test('shows the optional card heading', () => {
-    render(<LoginForm {...withHeadingArgs} />)
+    renderWithIntl(<LoginForm {...withHeadingArgs} />)
 
     expect(
       screen.getByRole('heading', { level: 2, name: withHeadingArgs.heading?.title }),
@@ -112,7 +133,7 @@ describe('LoginForm', () => {
   })
 
   test('names both missing fields and summarises the problem in an alert', () => {
-    render(<LoginForm {...missingFieldsArgs} />)
+    renderWithIntl(<LoginForm {...missingFieldsArgs} />)
 
     expect(screen.getByRole('alert')).toHaveTextContent(loginMessages.reviewFields)
     expect(control(LOGIN_LABELS.email)).toHaveAttribute('aria-invalid', 'true')
@@ -124,7 +145,7 @@ describe('LoginForm', () => {
   })
 
   test('reports bad credentials without pointing at either field', () => {
-    render(<LoginForm {...invalidCredentialsArgs} />)
+    renderWithIntl(<LoginForm {...invalidCredentialsArgs} />)
 
     expect(screen.getByRole('alert')).toHaveTextContent(loginMessages.invalidCredentials)
     expect(control(LOGIN_LABELS.email)).not.toHaveAttribute('aria-invalid')
@@ -136,7 +157,7 @@ describe('LoginForm', () => {
   })
 
   test('shows an unexpected failure in the alert', () => {
-    render(<LoginForm {...failedArgs} />)
+    renderWithIntl(<LoginForm {...failedArgs} />)
 
     expect(screen.getByRole('alert')).toHaveTextContent(loginMessages.unexpected)
   })

@@ -5,6 +5,25 @@ How the editable parts of the public home page (`/`) are stored, edited and reor
 [`translate-database-content.md`](translate-database-content.md); the edit-mode wiring follows
 [`add-a-cms-feature.md`](add-a-cms-feature.md).
 
+## Temporarily hidden
+
+The geomagnetic indices section is commented out of `/`. It stood in `.home-content`, between the
+banner and the work areas: `<GeomagneticIndicators>`, the `#datos` section. It listed Kp, Dst, AE
+and Ap (label, value and description) in the language chosen in the header, with the notice
+"Datos de demostración" / "Demonstration data". With "Modo edición" on, an account with
+`edit_components` could edit each card and drag it to a new order. The tables, the API and the
+editors below are still in place.
+
+To show that section again, uncomment the three blocks marked `Geomagnetic indices lines` in
+`apps/web/app/(public)/page.tsx`:
+
+1. The imports of `GeomagneticIndicators`, `IndicatorItem`, `indicatorCodes` and `indicatorTones`.
+2. The `indicators` value, built from the stored rows, or from the catalogue when none are stored.
+3. The `<GeomagneticIndicators>` element inside `.home-content`.
+
+In the same change, turn the six `test.skip` cases in `apps/web/tests/e2e/home-i18n.spec.ts` back
+into `test`.
+
 ## What is editable
 
 Only these, and only in "Modo edición" by an account with `edit_components`. Nothing on the home

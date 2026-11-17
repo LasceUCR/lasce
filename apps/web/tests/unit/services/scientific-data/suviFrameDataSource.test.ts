@@ -48,6 +48,23 @@ describe('querySuviFrames', () => {
     )
   })
 
+  test('reads frames across midnight up to the next day', async () => {
+    mocks.findMany.mockResolvedValue([])
+
+    await querySuviFrames({ ...query, date: '2026-09-30', startTime: '23:00', endTime: '01:00' })
+
+    expect(mocks.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({
+          observedAt: {
+            gte: new Date('2026-09-30T23:00:00.000Z'),
+            lte: new Date('2026-10-01T01:00:59.999Z'),
+          },
+        }),
+      }),
+    )
+  })
+
   test('returns each frame as a same-origin image with its observation time', async () => {
     mocks.findMany.mockResolvedValue([frame('a', '2026-09-10T08:30:00.000Z')])
 

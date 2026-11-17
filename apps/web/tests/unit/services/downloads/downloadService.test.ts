@@ -241,7 +241,7 @@ describe('createResourceDownload', () => {
       ok: false,
       reason: 'invalid',
     })
-    expect(await download({ query: { ...exisQuery, startTime: '10:00' }, format: 'png' })).toEqual({
+    expect(await download({ query: { ...exisQuery, startTime: '09:00' }, format: 'png' })).toEqual({
       ok: false,
       reason: 'invalid',
     })

@@ -77,6 +77,14 @@ failure) for the whole subtree, since the nested routes define no `error.tsx` of
 reuse the shared `Skeleton` primitive from `docs/skeletons.md`, not a gallery-specific one: see
 that doc for why the gallery's placeholders cannot use `LoadingRegion` the way `/datos` does.
 
+`loading.tsx` and `error.tsx` are themselves Server/Client Components, so each reads the
+visitor's language with `getTranslations`/`useTranslations` (`gallery.hero`, `gallery.common`,
+`gallery.albumPage`, and the top-level `common` namespace for the index page's back link) and
+passes every string into `GalleryPageSkeleton` / `AlbumPageSkeleton` / `GalleryErrorState` as
+props. Those three components stay presentational — no hook of their own — so the "Cargando…"
+status, the kicker and the error message always match the `lasce_locale` cookie instead of
+always showing Spanish while the real, already-localized page is still loading.
+
 ## Album translations
 
 The Prisma schema includes `GalleryAlbumTranslation` (`gallery.gallery_album_translations`) for
@@ -110,7 +118,9 @@ is kept as it is, with a notice, until the editor chooses a new period.
 - `POST /api/gallery/albums` and `POST /api/gallery/albums/{albumId}` (sub-album) require
   `create_components` and accept `slug`, `content` (`title` and `description` in both `es` and
   `en`), and optional `yearsLabel` and `coverObjectKey`. They return `201`, `404`/`400` for a missing
-  or non-top-level parent, and `409` for a duplicate slug.
+  or non-top-level parent. A slug that is already taken is not an error for a create: the album or
+  sub-album is stored under the slug with a unique suffix, so two of them can share a title. `409`
+  is returned only if that retry collides too.
 - `PATCH /api/gallery/albums/{albumId}` requires `edit_components` and accepts the `version` the
   editor loaded plus one or more of `content`, `slug`, `yearsLabel` and `coverObjectKey`. A field
   changed in one language only must be confirmed through `confirmedUnchanged` (otherwise `409`

@@ -55,8 +55,6 @@ export interface IndicatorItem extends Omit<GeomagneticIndicatorData, 'code' | '
 
 export interface GeomagneticIndicatorsProps {
   title: string
-  /** Shown beside the title while the values are entered by hand. */
-  demoNotice: string
   indicators: IndicatorItem[]
   canEdit?: boolean
 }
@@ -83,7 +81,6 @@ function sameOrder(a: readonly string[], b: readonly string[]) {
  */
 export function GeomagneticIndicators({
   title,
-  demoNotice,
   indicators,
   canEdit = false,
 }: GeomagneticIndicatorsProps) {
@@ -227,7 +224,6 @@ export function GeomagneticIndicators({
     <section className="indicators page-width" id="datos" aria-labelledby="indicators-title">
       <div className="indicator-heading">
         <h2 id="indicators-title">{title}</h2>
-        <span>{demoNotice}</span>
       </div>
 
       {editable ? (

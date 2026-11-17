@@ -2,6 +2,7 @@ import * as Minio from 'minio'
 import type { IAssetStorage } from '../interfaces/IAssetStorage'
 import {
   ALLOWED_ASSET_CONTENT_TYPES,
+  type AssetUploadValidation,
   DOWNLOAD_EXPIRY_SECONDS,
   MAX_ASSET_BYTES,
 } from '../const/storageConfig'
@@ -86,8 +87,12 @@ export class MinioAssetStorage implements IAssetStorage {
    * still gets rejected server-side. Someone "simplifying" this back to
    * `presignedPutObject` would silently drop that enforcement.
    */
-  async createUpload(file: File, bucket?: string): Promise<string> {
-    this.verifyAsset(file) // this throws if the file is invalid, preventing any further processing
+  async createUpload(
+    file: File,
+    bucket?: string,
+    validation?: AssetUploadValidation,
+  ): Promise<string> {
+    this.verifyAsset(file, validation) // this throws if the file is invalid, preventing further processing
     const bucketToUse = bucket || process.env.MINIO_DEFAULT_BUCKET || 'default'
     await this.ensureBucket(bucketToUse)
 
@@ -156,11 +161,13 @@ export class MinioAssetStorage implements IAssetStorage {
     return `${scheme}://${host}/${bucketToUse}/${encodeURIComponent(objectKey)}`
   }
 
-  verifyAsset(file: File): void {
+  verifyAsset(file: File, validation?: AssetUploadValidation): void {
     const sizeBytes = file.size
     const contentType = file.type
-    if (sizeBytes > MAX_ASSET_BYTES) throw new InvalidFileSizeError(file.name, sizeBytes)
-    if (!ALLOWED_ASSET_CONTENT_TYPES.some((t) => t === contentType))
+    const maxSizeBytes = validation?.maxSizeBytes ?? MAX_ASSET_BYTES
+    const allowedContentTypes = validation?.allowedContentTypes ?? ALLOWED_ASSET_CONTENT_TYPES
+    if (sizeBytes > maxSizeBytes) throw new InvalidFileSizeError(file.name, sizeBytes, maxSizeBytes)
+    if (!allowedContentTypes.some((t) => t === contentType))
       throw new InvalidFileTypeError(file.name, contentType)
     return
   }

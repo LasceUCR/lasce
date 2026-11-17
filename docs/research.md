@@ -84,11 +84,11 @@ The areas are shown the same way `/publicaciones` and `/noticias` show their ite
 column of full-width cards, 16px apart. The card deliberately repeats the `.news-card` metrics
 (`globals.css`, the "Research areas" block after the gallery rules):
 
-| Width    | Card                                                                               |
-| -------- | ---------------------------------------------------------------------------------- |
-| > 1120px | 280px photo column, text padded 20px 22px, 190px minimum height                    |
-| ≤ 1120px | Same, text padded 16px 18px                                                        |
-| ≤ 700px  | Stacked: 200px photo on top, text below, summary aligned left instead of justified |
+| Width    | Card                                                            |
+| -------- | --------------------------------------------------------------- |
+| > 1120px | 280px photo column, text padded 20px 22px, 190px minimum height |
+| ≤ 1120px | Same, text padded 16px 18px                                     |
+| ≤ 700px  | Stacked: 200px photo on top, text below                         |
 
 The summary is clamped to three lines with `TruncatedText` ([`truncated-text.md`](truncated-text.md)), so cards keep the same height; a description that does not fit ends its third line in an inline "… Leer más" that shows the rest in place, followed by "Leer menos", and a short description gets no toggle. The button is pinned to the bottom-right corner of the card, so the buttons form one aligned column down the right edge of the list, on phones as well. The full text is always in the page for assistive technology, and it is the lead of the detail page.
 

@@ -161,7 +161,7 @@ export function RolePermissionsPage({
             {error}
           </p>
         ) : null}
-        <div className={styles.footer}>
+        <div className={`${styles.footer} ${pendingChanges > 0 ? styles.footerSticky : ''}`.trim()}>
           <div className={styles.pending}>
             {pendingChanges > 0 ? (
               <>

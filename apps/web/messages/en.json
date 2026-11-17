@@ -1,10 +1,23 @@
 {
   "metadata": {
     "title": "LASCE | University of Costa Rica",
-    "description": "Space Sciences Laboratory of the University of Costa Rica: solar observation, radio astronomy, instrumentation and space weather."
+    "description": "Solar Astrophysics and Space Weather Laboratory of Universidad de Costa Rica: solar observation, radio astronomy, instrumentation and space weather.",
+    "openGraphImageAlt": "Solar flare observed in X-rays with formulas for analyzing solar activity"
   },
   "shell": {
-    "skipToContent": "Skip to main content"
+    "skipToContent": "Skip to main content",
+    "pageLoading": "Loading the page…",
+    "pageError": {
+      "message": "This page could not be loaded. Please try again.",
+      "retry": "Try again",
+      "home": "Back to home"
+    }
+  },
+  "brand": {
+    "ucr": "Universidad de Costa Rica",
+    "ucrLogo": "Logo of Universidad de Costa Rica",
+    "cinespa": "Centro de Investigaciones Espaciales",
+    "lasce": "Laboratorio de Astrofísica Solar y Clima Espacial"
   },
   "notFound": {
     "metaTitle": "Page not found | LASCE",
@@ -41,7 +54,8 @@
     "institutionsLabel": "Institutions",
     "navigationLabel": "Footer links",
     "contact": "Contact",
-    "rightsReserved": "All rights reserved."
+    "rightsReserved": "All rights reserved.",
+    "team": "Development team"
   },
   "languageSwitcher": {
     "label": "Language"
@@ -54,7 +68,6 @@
     },
     "indicators": {
       "title": "Geomagnetic indices for Costa Rica",
-      "demoNotice": "Demonstration data",
       "kp": {
         "label": "Kp index",
         "value": "2",
@@ -198,6 +211,8 @@
     "description": "Drag an image here or click to select from your device",
     "rejectionFormat": "Unsupported format. Use a JPG, PNG, WebP or GIF image.",
     "rejectionSize": "The image exceeds the maximum size of 25 MB.",
+    "rosacRejectionFormat": "Unsupported format. Use JPG, PNG, WebP, AVIF or SVG.",
+    "rosacRejectionSize": "The file must not exceed 10 MB.",
     "removeFile": "Remove image",
     "removeLabel": "Remove image",
     "previewAlt": "Preview of {label}",
@@ -277,25 +292,37 @@
       "title": "Solar astrophysics",
       "introduction": "Solar activity does not end at the Sun. Its magnetic fields, its radiation and the stream of particles it releases extend across the Solar System and can change the space environment of the Earth."
     },
+    "observation": {
+      "alt": "Image of the Sun observed by GOES SUVI in the 195 Å ultraviolet band",
+      "loading": "Loading the latest solar image…",
+      "unavailable": "The latest solar image is not available right now.",
+      "observedLabel": "Observed on",
+      "source": "Source: NOAA/GOES SUVI · 195 Å",
+      "dataLink": {
+        "title": "Explore more solar images",
+        "description": "This image shows the sun in extreme ultraviolet light. To access more photos and information, go to the data page from the button below.",
+        "label": "Go to Data"
+      }
+    },
     "overview": {
       "title": "What does solar astrophysics study?",
       "intro": "This area seeks to understand the physical processes behind the Sun's activity and to explain how those variations connect with the interplanetary medium and the Earth's environment.",
       "items": {
         "activity": {
           "title": "Solar activity",
-          "description": "It analyses eruptive phenomena such as flares, coronal mass ejections and solar radio emissions."
+          "description": "It analyses eruptive phenomena such as flares and coronal mass ejections, their evolution and the particle acceleration they produce, including the associated solar radio emissions and their propagation into the interplanetary medium."
         },
         "magneticField": {
           "title": "Magnetic field",
-          "description": "It studies how magnetic fields store energy, structure the solar atmosphere and take part in eruptive events."
+          "description": "It studies how magnetic fields store energy in the solar atmosphere and release it through processes such as magnetic reconnection, the mechanism behind flares and coronal mass ejections, as well as how these structures form and evolve within the Sun's active regions."
         },
         "sunEarth": {
           "title": "Sun-Earth relationship",
-          "description": "It relates solar disturbances to the solar wind, the interplanetary magnetic field and the ionosphere."
+          "description": "It relates solar disturbances to the solar wind, the interplanetary magnetic field and the ionosphere, with models that estimate the speed, trajectory and arrival time of coronal mass ejections, and analyses the regional geomagnetic response, with indices calculated for Costa Rica, and its effects on satellite navigation and communications."
         },
         "analysis": {
           "title": "Scientific analysis",
-          "description": "It brings together observations, satellite data, ground stations and computational processing tools."
+          "description": "It brings together observations, satellite data and ground stations through computational tools and artificial intelligence that identify solar events and process large volumes of data, and includes developing platforms and computing infrastructure to capture, store and query that information."
         }
       },
       "flow": {
@@ -307,6 +334,15 @@
           "terrestrial": "Earth's environment",
           "analysis": "LASCE analysis"
         }
+      }
+    },
+    "nextSteps": {
+      "title": "Next steps",
+      "links": {
+        "solarToday": "View the Sun today",
+        "spaceWeather": "Follow the chain: space weather",
+        "publications": "Browse LASCE publications",
+        "tools": "Explore scientific tools"
       }
     },
     "editor": {
@@ -357,7 +393,7 @@
       "items": {
         "release": {
           "title": "The Sun releases energy",
-          "description": "Flares produce intense increases in radiation and are associated with the origin of coronal mass ejections (CMEs), which are large structures of plasma and magnetic field. Some of these events accelerate particles to high energies."
+          "description": "Solar flares are among the most energetic phenomena on the Sun. They involve the rapid release of magnetic energy, particle acceleration, and enhanced electromagnetic radiation. Flares are often associated with coronal mass ejections (CMEs), large-scale eruptions of plasma and magnetic field that can reach Earth and trigger geomagnetic storms."
         },
         "propagation": {
           "title": "The disturbance propagates",
@@ -375,7 +411,7 @@
     },
     "costaRica": {
       "title": "Why study it from Costa Rica?",
-      "p1": "The response of the ionosphere and the performance of technological systems can depend on geographic and geomagnetic location. Having observations and analyses made from Costa Rica makes it possible to characterise the regional environment better, to contribute data to global networks and to build local scientific capabilities. For a country that depends more and more on satellite navigation, telecommunications and digital infrastructure, understanding space weather is an investment in knowledge."
+      "p1": "The response of the ionosphere and the performance of technological systems can depend on geographic and geomagnetic location. Having observations and analyses made from Costa Rica makes it possible to characterize the regional environment better, to contribute data to global networks and to build local scientific capabilities. For a country that depends more and more on satellite navigation, telecommunications and digital infrastructure, understanding space weather is an investment in knowledge."
     },
     "components": {
       "title": "What makes up space weather?",
@@ -383,15 +419,15 @@
       "items": {
         "solarActivity": {
           "title": "Solar activity",
-          "description": "The Sun is not still. Sunspots, flares and coronal mass ejections release energy, particles and magnetic fields into space."
+          "description": "As part of solar astrophysics, we study the Sun as a dynamic star, including active regions, solar flares, coronal mass ejections, and other phenomena that release energy and particles into space and disturb the interplanetary magnetic field."
         },
         "solarWind": {
           "title": "Solar wind",
-          "description": "It is a continuous stream of plasma leaving the solar corona. Its speed, density and magnetic field change according to what happens on the Sun."
+          "description": "The solar wind is a continuous flow of charged particles in a plasma state that travels outward from the Sun through interplanetary space."
         },
         "magnetosphere": {
           "title": "Magnetosphere",
-          "description": "The Earth's magnetic field deflects most of the solar wind. When that stream intensifies, the magnetosphere is compressed and can be disturbed."
+          "description": "Earth’s magnetosphere is the region surrounding the planet where its magnetic field is dominant and interacts with the solar wind. When the solar wind intensifies, it can compress and disturb the magnetosphere."
         },
         "ionosphere": {
           "title": "Ionosphere",
@@ -403,7 +439,7 @@
         },
         "particles": {
           "title": "Particle radiation",
-          "description": "The Sun can also send protons and other energetic particles. That stream is different from the everyday solar wind and can affect satellites and polar flights."
+          "description": "Solar activity can also accelerate particles to high energies. These solar energetic particles (SEPs) can affect satellites and increase radiation exposure on high-altitude and polar flights."
         }
       },
       "flow": {
@@ -424,6 +460,7 @@
       "titleField": "Title ({language})",
       "bodyField": "Text ({language})",
       "bodyHint": "Separate paragraphs with a blank line.",
+      "remainingCharacters": "{remaining} of {max} characters remaining.",
       "legacyBaseText": "This text was saved before language versions existed and may not be in Spanish. If you change the title or the text, review it too.",
       "legacyNoTranslation": "This section has no English version yet. To change the title or the text, fill in both languages.",
       "cancel": "Cancel",
@@ -447,16 +484,63 @@
     "hero": {
       "kicker": "LASCE resources",
       "title": "Scientific tools",
-      "intro": "Access tools for analysing solar activity and studying space weather."
-    },
-    "tools": {
-      "swaat": "Analyse solar events using GOES X-ray and RSTN microwave observations. View and compare their evolution over time with static and interactive charts.",
-      "swapro": "Query and view solar events in specific time intervals to support the study of solar activity and space weather."
+      "intro": "LASCE tools for analysing solar activity and studying space weather."
     },
     "list": {
+      "title": "Available tools",
       "empty": "No scientific tools are available at the moment.",
-      "access": "Open {title}",
-      "externalNotice": "The links open in a new tab and take you to external sites."
+      "access": "Open {title}"
+    },
+    "editor": {
+      "add": "Add scientific tool",
+      "edit": "Edit scientific tool",
+      "editNamed": "Edit tool {title}",
+      "deleteNamed": "Delete tool {title}",
+      "name": "Name",
+      "description": "Description ({language})",
+      "languages": "Tool translations",
+      "accessUrl": "Access link",
+      "image": "Image (optional)",
+      "imageHelp": "Select or drop a PNG, JPG, WebP or GIF image of up to 25 MiB.",
+      "cancel": "Cancel",
+      "save": "Confirm",
+      "saving": "Saving…",
+      "legacy": "This tool keeps its original text. Complete both languages when you change the description."
+    },
+    "validation": {
+      "name": "The name is required.",
+      "nameTooLong": "The name must not exceed 100 characters.",
+      "accessUrl": "Enter a valid https address, without credentials.",
+      "imageUrl": "Select a valid image."
+    },
+    "upload": {
+      "uploaded": "Image uploaded successfully.",
+      "failed": "The image could not be uploaded. Please try again.",
+      "missing": "Select an image.",
+      "tooLarge": "The image must not exceed 25 MiB.",
+      "invalidType": "Select a valid PNG, JPG, WebP or GIF image."
+    },
+    "feedback": {
+      "created": "Scientific tool added successfully.",
+      "updated": "Scientific tool updated successfully.",
+      "deleted": "Scientific tool deleted successfully.",
+      "failed": "The scientific tool could not be saved. Please try again.",
+      "forbidden": "You do not have permission to perform this action. Sign in with an authorised account.",
+      "notFound": "The scientific tool no longer exists. Reload the page.",
+      "conflict": "The scientific tool has changed. Reopen the form to load the current version.",
+      "review": "Review the pending translations before saving.",
+      "fields": "Check the highlighted fields."
+    },
+    "delete": {
+      "title": "Delete scientific tool",
+      "message": "Do you want to delete this scientific tool? This action cannot be undone.",
+      "confirm": "Delete"
+    },
+    "discard": {
+      "title": "Discard unsaved changes",
+      "message": "The changes you have made will be lost.",
+      "keepEditing": "Keep editing",
+      "confirm": "Discard"
     }
   },
   "collaborations": {
@@ -515,7 +599,8 @@
       "name": "The name is required and must contain at most 300 characters.",
       "scope": "Select National or International.",
       "acronym": "The acronym must contain at most 100 characters.",
-      "url": "Enter a valid HTTP or HTTPS URL without credentials and at most 2048 characters."
+      "url": "Enter a valid HTTP or HTTPS URL without credentials and at most 2048 characters.",
+      "logoPath": "Select a valid image for the logo."
     },
     "editor": {
       "add": "Add collaboration",
@@ -527,11 +612,20 @@
       "scope": "Classification",
       "country": "Country ({language})",
       "languages": "Country language",
+      "logo": "Logo (optional)",
+      "logoHelp": "Select or drag a PNG, JPG, WebP or GIF image up to 25 MiB.",
       "websiteUrl": "Website (optional)",
       "cancel": "Cancel",
       "save": "Confirm",
       "saving": "Saving...",
       "legacy": "This record has text in an unknown language. When changing its country, complete and review both languages."
+    },
+    "upload": {
+      "uploaded": "Logo uploaded successfully.",
+      "failed": "The logo could not be uploaded. Try again.",
+      "missing": "Select an image for the logo.",
+      "tooLarge": "The image must not exceed 25 MiB.",
+      "invalidType": "Select a valid PNG, JPG, WebP or GIF image."
     },
     "feedback": {
       "created": "Collaboration added successfully.",
@@ -572,18 +666,65 @@
       "metaDescription": "Workshops, courses, talks and scientific and training activities organised by or linked to LASCE.",
       "kicker": "LASCE public portal",
       "title": "Academic activities",
-      "lead": "Workshops, courses, talks and scientific and training activities organised by or linked to LASCE."
+      "lead": "Workshops, courses, talks and scientific and training activities organised by or linked to LASCE.",
+      "searchLabel": "Search academic activities",
+      "searchPlaceholder": "Search by title, category, date or keyword...",
+      "paginationLabel": "Academic activities pages",
+      "results": "{count, plural, one {# academic activity found.} other {# academic activities found.}}",
+      "range": "Showing {from}–{to} of {total}.",
+      "rangeOne": "Showing activity {position} of {total}.",
+      "emptyQuery": "No academic activities were found for “{query}”.",
+      "loadError": "The academic activities could not be loaded. Try again.",
+      "retry": "Try again"
     },
-    "items": {
-      "machineLearningWorkshop": {
-        "category": "Workshop",
-        "date": "16-20 February 2026",
-        "p1": "As part of the LASCE project, the Workshop on Machine Learning Applied to Space Weather and Global Navigation Satellite Systems (GNSS) was held from 16 to 20 February 2026 in San José, Costa Rica. For five days the activity brought together students, early-career researchers and specialists to strengthen their skills in the study of the Sun-Earth relationship, scientific data analysis and the application of artificial intelligence and machine learning techniques to space weather.",
-        "p2": "The programme combined lectures, discussion sessions and computational practice devoted to ionospheric processes, the effects of space weather on GNSS systems, scientific computing and data analysis with machine learning tools. This approach made it possible to combine the physical understanding of solar and terrestrial phenomena with modern methods of processing, modelling and prediction, while also promoting the use of open data and reproducible procedures.",
-        "p3": "The workshop had 52 in-person participants from 17 countries; 37.2% were women and 70% came from developing countries. It was organised with the participation of the Space Research Center of the University of Costa Rica, the United Nations Office for Outer Space Affairs, the International Committee on GNSS, COSPAR, INGV and SCOSTEP, together with contributions from the National University of Tucumán and the Abdus Salam International Centre for Theoretical Physics.",
-        "p4": "This activity strengthened the international profile of LASCE, widened its networks of scientific collaboration and contributed to building regional capabilities for researching, monitoring and predicting the effects of space weather on the ionosphere and on technological systems. It also created a space for identifying new scientific challenges, opportunities for cooperation and future initiatives that combine space weather physics with advanced data analysis tools.",
-        "imageAlt": "Committee and participants beside the official poster of the Machine Learning and space weather workshop"
-      }
+    "created": "Activity added successfully.",
+    "updated": "Activity updated successfully.",
+    "deleted": "Activity deleted successfully.",
+    "errors": {
+      "saveUnknown": "The activity could not be saved. Try again.",
+      "deleteUnknown": "The activity could not be deleted. Try again."
+    },
+    "editor": {
+      "addCard": "Add activity",
+      "editTitle": "Edit academic activity",
+      "editLabel": "Edit",
+      "deleteLabel": "Delete",
+      "languageTabs": "Content language",
+      "legacyBaseText": "This text was entered before language versions existed and may not be in Spanish. If you change the title, the category, the description or the alt text, check it as well.",
+      "legacyNoTranslation": "This activity has no English version yet. To change the title, the category, the description or the alt text you must complete both languages; the other fields can be edited without translating it.",
+      "titleField": "Title ({language})",
+      "categoryField": "Category ({language})",
+      "categoryPlaceholder": "Workshop, talk, course, conference...",
+      "locationField": "Location",
+      "startDateField": "Start date",
+      "endDateField": "End date",
+      "descriptionField": "Description ({language})",
+      "photoField": "Image",
+      "photoHelperText": "Illustrative image of the activity, in JPG, PNG, WebP or GIF format.",
+      "photoAltField": "Image alternative text ({language})",
+      "cancel": "Cancel",
+      "save": "Confirm",
+      "saving": "Saving...",
+      "uploadingImage": "Uploading image..."
+    },
+    "validation": {
+      "startDate": "The start date is required.",
+      "endDate": "The end date must be on or after the start date.",
+      "location": "The location is required.",
+      "photo": "The image is required.",
+      "uploadFailed": "The image could not be uploaded. Try again."
+    },
+    "discardDialog": {
+      "title": "Discard unsaved changes",
+      "message": "If you discard now, all the data entered that has not been saved will be lost.",
+      "keepEditing": "Keep editing",
+      "discard": "Discard"
+    },
+    "deleteDialog": {
+      "title": "Delete academic activity",
+      "message": "This action cannot be undone and will remove the activity from the public catalog.",
+      "confirm": "Delete",
+      "cancel": "Cancel"
     }
   },
   "publications": {
@@ -720,7 +861,11 @@
       "subalbumsTitle": "Subalbums",
       "backToGallery": "Back to gallery",
       "backToAlbum": "Back to {album}",
-      "gallery": "LASCE Gallery"
+      "gallery": "LASCE Gallery",
+      "loading": "Loading gallery…",
+      "loadingAlbum": "Loading album…",
+      "loadError": "Could not load the gallery. Please try again.",
+      "retry": "Retry"
     },
     "albumPage": {
       "albumFiles": "{count, plural, one {# file in this album} other {# files in this album}}",
@@ -892,10 +1037,10 @@
   "news": {
     "page": {
       "metaTitle": "News | LASCE",
-      "metaDescription": "News and media coverage of the Solar Astrophysics and Space Weather Laboratory of the University of Costa Rica.",
+      "metaDescription": "News from the Solar Astrophysics and Space Weather Laboratory of the University of Costa Rica.",
       "kicker": "LASCE public portal",
-      "title": "News and media coverage",
-      "lead": "News, outreach and coverage of LASCE’s work.",
+      "title": "News",
+      "lead": "Recent news",
       "recent": "Recent news",
       "searchLabel": "Search news",
       "searchPlaceholder": "Search by title, author or keyword...",
@@ -975,7 +1120,7 @@
     },
     "overview": {
       "title": "What is ROSAC?",
-      "p1": "The Santa Cruz Radio Observatory (ROSAC) is a University of Costa Rica project located at the Santa Cruz Campus, Guanacaste. Its development centers on adapting an 11-meter parabolic antenna for astronomical use, through a new mount, motion and pointing systems, receivers, electronics, and control software.",
+      "p1": "The Santa Cruz Radio Observatory (ROSAC) is a project developed by the University of Costa Rica located at the Santa Cruz Campus, Guanacaste. Its development centers on adapting an 11-meter parabolic antenna for astronomical use, through a new mount, motion and pointing systems, receivers, electronics, and control software.",
       "p2": "Its purpose is to develop national capabilities to observe the Sun and other celestial sources at radio frequencies. The project connects astrophysics research with physics, electronics, engineering, telecommunications, automatic control, and software development."
     },
     "characteristics": {
@@ -1041,7 +1186,7 @@
     },
     "construction": {
       "title": "ROSAC construction",
-      "intro": "The development of the Santa Cruz Radio Observatory has involved various stages of study, preparation, assembly, and infrastructure adaptation. This walkthrough presents some of the work carried out during that process.",
+      "intro": "The development of the Santa Cruz Radio Observatory has involved several stages of study, preparation, assembly, and infrastructure adaptation. This walkthrough presents some of the work carried out during that process.",
       "carousel": {
         "ariaLabel": "ROSAC construction process",
         "groupNoun": "Stage",
@@ -1116,12 +1261,12 @@
     },
     "radioObservation": {
       "title": "Why observe in radio?",
-      "p1": "Radio emissions allow tracking accelerated electrons and structures moving through the solar corona and interplanetary medium. These observations complement visible light, ultraviolet, and X-ray images, helping reconstruct the evolution of solar events."
+      "p1": "Radio emissions enable us to trace accelerated electrons and follow the propagation of structures through the solar corona and interplanetary medium. These observations complement visible light, ultraviolet, and X-ray images, helping reconstruct the evolution of solar events."
     },
     "relationship": {
       "title": "ROSAC and LASCE",
       "p1": "LASCE integrates data, models, and analysis methods to study solar activity and its relationship with the Earth's environment. ROSAC provides national infrastructure to observe the Sun at radio frequencies and strengthen those research capabilities.",
-      "p2": "LASCE turns observations into knowledge; ROSAC generates and strengthens an essential part of those observations. Together they connect basic science, technological development, training, and applications of national interest."
+      "p2": "LASCE turns observations into knowledge; ROSAC generates and strengthens an essential part of those observations. Together they connect basic science, technological development, training, and applications of national and international interest."
     },
     "instruments": {
       "title": "Scientific instruments",
@@ -1241,7 +1386,7 @@
         },
         "prysmian": {
           "title": "Prysmian donation",
-          "description": "The ROSAC organization received an equipment donation from Prysmian, as part of its commitment to strengthening the initiatives and activities carried out by the organization. This contribution represents valuable support for ROSAC and the development of its work.",
+          "description": "Prysmian Group donated nearly 3 km of power and telecommunications cables, valued at $36,000, for the development of the ROSAC radio telescope, the only one of its kind in Central America. The 96-fiber optical cable will carry the Sun’s data to servers in real time, while the power cables will supply the receivers and equipment. The company will also provide guidance for proper installation and commissioning.",
           "imageAlt": "Prysmian representative talking with a ROSAC team member in front of the observatory antenna"
         }
       },
@@ -1385,7 +1530,7 @@
         "addModal": {
           "title": "Add photograph",
           "fileLabel": "Image file",
-          "fileHelp": "JPG, PNG or WebP formats (max. 10 MB).",
+          "fileHelp": "JPG, PNG, WebP, AVIF or SVG formats (max. 10 MB).",
           "fileRequired": "You must select an image file.",
           "altLabel": "Accessible alternative text (alt)",
           "altPlaceholder": "Description for screen reader users",
@@ -1418,7 +1563,7 @@
         "descriptionLabel": "Description",
         "descriptionRequired": "Description is required.",
         "imageLabel": "Instrument image",
-        "imageHelp": "JPG, PNG, WebP or AVIF formats (max. 10 MB).",
+        "imageHelp": "JPG, PNG, WebP, AVIF or SVG formats (max. 10 MB).",
         "imageRequired": "Image is required.",
         "imageAltLabel": "Image alternative text (Accessibility)",
         "imageAltPlaceholder": "Short image description for screen readers",
@@ -1466,7 +1611,7 @@
         "logoSourceCustom": "Upload custom logo",
         "logoSourcePreset": "Select from list: {label}",
         "logoFileLabel": "Logo file",
-        "logoFileHelp": "WebP, PNG, SVG or JPG formats (max. 10 MB).",
+        "logoFileHelp": "JPG, PNG, WebP, AVIF or SVG formats (max. 10 MB).",
         "logoRequired": "You must select or upload a logo for the institution.",
         "logoAltLabel": "Logo alternative text (Accessibility)",
         "logoAltPlaceholder": "Accessible description of the institutional logo",
@@ -1489,7 +1634,7 @@
     "loading": "Loading research areas…",
     "empty": "No research areas are available.",
     "paginationLabel": "Research area pages",
-    "results": "Showing {from}–{to} of {total} research areas.",
+    "results": "Showing {from}–{to} of {total}.",
     "page": {
       "metaTitle": "Research | LASCE",
       "metaDescription": "Research areas of the Solar Astrophysics and Space Weather Laboratory of the Universidad de Costa Rica.",
@@ -1583,6 +1728,7 @@
       "institutionRequired": "Institution is required.",
       "invalidEmail": "One or more email addresses are invalid.",
       "maxEmails": "Maximum 2 contact email addresses.",
+      "invalidSrc": "The photo must be a site path or an already uploaded image.",
       "versionRequired": "The researcher version is required and must match what was loaded.",
       "confirmationsOnlyWithContent": "Confirmations only apply to a content update.",
       "noFieldsToUpdate": "The request does not include any fields to update."
@@ -1597,7 +1743,8 @@
       "deleteConfirm": "Delete",
       "deleteCancel": "Cancel",
       "photoLabel": "Photo",
-      "photoHelp": "Optional. Researcher portrait, in JPG or PNG format.",
+      "photoHelp": "Optional. Researcher portrait, in JPG, PNG, WebP or GIF format.",
+      "rosacPhotoHelp": "Optional. Researcher portrait in JPG, PNG, WebP, AVIF or SVG format (max. 10 MB).",
       "roleLabel": "Role",
       "roleRequired": "Role is required.",
       "nameLabel": "Name",
@@ -1856,6 +2003,7 @@
       "minimum": "Minimum",
       "maximum": "Maximum",
       "latest": "Latest value",
+      "flareClass": "Flare class {flareClass}",
       "chartCaptionObserved": "Observations from {provider}.",
       "chartCaptionSimulated": "Simulated series to prepare the future ROSAC integration.",
       "tableToggle": "View chart values ({count})",
@@ -1868,7 +2016,14 @@
       "dynamicSpectrumTableCaption": "Simulated intensity by hour and frequency",
       "columnFrequency": "Frequency (MHz)",
       "columnIntensity": "Relative intensity",
-      "downloadStarted": "The download of {filename} has started. The link expires in 30 minutes."
+      "downloadStarted": "The download of {filename} has started. The link expires in 30 minutes.",
+      "timeZoneHint": "Times are in UTC. Costa Rica is 6 hours behind (UTC−6): 12:00 UTC is 06:00 in Costa Rica.",
+      "crossesMidnightHint": "The end time is earlier than the start time: the range ends on the next day (UTC).",
+      "dateLatestHint": "Latest day with data: {date}.",
+      "localIntervalResultLabel": "Costa Rica time (UTC−6)",
+      "localDayBefore": "{time} (previous day)",
+      "localDayAfter": "{time} (next day)",
+      "crossesMidnightResult": "(ends the next day)"
     },
     "downloads": {
       "title": "Downloads",
@@ -1885,6 +2040,11 @@
       "description": "Series of {count} measurements between {start} and {end} UTC. The minimum value is {minimum} and the maximum is {maximum} {unit}.",
       "empty": "There are no values to chart.",
       "caption": "{caption} Unit: {unit}.",
+      "logScale": "The vertical axis uses a logarithmic scale.",
+      "flareClasses": "The letters A, B, C, M and X on the right mark the solar flare classes.",
+      "peakClass": "The maximum is a class {flareClass} flare.",
+      "tooltip": "{time} UTC: {value} {unit}",
+      "keyboardHint": "Use the left and right arrow keys to move through the values, and Home and End to go to the first and the last.",
       "low": "Low",
       "high": "High",
       "spectrumDescription": "Intensity map by time and frequency, from {minFreq} to {maxFreq} {frequencyUnit} and from {start} to {end} UTC. Values range from {minimum} to {maximum} {unit}.",
@@ -1897,7 +2057,7 @@
       "invalidDate": "Select a valid date in YYYY-MM-DD format.",
       "invalidStartTime": "Select a valid start time in HH:mm format.",
       "invalidEndTime": "Select a valid end time in HH:mm format.",
-      "startBeforeEnd": "The start time must be before the end time.",
+      "sameStartEnd": "The start time and the end time cannot be the same.",
       "productUnavailable": "The selected product is not yet available for this source.",
       "invalidParameterForProduct": "Select a valid channel or parameter for the product.",
       "default": "Check the criteria."
@@ -1914,10 +2074,11 @@
       "downloadInvalid": "The download request is not valid.",
       "downloadUnsupported": "This product does not offer downloads in the requested format.",
       "downloadPending": "The query is still being processed. Wait for it to finish and try the download again.",
-      "downloadEmpty": "There is no data to download for the selected criteria."
+      "downloadEmpty": "There is no data to download for the selected criteria.",
+      "dateNotPublished": "That date does not have published data yet. Choose {date} or an earlier date."
     },
     "origins": {
-      "sampled": "{count} observations evenly spread across the interval are shown; no values were interpolated.",
+      "sampled": "The chart shows {count} points: the lowest and highest reading of each stretch of the interval, without interpolation. The minimum, maximum and latest value are computed from every observation.",
       "full": "Not sampled: includes every valid observation in the interval.",
       "exis": {
         "provider": "GOES",
@@ -1983,7 +2144,8 @@
         "descargas": "Downloads",
         "usuarios": "Users",
         "permisos": "Permissions",
-        "auditoria": "Audit trail"
+        "auditoria": "Audit trail",
+        "correo": "Email"
       }
     },
     "summary": {
@@ -2011,6 +2173,7 @@
     },
     "activity": {
       "title": "Recent activity",
+      "viewAll": "View all",
       "empty": "No activity has been recorded yet.",
       "actors": {
         "system": "System",
@@ -2213,9 +2376,15 @@
         "collaboration_create": "Collaboration added: {name}",
         "collaboration_update": "Collaboration updated: {name}",
         "collaboration_delete": "Collaboration deleted: {name}",
+        "scientific_tool_create": "Scientific tool added: {name}",
+        "scientific_tool_update": "Scientific tool updated: {name}",
+        "scientific_tool_delete": "Scientific tool deleted: {name}",
         "contact_channel_create": "Contact channel added: {name}",
         "contact_channel_update": "Contact channel updated: {name}",
         "contact_channel_delete": "Contact channel deleted: {name}",
+        "academic_activity_create": "Academic activity added: {name}",
+        "academic_activity_update": "Academic activity updated: {name}",
+        "academic_activity_delete": "Academic activity deleted: {name}",
         "nosotros_activity_create": "Nosotros activity added: {name}",
         "nosotros_activity_update": "Nosotros activity updated: {name}",
         "nosotros_activity_delete": "Nosotros activity deleted: {name}",
@@ -2240,7 +2409,156 @@
         "space_weather_section_update": "Space weather card updated: {name}",
         "solar_physics_section_update": "Solar physics section updated: {name}",
         "role_permissions_update": "Permissions updated for the {role} role",
-        "user_role_change": "{name}'s role changed from {previous} to {next}"
+        "user_role_change": "{name}'s role changed from {previous} to {next}",
+        "smtp_settings_update": "Email settings updated",
+        "user_password_reset": "Password reset: {name}"
+      }
+    },
+    "auditLabels": {
+      "actions": {
+        "news_create": "News article added",
+        "news_update": "News article updated",
+        "news_delete": "News article deleted",
+        "publication_create": "Publication added",
+        "publication_update": "Publication updated",
+        "publication_delete": "Publication deleted",
+        "research_area_create": "Research area added",
+        "research_area_update": "Research area updated",
+        "research_area_delete": "Research area deleted",
+        "collaboration_create": "Collaboration added",
+        "collaboration_update": "Collaboration updated",
+        "collaboration_delete": "Collaboration deleted",
+        "contact_channel_create": "Contact channel added",
+        "contact_channel_update": "Contact channel updated",
+        "contact_channel_delete": "Contact channel deleted",
+        "academic_activity_create": "Academic activity added",
+        "academic_activity_update": "Academic activity updated",
+        "academic_activity_delete": "Academic activity deleted",
+        "nosotros_activity_create": "Nosotros activity added",
+        "nosotros_activity_update": "Nosotros activity updated",
+        "nosotros_activity_delete": "Nosotros activity deleted",
+        "nosotros_researcher_create": "Nosotros researcher added",
+        "nosotros_researcher_update": "Nosotros researcher updated",
+        "nosotros_researcher_delete": "Nosotros researcher deleted",
+        "rosac_researcher_create": "ROSAC researcher added",
+        "rosac_researcher_update": "ROSAC researcher updated",
+        "rosac_researcher_delete": "ROSAC researcher deleted",
+        "gallery_album_create": "Gallery album added",
+        "gallery_album_update": "Gallery album updated",
+        "gallery_album_delete": "Gallery album deleted",
+        "gallery_sub_album_create": "Gallery sub-album added",
+        "gallery_sub_album_update": "Gallery sub-album updated",
+        "gallery_sub_album_delete": "Gallery sub-album deleted",
+        "gallery_media_create": "Gallery file added",
+        "gallery_media_update": "Gallery file updated",
+        "gallery_media_delete": "Gallery file deleted",
+        "home_hero_update": "Home banner updated",
+        "geomagnetic_index_update": "Geomagnetic index updated",
+        "space_weather_section_update": "Space weather card updated",
+        "solar_physics_section_update": "Solar physics section updated",
+        "geomagnetic_index_reorder": "Geomagnetic indices reordered",
+        "role_permissions_update": "Role permissions updated",
+        "user_role_change": "Account role changed",
+        "user_login": "Signed in",
+        "schedule_register": "Job schedule registered",
+        "legacy_event": "Earlier event",
+        "smtp_settings_update": "Email settings updated",
+        "user_password_reset": "Password reset"
+      },
+      "entities": {
+        "news": "News article",
+        "publication": "Publication",
+        "research_area": "Research area",
+        "collaboration": "Collaboration",
+        "contact_channel": "Contact channel",
+        "academic_activity": "Academic activity",
+        "nosotros_activity": "About Us activity",
+        "nosotros_researcher": "About Us researcher",
+        "rosac_researcher": "ROSAC researcher",
+        "gallery_album": "Gallery album",
+        "gallery_sub_album": "Gallery sub-album",
+        "gallery_media": "Gallery file",
+        "home_hero": "Home banner",
+        "geomagnetic_index": "Geomagnetic index",
+        "space_weather_section": "Space weather card",
+        "solar_physics_section": "Solar physics section",
+        "role": "Role",
+        "role_permissions": "Role permissions",
+        "user": "Account",
+        "schedule": "Job schedule",
+        "smtp_settings": "Email settings"
+      },
+      "unknown": "Other"
+    },
+    "email": {
+      "metaTitle": "Email | Administration | LASCE",
+      "title": "Email",
+      "description": "Configure the SMTP server the portal sends email through, such as password reset links.",
+      "notConfigured": "No mail server is configured yet. Until one is, password reset requests send no email.",
+      "passwordUnreadable": "The saved password cannot be decrypted, probably because CRON_SECRET changed. Type it again and save the settings.",
+      "keyUnavailable": "The server has no CRON_SECRET, so it cannot store an SMTP password. Set it and restart the portal.",
+      "requiredNote": "The username and password are optional; every other field is required.",
+      "labels": {
+        "host": "SMTP server",
+        "port": "Port",
+        "security": "Security",
+        "username": "Username",
+        "password": "Password",
+        "fromAddress": "Sender email",
+        "fromName": "Sender name"
+      },
+      "placeholders": {
+        "host": "smtp.example.com",
+        "security": "Choose the connection type",
+        "fromAddress": "no-reply@example.com"
+      },
+      "security": {
+        "tls": "TLS (usually port 465)",
+        "starttls": "STARTTLS (usually port 587)",
+        "none": "No encryption (testing only)"
+      },
+      "hints": {
+        "username": "Leave it empty if the server does not require authentication.",
+        "passwordKeep": "A password is saved. Leave the field empty to keep it; if you change the server, port, security or username, type it again.",
+        "passwordNew": "It is stored encrypted and never shown again."
+      },
+      "save": "Save settings",
+      "saving": "Saving...",
+      "saved": "Email settings updated successfully.",
+      "saveFailed": "The email settings could not be saved. Try again.",
+      "test": {
+        "title": "Test email",
+        "body": "Send a message to {email} with the saved settings.",
+        "send": "Send test email",
+        "sending": "Sending...",
+        "sent": "Test email sent to {email}.",
+        "failed": "The test email could not be sent. Try again."
+      },
+      "validation": {
+        "hostRequired": "Enter the SMTP server.",
+        "hostInvalid": "Enter a valid server name, without spaces.",
+        "portInvalid": "Enter a port between 1 and 65535.",
+        "securityRequired": "Choose the connection type.",
+        "usernameTooLong": "The username cannot be longer than 254 characters.",
+        "passwordTooLong": "The password cannot be longer than 512 characters.",
+        "fromAddressRequired": "Enter the sender email.",
+        "fromAddressInvalid": "Enter a valid email address.",
+        "fromNameRequired": "Enter the sender name.",
+        "fromNameTooLong": "The name cannot be longer than 120 characters.",
+        "passwordRequired": "Enter the password of the SMTP user."
+      },
+      "errors": {
+        "invalid": "Review the email settings fields.",
+        "keyUnavailable": "The password cannot be stored because the server has no CRON_SECRET.",
+        "notConfigured": "Save the mail server settings first.",
+        "passwordUnreadable": "The saved password cannot be decrypted. Type it again and save the settings.",
+        "sendFailed": "The mail server rejected the message or did not answer. Check the server, port, security and credentials.",
+        "saveFailed": "The email settings could not be saved.",
+        "passwordRequired": "Enter the password of the SMTP user."
+      },
+      "testEmail": {
+        "subject": "LASCE portal test email",
+        "body": "This message confirms that the Solar Astrophysics and Space Weather Laboratory portal can send email with the saved settings."
       }
     }
   },
@@ -2253,17 +2571,17 @@
     "permissions": {
       "create_components": {
         "label": "Create components",
-        "description": "Create portal components when that feature is available.",
+        "description": "Add editable portal content from Edit mode.",
         "denied": "You are not authorized to create components."
       },
       "edit_components": {
         "label": "Edit components",
-        "description": "Edit portal components when that feature is available.",
+        "description": "Edit editable portal content from Edit mode.",
         "denied": "You are not authorized to edit components."
       },
       "delete_components": {
         "label": "Delete components",
-        "description": "Delete portal components when that feature is available.",
+        "description": "Delete editable portal content from Edit mode.",
         "denied": "You are not authorized to delete components."
       },
       "download_resources": {
@@ -2295,13 +2613,188 @@
         "label": "View the download history",
         "description": "See who downloaded which laboratory resources and when.",
         "denied": "You are not authorized to view the download history."
+      },
+      "manage_email_settings": {
+        "label": "Configure email",
+        "description": "Configure the SMTP server the portal sends email through.",
+        "denied": "You are not authorized to configure the portal email."
       }
     },
     "accessDenied": {
       "title": "Access denied"
     }
   },
+  "auth": {
+    "meta": {
+      "title": "Portal access | LASCE",
+      "description": "Sign in or create an account on the portal of the Space Weather Laboratory of the University of Costa Rica."
+    },
+    "page": {
+      "title": "Portal access",
+      "lead": "Sign in or create an account to download scientific products and review your activity.",
+      "backLink": "Back to home"
+    },
+    "tabs": {
+      "label": "Access",
+      "login": "Sign in",
+      "register": "Create account"
+    },
+    "login": {
+      "heading": {
+        "title": "Sign in",
+        "description": "Sign in to download scientific products and review your activity."
+      },
+      "labels": {
+        "email": "Email address",
+        "password": "Password"
+      },
+      "placeholders": {
+        "email": "email@example.com"
+      },
+      "submit": "Sign in",
+      "submitting": "Signing in...",
+      "noAccountPrompt": "Don't have an account?",
+      "noAccountLink": "Create account",
+      "footnote": "The download is associated with your account for traceability and scientific use.",
+      "validation": {
+        "emailRequired": "Enter your email address.",
+        "emailInvalid": "Enter a valid email address.",
+        "passwordRequired": "Enter your password.",
+        "reviewFields": "Review the marked fields to continue.",
+        "invalidCredentials": "Incorrect email or password.",
+        "unexpected": "We could not sign you in. Try again in a few minutes.",
+        "authRequired": "You must sign in to continue."
+      },
+      "forgotPassword": "Forgot your password?",
+      "resetDone": "Password updated successfully. Sign in with your new password."
+    },
+    "registration": {
+      "heading": {
+        "title": "Create account",
+        "lead": "Personal and institutional emails are accepted."
+      },
+      "labels": {
+        "fullName": "Full name",
+        "email": "Email address",
+        "institution": "Institution",
+        "countryCode": "Country",
+        "password": "Password",
+        "passwordConfirmation": "Repeat password"
+      },
+      "placeholders": {
+        "fullName": "First and last name",
+        "email": "email@example.com",
+        "institution": "University / Research center",
+        "countryCode": "Select a country"
+      },
+      "requiredNote": "All fields are required.",
+      "passwordHint": "At least 8 characters.",
+      "submit": "Create account",
+      "submitting": "Creating account...",
+      "successTitle": "Account created",
+      "successBody": "Your account was registered. You can now sign in.",
+      "successLink": "Sign in",
+      "validation": {
+        "fullNameRequired": "Enter your full name.",
+        "fullNameTooLong": "The name cannot exceed 120 characters.",
+        "emailRequired": "Enter your email address.",
+        "emailInvalid": "Enter a valid email address.",
+        "emailTooLong": "The email address cannot exceed 254 characters.",
+        "emailTaken": "An account with this email address already exists.",
+        "institutionRequired": "Enter your institution.",
+        "institutionTooLong": "The institution cannot exceed 160 characters.",
+        "countryRequired": "Select your country.",
+        "passwordRequired": "Enter a password.",
+        "passwordTooShort": "The password must be at least 8 characters long.",
+        "passwordTooLong": "The password cannot exceed 128 characters.",
+        "confirmationRequired": "Repeat your password.",
+        "confirmationMismatch": "The passwords do not match.",
+        "reviewFields": "Review the marked fields to continue.",
+        "unexpected": "We could not create your account. Try again in a few minutes."
+      }
+    },
+    "passwordReset": {
+      "backLink": "Back to sign in",
+      "request": {
+        "meta": {
+          "title": "Recover password | LASCE",
+          "description": "Request a link to reset the password of your account on the Solar Astrophysics and Space Weather Laboratory portal."
+        },
+        "title": "Recover password",
+        "lead": "Enter your account's email address and we will send you a link to choose a new password.",
+        "labels": {
+          "email": "Email address"
+        },
+        "placeholders": {
+          "email": "email@example.com"
+        },
+        "submit": "Send link",
+        "submitting": "Sending...",
+        "successTitle": "Check your email",
+        "successBody": "If an account exists for that email address, we sent it a link to reset the password. The link expires in 30 minutes and can be used only once.",
+        "successHint": "Nothing arrived? Check your spam folder or request another link in a few minutes.",
+        "retry": "Request another link",
+        "backToLogin": "Back to sign in",
+        "validation": {
+          "emailRequired": "Enter your email address.",
+          "emailInvalid": "Enter a valid email address."
+        }
+      },
+      "reset": {
+        "meta": {
+          "title": "Reset password | LASCE",
+          "description": "Choose a new password for your portal account."
+        },
+        "title": "Choose a new password",
+        "lead": "Type the new password twice. Saving it signs your account out of every open session.",
+        "labels": {
+          "password": "New password",
+          "passwordConfirmation": "Repeat password"
+        },
+        "passwordHint": "At least 8 characters.",
+        "submit": "Save password",
+        "submitting": "Saving...",
+        "invalidTitle": "This link is not valid",
+        "invalidBody": "The link has expired, was already used or is not correct. Request a new one to reset your password.",
+        "requestNew": "Request a new link",
+        "validation": {
+          "passwordRequired": "Enter a password.",
+          "passwordTooShort": "The password must be at least 8 characters long.",
+          "passwordTooLong": "The password cannot be longer than 128 characters.",
+          "confirmationRequired": "Repeat your password.",
+          "confirmationMismatch": "The passwords do not match.",
+          "unexpected": "We could not save the password. Try again in a few minutes."
+        }
+      },
+      "email": {
+        "subject": "Reset your LASCE portal password",
+        "greeting": "Hello, {name}:",
+        "intro": "We received a request to reset the password of your account on the Solar Astrophysics and Space Weather Laboratory portal.",
+        "action": "Choose a new password",
+        "linkFallback": "If the button does not work, copy this link into your browser:",
+        "expiry": "The link expires in {minutes} minutes and can be used only once.",
+        "ignore": "If you did not ask for this, ignore this message: your password will not change.",
+        "signature": "Solar Astrophysics and Space Weather Laboratory, University of Costa Rica"
+      }
+    }
+  },
   "account": {
+    "meta": {
+      "title": "My account | LASCE",
+      "description": "Your profile on the portal of the Laboratorio de Astrofísica Solar y Clima Espacial of the University of Costa Rica."
+    },
+    "page": {
+      "title": "My account",
+      "lead": "Your profile on the portal and your session controls."
+    },
+    "profile": {
+      "fullName": "Name",
+      "email": "Email address",
+      "institution": "Institution",
+      "country": "Country",
+      "role": "Role",
+      "memberSince": "Member since"
+    },
     "signIn": "Sign in",
     "myAccount": "My account",
     "administration": "Administration",
@@ -2313,11 +2806,53 @@
       "ASSISTANT": "Assistant",
       "ADMIN": "Administrator"
     },
+    "noRole": "No role assigned",
     "signOutDialog": {
       "title": "Sign out?",
       "body": "Your session in this browser will end and you will have to sign in again.",
       "confirm": "Sign out",
       "cancel": "Cancel"
+    }
+  },
+  "team": {
+    "meta": {
+      "title": "Development team | LASCE",
+      "description": "Meet the student team that built the LASCE portal, and the project background: origins, motivation and objectives."
+    },
+    "hero": {
+      "kicker": "LASCE public portal",
+      "title": "Development team",
+      "lead": "The LASCE portal was built by Software Engineering students at the University of Costa Rica as a project of the Supervised Practice course."
+    },
+    "team": {
+      "title": "Who built it",
+      "intro": "Nine students worked together, using the Scrum agile methodology, to design, build, test and deliver the portal.",
+      "emailLabel": "Email",
+      "memberLabel": "Development team member"
+    },
+    "background": {
+      "title": "Project background",
+      "origin": {
+        "title": "Origins and motivation",
+        "body": "The Solar Astrophysics and Space Weather Laboratory (LASCE) needed a site of its own to present its research and share its data with the scientific community and the public. The project began as the information needs of a real organization, which is what the Supervised Practice course (CI-0156) of the School of Computer Science and Informatics asks of its students."
+      },
+      "objectives": {
+        "title": "Objectives",
+        "intro": "The portal aims to:",
+        "item1": "Present LASCE, its work areas, its research and its collaborations clearly.",
+        "item2": "Make the laboratory's information and scientific data available to anyone.",
+        "item3": "Let the laboratory keep its own content up to date.",
+        "item4": "Serve as a quality software development exercise for the student team."
+      },
+      "process": {
+        "title": "Development process",
+        "body": "The work was organized in Scrum iterations. In each one the team analyzed LASCE's needs, planned user stories, built and tested the software, and presented a version of the product to the laboratory to gather its feedback."
+      }
+    },
+    "acknowledgments": {
+      "title": "Acknowledgments",
+      "body": "We thank the researchers of LASCE and the Space Research Center (CINESPA) for their time and trust, and Professor Luis Gustavo Esquivel Quirós, the course instructor, for his guidance throughout the project.",
+      "notice": "This project was developed in the Supervised Practice course of the School of Computer Science and Informatics, University of Costa Rica."
     }
   },
   "initiatives": {

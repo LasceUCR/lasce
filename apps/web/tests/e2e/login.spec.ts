@@ -1,7 +1,7 @@
 import AxeBuilder from '@axe-core/playwright'
 import { expect as baseExpect, test, type Page } from '@playwright/test'
 
-import { cuentaIntro } from '@/app/lib/auth/account'
+import es from '@/messages/es.json' with { type: 'json' }
 import {
   ACCESS_PATH,
   LOGIN_CARD_ID,
@@ -240,7 +240,7 @@ test('shows the profile on the account page once signed in', async ({ page }) =>
   await page.goto('/cuenta')
 
   await expect(page).toHaveURL(/\/cuenta$/)
-  await expect(page.getByRole('heading', { level: 1, name: cuentaIntro.title })).toBeVisible()
+  await expect(page.getByRole('heading', { level: 1, name: es.account.page.title })).toBeVisible()
   const main = page.getByRole('main')
   await expect(main.getByText(account.fullName)).toBeVisible()
   await expect(main.getByText(account.email)).toBeVisible()
@@ -260,6 +260,80 @@ test('shows the profile on the account page once signed in', async ({ page }) =>
   const menu = page.getByRole('navigation', { name: 'Navegación móvil' })
   await expect(menu.getByRole('link', { name: 'Mi cuenta' })).toHaveAttribute('href', '/cuenta')
   await expect(menu.getByRole('button', { name: 'Cerrar sesión' })).toBeVisible()
+})
+
+test('switches language on the account page while preserving user info and session', async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1600, height: 900 })
+  await signIn(page)
+  await page.goto('/cuenta')
+
+  await expect(page).toHaveURL(/\/cuenta$/)
+  await expect(page).toHaveTitle(es.account.meta.title)
+  await expect(page.getByRole('heading', { level: 1, name: es.account.page.title })).toBeVisible()
+
+  let main = page.getByRole('main')
+  await expect(main.getByText(account.fullName)).toBeVisible()
+  await expect(main.getByText('Visitante')).toBeVisible()
+  await expect(main.getByText('Nombre', { exact: true })).toBeVisible()
+  await expect(main.getByText('Rol', { exact: true })).toBeVisible()
+
+  // Switch to English using the header language menu
+  await page.getByRole('banner').getByLabel('Idioma: Español').click()
+  await page.getByRole('banner').getByRole('button', { name: 'English' }).click()
+
+  // The route does not change and session is preserved
+  await expect(page).toHaveURL(/\/cuenta$/)
+  await expect(page).toHaveTitle('My account | LASCE')
+  await expect(page.getByRole('heading', { level: 1, name: 'My account' })).toBeVisible()
+  await expect(
+    page.getByText('Your profile on the portal and your session controls.'),
+  ).toBeVisible()
+
+  main = page.getByRole('main')
+  // User personal account data remains unchanged
+  await expect(main.getByText(account.fullName)).toBeVisible()
+  await expect(main.getByText(account.email)).toBeVisible()
+  await expect(main.getByText(account.institution)).toBeVisible()
+  await expect(main.getByText('Costa Rica', { exact: true })).toBeVisible()
+  await expect(main.getByText('Visitor', { exact: true })).toBeVisible()
+
+  // Profile labels in English
+  await expect(main.getByText('Name', { exact: true })).toBeVisible()
+  await expect(main.getByText('Email address', { exact: true })).toBeVisible()
+  await expect(main.getByText('Institution', { exact: true })).toBeVisible()
+  await expect(main.getByText('Country', { exact: true })).toBeVisible()
+  await expect(main.getByText('Role', { exact: true })).toBeVisible()
+  await expect(main.getByText('Member since', { exact: true })).toBeVisible()
+
+  // Back link in English
+  await expect(page.getByRole('link', { name: 'Back to home' })).toHaveAttribute('href', '/')
+
+  // Confirmation dialog in English
+  const signOutBtn = main.getByRole('button', { name: 'Sign out' })
+  await expect(signOutBtn).toBeVisible()
+  await signOutBtn.click()
+
+  const dialog = page.getByRole('dialog')
+  await expect(dialog.getByRole('heading', { level: 2, name: 'Sign out?' })).toBeVisible()
+  await expect(
+    dialog.getByText('Your session in this browser will end and you will have to sign in again.'),
+  ).toBeVisible()
+  await expect(dialog.getByRole('button', { name: 'Cancel' })).toBeVisible()
+  await expect(dialog.getByRole('button', { name: 'Sign out' })).toBeVisible()
+
+  // Close the dialog and switch back to Spanish
+  await dialog.getByRole('button', { name: 'Cancel' }).click()
+  await expect(dialog).not.toBeVisible()
+
+  await page.getByRole('banner').getByLabel('Language: English').click()
+  await page.getByRole('banner').getByRole('button', { name: 'Español' }).click()
+
+  await expect(page).toHaveURL(/\/cuenta$/)
+  await expect(page).toHaveTitle(es.account.meta.title)
+  await expect(page.getByRole('heading', { level: 1, name: es.account.page.title })).toBeVisible()
+  await expect(page.getByRole('main').getByText('Visitante')).toBeVisible()
 })
 
 test('returns to a safe path after login and ignores an off-site one', async ({ page }) => {
@@ -367,7 +441,12 @@ test('shows the account menu and sign-out dialog in English once the interface l
   context,
 }) => {
   await context.addCookies([{ name: 'lasce_locale', value: 'en', url: 'http://localhost:3000' }])
-  await signIn(page)
+  // The login form itself follows the cookie, so it must be filled by its English labels here.
+  await openAccess(page)
+  await loginCard(page).getByLabel('Email address', { exact: true }).fill(account.email)
+  await loginCard(page).getByLabel('Password', { exact: true }).fill(account.password)
+  await loginCard(page).getByRole('button', { name: 'Sign in' }).click()
+  await page.waitForURL((url) => url.pathname !== ACCESS_PATH)
   await expect(page).toHaveURL(/\/$/)
 
   await headerActions(page).locator('.account-menu summary').press('Enter')
@@ -385,6 +464,105 @@ test('shows the account menu and sign-out dialog in English once the interface l
   await dialog.getByRole('button', { name: 'Sign out' }).click()
   await expect(page).toHaveURL(/\/$/)
   await expect(headerActions(page).getByRole('link', { name: 'Sign in' })).toBeVisible()
+})
+
+test('shows the login and registration forms, their placeholders and validation in English', async ({
+  page,
+  context,
+}) => {
+  await context.addCookies([{ name: 'lasce_locale', value: 'en', url: 'http://localhost:3000' }])
+  await openAccess(page)
+
+  await expect(page.getByRole('heading', { level: 1, name: 'Portal access' })).toBeVisible()
+  await expect(page.getByRole('tab', { name: 'Sign in' })).toHaveAttribute('aria-selected', 'true')
+  await expect(loginCard(page).getByRole('heading', { level: 2, name: 'Sign in' })).toBeVisible()
+  const email = loginCard(page).getByLabel('Email address', { exact: true })
+  await expect(email).toHaveAttribute('placeholder', 'email@example.com')
+  await expect(loginCard(page).getByLabel('Password', { exact: true })).toBeVisible()
+  await expect(
+    loginCard(page).getByText('The download is associated with your account', { exact: false }),
+  ).toBeVisible()
+  await expect(loginCard(page).getByRole('link', { name: 'Create account' })).toBeVisible()
+
+  await loginCard(page).getByRole('button', { name: 'Sign in' }).click()
+  await expect(loginCard(page).getByRole('alert')).toHaveText(
+    'Review the marked fields to continue.',
+  )
+  await expect(email).toHaveAccessibleDescription('Enter your email address.')
+
+  await page.getByRole('tab', { name: 'Create account' }).click()
+  const registrationCard = page.locator(`#${REGISTRATION_CARD_ID}`)
+  await expect(
+    registrationCard.getByRole('heading', { level: 2, name: 'Create account' }),
+  ).toBeVisible()
+  await expect(registrationCard.getByText('All fields are required.')).toBeVisible()
+  await expect(registrationCard.getByLabel('Full name', { exact: true })).toHaveAttribute(
+    'placeholder',
+    'First and last name',
+  )
+  await expect(registrationCard.getByLabel('Institution', { exact: true })).toHaveAttribute(
+    'placeholder',
+    'University / Research center',
+  )
+  await expect(
+    registrationCard.getByLabel('Country', { exact: true }).getByRole('option', {
+      name: 'United States',
+    }),
+  ).toHaveAttribute('value', 'US')
+  await expect(registrationCard.getByText('At least 8 characters.')).toBeVisible()
+
+  await registrationCard.getByRole('button', { name: 'Create account' }).click()
+  await expect(
+    registrationCard.getByLabel('Full name', { exact: true }),
+  ).toHaveAccessibleDescription('Enter your full name.')
+})
+
+for (const width of [320, 390, 640, 1440]) {
+  test(`shows the English login and registration cards at ${width}px without horizontal overflow`, async ({
+    page,
+    context,
+  }) => {
+    await context.addCookies([{ name: 'lasce_locale', value: 'en', url: 'http://localhost:3000' }])
+    await page.setViewportSize({ width, height: 900 })
+    await openAccess(page)
+
+    await expect(page.getByRole('heading', { level: 1, name: 'Portal access' })).toBeVisible()
+    expect(
+      await page.evaluate(() => document.documentElement.scrollWidth - innerWidth),
+    ).toBeLessThanOrEqual(0)
+
+    await page.getByRole('tab', { name: 'Create account' }).click()
+    await expect(
+      page
+        .locator(`#${REGISTRATION_CARD_ID}`)
+        .getByRole('heading', { level: 2, name: 'Create account' }),
+    ).toBeVisible()
+    expect(
+      await page.evaluate(() => document.documentElement.scrollWidth - innerWidth),
+    ).toBeLessThanOrEqual(0)
+  })
+}
+
+test('switches the login form to English without losing the route or what was typed', async ({
+  page,
+}) => {
+  await openAccess(page)
+
+  await loginField(page, 'email').fill('ana.perez@ucr.ac.cr')
+
+  await page.getByRole('banner').getByLabel('Idioma: Español').click()
+  await page.getByRole('banner').getByRole('button', { name: 'English' }).click()
+
+  await expect(page).toHaveURL(/\/acceso$/)
+  await expect(page.getByRole('heading', { level: 1, name: 'Portal access' })).toBeVisible()
+  const email = loginCard(page).getByLabel('Email address', { exact: true })
+  await expect(email).toHaveValue('ana.perez@ucr.ac.cr')
+
+  await page.getByRole('banner').getByLabel('Language: English').click()
+  await page.getByRole('banner').getByRole('button', { name: 'Español' }).click()
+
+  await expect(page.getByRole('heading', { level: 1, name: accesoIntro.title })).toBeVisible()
+  await expect(loginField(page, 'email')).toHaveValue('ana.perez@ucr.ac.cr')
 })
 
 test('the old sign-in and sign-up routes redirect to the access page, query included', async ({

@@ -67,6 +67,25 @@ export function EditModeProvider({ children }: EditModeProviderProps) {
   )
 }
 
+/**
+ * Turns the persisted edit mode off without a provider at hand. Used when the
+ * session ends or the server says the account can no longer edit
+ * (LASCE-SEC-001), so a stored `true` never outlives the permission. The
+ * controls themselves are always gated by server-computed grants as well.
+ */
+export function clearStoredEditMode(): void {
+  try {
+    window.localStorage.setItem(STORAGE_KEY, 'false')
+  } catch {
+    // Storage unavailable: there is nothing persisted to clear.
+  }
+}
+
+/** Like `useEditMode`, but `undefined` outside a provider instead of throwing. */
+export function useOptionalEditMode(): EditModeContextValue | undefined {
+  return useContext(EditModeContext)
+}
+
 export function useEditMode(): EditModeContextValue {
   const context = useContext(EditModeContext)
   if (!context) {

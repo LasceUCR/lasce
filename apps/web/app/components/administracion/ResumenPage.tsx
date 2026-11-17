@@ -11,9 +11,10 @@ export interface ResumenPageProps {
   summary: ContentSummary
   activity: ActivityItem[]
   now: Date
+  canViewAuditLog?: boolean
 }
 
-export function ResumenPage({ summary, activity, now }: ResumenPageProps) {
+export function ResumenPage({ summary, activity, now, canViewAuditLog = false }: ResumenPageProps) {
   const t = useTranslations('administration.summary')
 
   return (
@@ -25,7 +26,7 @@ export function ResumenPage({ summary, activity, now }: ResumenPageProps) {
 
       <ContentSummaryCards summary={summary} />
 
-      <RecentActivityPanel items={activity} now={now} />
+      <RecentActivityPanel canViewAuditLog={canViewAuditLog} items={activity} now={now} />
 
       <div className="section-heading admin-panel">
         <h2>{t('infrastructureTitle')}</h2>

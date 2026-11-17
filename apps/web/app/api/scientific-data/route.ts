@@ -26,7 +26,7 @@ export async function GET(request: Request): Promise<NextResponse> {
     invalidDate: validation('invalidDate'),
     invalidStartTime: validation('invalidStartTime'),
     invalidEndTime: validation('invalidEndTime'),
-    startBeforeEnd: validation('startBeforeEnd'),
+    sameStartEnd: validation('sameStartEnd'),
     productUnavailable: validation('productUnavailable'),
     invalidParameterForProduct: validation('invalidParameterForProduct'),
   }).safeParse({

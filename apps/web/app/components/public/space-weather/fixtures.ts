@@ -14,7 +14,7 @@ const spanish = {
 
 const english = {
   title: 'Why study it from Costa Rica?',
-  body: 'The response of the ionosphere can depend on geographic location.\n\nObservations made from Costa Rica make it possible to characterise the regional environment better.',
+  body: 'The response of the ionosphere can depend on geographic location.\n\nObservations made from Costa Rica make it possible to characterize the regional environment better.',
 }
 
 export const bilingualSection: SpaceWeatherSection = {

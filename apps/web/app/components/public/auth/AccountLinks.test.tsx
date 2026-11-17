@@ -103,6 +103,17 @@ describe('AccountLinks', () => {
     )
   })
 
+  test('hides Administración and the switch in the mobile menu until the server confirms them', () => {
+    renderWithIntl(
+      <EditModeProvider>
+        <AccountLinks {...signedInMobileAdminArgs} canAccessAdmin={false} canEdit={false} />
+      </EditModeProvider>,
+    )
+
+    expect(screen.queryByRole('link', { name: 'Administración' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('switch')).not.toBeInTheDocument()
+  })
+
   test('hides the switch from a visitor in the mobile menu', () => {
     renderWithIntl(<AccountLinks {...signedInMobileArgs} />)
 

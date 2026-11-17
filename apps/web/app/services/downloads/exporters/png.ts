@@ -6,7 +6,7 @@ import {
   DYNAMIC_SPECTRUM_CHART,
   layoutDynamicSpectrum,
 } from '@/app/lib/charts/dynamicSpectrumLayout'
-import { layoutTimeSeries, TIME_SERIES_CHART } from '@/app/lib/charts/timeSeriesLayout'
+import { layoutTimeSeries, timeSeriesStyle } from '@/app/lib/charts/timeSeriesLayout'
 import type {
   DynamicSpectrumDataResult,
   ScientificDataResult,
@@ -120,16 +120,28 @@ export function renderTimeSeriesSvg(
   result: TimeSeriesDataResult,
   copy: ExportCopy = exportCopy(),
 ): string {
-  const layout = layoutTimeSeries(result.points)
+  // Same scale, flare classes and default width as the chart on the page.
+  const layout = layoutTimeSeries(
+    result.points,
+    timeSeriesStyle(result.product.code, result.parameter.code),
+  )
   if (!layout) throw new UnexportableResultError('png', 'empty time-series')
 
-  const chart = TIME_SERIES_CHART
+  const chart = layout.frame
   const plotBottom = chart.height - chart.bottom
+  const { peak, peakClass } = layout
   const plot = [
     ...layout.gridLines.map(
       ({ y, value }) =>
         `<line x1="${chart.left}" x2="${chart.width - chart.right}" y1="${y}" y2="${y}" stroke="${COLORS.grid}" stroke-width="1"/>` +
         text(copy.formatValue(value), chart.left - 12, y + 4, { anchor: 'end' }),
+    ),
+    ...layout.flareBands.map(({ letter, y }) =>
+      text(letter, chart.width - chart.right / 2, y + 5, {
+        anchor: 'middle',
+        size: 14,
+        fill: COLORS.title,
+      }),
     ),
     `<line x1="${chart.left}" x2="${chart.left}" y1="${chart.top}" y2="${plotBottom}" stroke="${COLORS.text}" stroke-width="1"/>`,
     `<line x1="${chart.left}" x2="${chart.width - chart.right}" y1="${plotBottom}" y2="${plotBottom}" stroke="${COLORS.text}" stroke-width="1"/>`,
@@ -138,13 +150,21 @@ export function renderTimeSeriesSvg(
       ({ x, y }) =>
         `<circle cx="${x}" cy="${y}" r="${layout.pointRadius}" fill="${COLORS.pointFill}" stroke="${COLORS.pointStroke}" stroke-width="1.5"/>`,
     ),
-    text(formatTime(layout.firstTimestamp), chart.left, chart.height - 20),
-    text(formatTime(layout.middleTimestamp), chart.left + layout.plotWidth / 2, chart.height - 20, {
-      anchor: 'middle',
-    }),
-    text(`${formatTime(layout.lastTimestamp)} UTC`, chart.width - chart.right, chart.height - 20, {
-      anchor: 'end',
-    }),
+    peakClass
+      ? text(peakClass.label, peak.x, Math.max(peak.y - 10, chart.top - 8), {
+          anchor: peak.x > chart.width - chart.right - 40 ? 'end' : 'middle',
+          size: 13,
+          fill: COLORS.title,
+        })
+      : '',
+    ...layout.timeTicks.map(({ anchor, timestamp, x }, index) =>
+      text(
+        `${formatTime(timestamp)}${index === layout.timeTicks.length - 1 ? ' UTC' : ''}`,
+        x,
+        chart.height - 20,
+        { anchor },
+      ),
+    ),
   ].join('')
 
   const height = HEADER_HEIGHT + chart.height + FOOTER_HEIGHT

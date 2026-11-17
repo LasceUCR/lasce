@@ -59,10 +59,15 @@ export function SpaceWeatherPage({
   } = content
 
   return (
-    <article className="topic-page">
+    <article className="topic-page topic-page-reading">
       <TopicHero kicker={spaceWeatherHero.kicker} title={spaceWeatherHero.title} />
 
-      <TopicSection title={spaceWeatherDefinition.title} titleId="sw-definition-title" wide>
+      <TopicSection
+        index="1"
+        title={spaceWeatherDefinition.title}
+        titleId="sw-definition-title"
+        wide
+      >
         {spaceWeatherDefinition.paragraphs.map((paragraph) => (
           <p className="topic-intro" key={paragraph}>
             {paragraph}
@@ -70,7 +75,7 @@ export function SpaceWeatherPage({
         ))}
       </TopicSection>
 
-      <TopicSection index="1" title={spaceWeatherSunToEarth.title} titleId="sw-sun-to-earth-title">
+      <TopicSection index="2" title={spaceWeatherSunToEarth.title} titleId="sw-sun-to-earth-title">
         <CardGrid columns={2} equalHeight>
           {spaceWeatherSunToEarth.items.map((item, index) => {
             const Icon = sunToEarthIcons[item.id]
@@ -88,7 +93,7 @@ export function SpaceWeatherPage({
       </TopicSection>
 
       <TopicSection
-        index="2"
+        index="3"
         intro={spaceWeatherComponents.intro}
         title={spaceWeatherComponents.title}
         titleId="sw-components-title"
@@ -117,9 +122,9 @@ export function SpaceWeatherPage({
 
       {/* Visitors get the plain card: the editor, and its client code, only for an editor. */}
       {canEditCostaRica && costaRicaSection?.editing ? (
-        <EditableCostaRicaSection canEdit section={costaRicaSection} />
+        <EditableCostaRicaSection canEdit index="4" section={costaRicaSection} />
       ) : (
-        <CostaRicaSectionView section={costaRicaSection ?? spaceWeatherCostaRica} />
+        <CostaRicaSectionView index="4" section={costaRicaSection ?? spaceWeatherCostaRica} />
       )}
 
       <div className="topic-page-footer space-weather-footer page-width">

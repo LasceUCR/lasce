@@ -59,9 +59,13 @@ working through Claude Code.
 | How does the ROSAC location map work?                | [`docs/rosac-location.md`](docs/rosac-location.md)                         |
 | How is the research areas page built?                | [`docs/research.md`](docs/research.md)                                     |
 | How is the collaborations page built?                | [`docs/collaborations.md`](docs/collaborations.md)                         |
+| How are the scientific tools managed?                | [`docs/scientific-tools.md`](docs/scientific-tools.md)                     |
 | How does a visitor see LASCE contact information?    | [`docs/contact.md`](docs/contact.md)                                       |
+| Who built the portal, and where is that credited?    | [`docs/development-team.md`](docs/development-team.md)                     |
 | How does a visitor register an account?              | [`docs/registration.md`](docs/registration.md)                             |
 | How do users sign in, and how is a page protected?   | [`docs/sessions.md`](docs/sessions.md)                                     |
+| How does a user reset a forgotten password?          | [`docs/password-reset.md`](docs/password-reset.md)                         |
+| How is the SMTP server configured, and stored?       | [`docs/password-reset.md`](docs/password-reset.md)                         |
 | How do I get an account to sign in locally?          | [`docs/user-administration.md`](docs/user-administration.md)               |
 | How are role permissions configured?                 | [`docs/role-permissions.md`](docs/role-permissions.md)                     |
 | How do I gate a page or a control with a grant?      | [`docs/add-permissions.md`](docs/add-permissions.md)                       |

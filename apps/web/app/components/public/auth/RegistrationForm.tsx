@@ -1,14 +1,13 @@
 'use client'
 
-import { useActionState, useEffect, useRef } from 'react'
+import { useActionState, useEffect, useRef, useState } from 'react'
+import { useTranslations } from 'next-intl'
 
+import { useToast } from '@/app/components/public/toast/ToastProvider'
 import type { CountryOption } from '@/app/lib/auth/countries'
 import { LOGIN_HREF } from '@/app/lib/auth/login'
 import {
-  REGISTRATION_LABELS,
-  REGISTRATION_PLACEHOLDERS,
   initialRegistrationState,
-  registrationFormCopy,
   type RegistrationAction,
   type RegistrationState,
 } from '@/app/lib/auth/registration'
@@ -49,19 +48,38 @@ export function RegistrationForm({
   id,
   initialState,
 }: RegistrationFormProps) {
+  const t = useTranslations('auth.registration')
   const [state, formAction, isPending] = useActionState(
     action,
     initialState ?? initialRegistrationState,
   )
-  const alertRef = useRef<HTMLDivElement>(null)
+  const [password, setPassword] = useState('')
+  const [passwordConfirmation, setPasswordConfirmation] = useState('')
+  const formRef = useRef<HTMLFormElement>(null)
   const successRef = useRef<HTMLHeadingElement>(null)
+  const toast = useToast()
+  const lastToastIdRef = useRef<number | null>(null)
 
   // Move focus to the outcome of a submission so keyboard and screen-reader
-  // users land on the summary (or the confirmation) instead of a reset form.
+  // users land on the first invalid field (or the confirmation) instead of a reset form.
   useEffect(() => {
-    if (state.status === 'error') alertRef.current?.focus()
-    if (state.status === 'success') successRef.current?.focus()
-  }, [state])
+    if (state.status === 'error') {
+      if (lastToastIdRef.current !== null) {
+        toast.dismiss(lastToastIdRef.current)
+        lastToastIdRef.current = null
+      }
+      if (state.formError) {
+        lastToastIdRef.current = toast.show('error', state.formError)
+      }
+      formRef.current?.querySelector<HTMLElement>('[aria-invalid="true"]')?.focus()
+    } else if (state.status === 'success') {
+      if (lastToastIdRef.current !== null) {
+        toast.dismiss(lastToastIdRef.current)
+        lastToastIdRef.current = null
+      }
+      successRef.current?.focus()
+    }
+  }, [state, toast])
 
   const headingBlock = heading ? (
     <div className="registration-heading">
@@ -76,13 +94,13 @@ export function RegistrationForm({
     return (
       <section className="registration-card form-success" id={id} role="status">
         <h2 ref={successRef} tabIndex={-1}>
-          {registrationFormCopy.successTitle}
+          {t('successTitle')}
         </h2>
-        <p>{registrationFormCopy.successBody}</p>
+        <p>{t('successBody')}</p>
         {/* The tab selector keeps its selection across client-side navigations, so this
             link loads the page fresh on the login tab, which also resets this card. */}
         <Button fullPageLoad href={LOGIN_HREF} variant="brand">
-          {registrationFormCopy.successLink}
+          {t('successLink')}
         </Button>
       </section>
     )
@@ -96,31 +114,31 @@ export function RegistrationForm({
   return (
     <section className="registration-card" id={id}>
       {headingBlock}
-      <form action={formAction} aria-busy={isPending} className="registration-form" noValidate>
-        <p className="form-required-note">{registrationFormCopy.requiredNote}</p>
-
-        {state.formError ? (
-          <div className="form-alert" ref={alertRef} role="alert" tabIndex={-1}>
-            {state.formError}
-          </div>
-        ) : null}
+      <form
+        action={formAction}
+        aria-busy={isPending}
+        className="registration-form"
+        noValidate
+        ref={formRef}
+      >
+        <p className="form-required-note">{t('requiredNote')}</p>
 
         <FormField
           autoComplete="name"
           defaultValue={state.values.fullName}
           error={state.fieldErrors.fullName}
-          label={REGISTRATION_LABELS.fullName}
+          label={t('labels.fullName')}
           name="fullName"
-          placeholder={REGISTRATION_PLACEHOLDERS.fullName}
+          placeholder={t('placeholders.fullName')}
           required
         />
         <FormField
           autoComplete="email"
           defaultValue={state.values.email}
           error={state.fieldErrors.email}
-          label={REGISTRATION_LABELS.email}
+          label={t('labels.email')}
           name="email"
-          placeholder={REGISTRATION_PLACEHOLDERS.email}
+          placeholder={t('placeholders.email')}
           required
           type="email"
         />
@@ -128,42 +146,46 @@ export function RegistrationForm({
           autoComplete="organization"
           defaultValue={state.values.institution}
           error={state.fieldErrors.institution}
-          label={REGISTRATION_LABELS.institution}
+          label={t('labels.institution')}
           name="institution"
-          placeholder={REGISTRATION_PLACEHOLDERS.institution}
+          placeholder={t('placeholders.institution')}
           required
         />
         <FormField
           autoComplete="country"
           defaultValue={state.values.countryCode}
           error={state.fieldErrors.countryCode}
-          label={REGISTRATION_LABELS.countryCode}
+          label={t('labels.countryCode')}
           name="countryCode"
           options={countryOptions}
-          placeholder={REGISTRATION_PLACEHOLDERS.countryCode}
+          placeholder={t('placeholders.countryCode')}
           required
         />
         <FormField
           autoComplete="new-password"
           error={state.fieldErrors.password}
-          hint={registrationFormCopy.passwordHint}
-          label={REGISTRATION_LABELS.password}
+          hint={t('passwordHint')}
+          label={t('labels.password')}
           name="password"
+          onChange={(event) => setPassword(event.target.value)}
           required
           type="password"
+          value={password}
         />
         <FormField
           autoComplete="new-password"
           error={state.fieldErrors.passwordConfirmation}
-          label={REGISTRATION_LABELS.passwordConfirmation}
+          label={t('labels.passwordConfirmation')}
           name="passwordConfirmation"
+          onChange={(event) => setPasswordConfirmation(event.target.value)}
           required
           type="password"
+          value={passwordConfirmation}
         />
 
         <div className="form-actions">
           <Button className="button-block" disabled={isPending} type="submit" variant="brand">
-            {isPending ? registrationFormCopy.submitting : registrationFormCopy.submit}
+            {isPending ? t('submitting') : t('submit')}
           </Button>
         </div>
       </form>

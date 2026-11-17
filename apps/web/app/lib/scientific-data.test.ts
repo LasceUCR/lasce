@@ -88,7 +88,6 @@ describe('scientific data catalog and query validation', () => {
 
   test.each([
     ['equal times', { startTime: '08:00', endTime: '08:00' }],
-    ['end before start', { startTime: '12:00', endTime: '08:00' }],
     ['nonexistent calendar day', { date: '2026-02-31' }],
     ['unknown product', { product: 'UNKNOWN' }],
     ['source and product mismatch', { source: 'ROSAC' }],
@@ -97,6 +96,25 @@ describe('scientific data catalog and query validation', () => {
     ['SGPS proton channel under MPSH', { product: 'MPSH', parameter: 'proton:P1' }],
   ])('rejects %s', (_label, overrides) => {
     expect(scientificDataQuerySchema.safeParse({ ...validQuery, ...overrides }).success).toBe(false)
+  })
+
+  test('accepts an end before the start as a range across midnight', () => {
+    expect(
+      scientificDataQuerySchema.safeParse({ ...validQuery, startTime: '23:00', endTime: '01:00' })
+        .success,
+    ).toBe(true)
+  })
+
+  test('explains that equal times are not a range', () => {
+    const parsed = scientificDataQuerySchema.safeParse({
+      ...validQuery,
+      startTime: '08:00',
+      endTime: '08:00',
+    })
+
+    expect(parsed.success ? [] : parsed.error.issues.map((issue) => issue.path[0])).toEqual([
+      'endTime',
+    ])
   })
 
   function imageResult(imageUrl: string) {

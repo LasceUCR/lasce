@@ -1,8 +1,7 @@
 # Managing assets
 
 `apps/web/app/services/storage/` uploads files to MinIO and deletes them again, behind an
-`IAssetStorage` interface. It is a **service layer only** — no route handler, Server Action or UI
-calls it yet. This page is how you put one there.
+`IAssetStorage` interface. It is a **service layer only**
 
 > **Status: unfinished.** The service works, but several obligations its own interface documents
 > are not implemented, and its default configuration does not boot. Read
@@ -90,7 +89,7 @@ export async function uploadAsset(formData: FormData): Promise<UploadResult> {
 
 | Method                                     | Returns            | Notes                                                          |
 | ------------------------------------------ | ------------------ | -------------------------------------------------------------- |
-| `createUpload(file, bucket?)`              | `Promise<string>`  | Validates, ensures the bucket, uploads. Resolves to the key.   |
+| `createUpload(file, bucket?, validation?)` | `Promise<string>`  | Validates, ensures the bucket, uploads. Resolves to the key.   |
 | `delete(objectKey)`                        | `Promise<void>`    | Calls `removeObject`. No prefix guard — see Known gaps.        |
 | `createDownloadUrl(objectKey, expiresIn?)` | `Promise<string>`  | Presigned GET. Defaults to `DOWNLOAD_EXPIRY_SECONDS` (1 hour). |
 | `bucketExists(bucket)`                     | `Promise<boolean>` | Passthrough to the MinIO client.                               |
@@ -103,7 +102,10 @@ caller if you need to list assets or attach them to a record.
 ## What is validated
 
 `verifyAsset` runs first inside `createUpload`, so an invalid file never reaches MinIO — no
-`bucketExists`, no `putObject`. It checks two things, **in this order**:
+`bucketExists`, no `putObject`. By default, it uses `MAX_ASSET_BYTES` (25 MiB) and
+`ALLOWED_ASSET_CONTENT_TYPES`. A caller may pass `validation` to override either rule for that
+upload. The ROSAC CMS passes a 10 MB limit and allows JPG, PNG, WebP, AVIF and SVG images.
+Validation checks two things, **in this order**:
 
 | Check       | Rule                                                                | Throws                       |
 | ----------- | ------------------------------------------------------------------- | ---------------------------- |

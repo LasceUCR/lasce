@@ -52,8 +52,6 @@ export default defineConfig({
   webServer: {
     command: serverCommand,
     env: {
-      // Inlined at build time too: the e2e job sets it on `next build` as well.
-      NEXT_PUBLIC_WEBDOTS_DISABLED: 'true',
       HOSTNAME: 'localhost',
       PORT: '3000',
     },

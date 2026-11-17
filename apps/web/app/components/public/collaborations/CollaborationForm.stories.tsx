@@ -3,7 +3,11 @@ import { CollaborationForm } from './CollaborationForm'
 
 const meta: Meta<typeof CollaborationForm> = {
   component: CollaborationForm,
-  args: { onSave: () => {}, onCancel: () => {} },
+  args: {
+    onSave: () => {},
+    onCancel: () => {},
+    onUploadLogo: async () => '/brand/collaborations/tec.png',
+  },
 }
 export default meta
 type Story = StoryObj<typeof CollaborationForm>
@@ -22,6 +26,14 @@ export const Edit: Story = {
         isLegacy: false,
         version: '2026-10-14T12:00:00.000Z',
       },
+    },
+  },
+}
+export const WithLogo: Story = {
+  args: {
+    collaboration: {
+      ...Edit.args!.collaboration!,
+      logoPath: '/brand/collaborations/tec.png',
     },
   },
 }

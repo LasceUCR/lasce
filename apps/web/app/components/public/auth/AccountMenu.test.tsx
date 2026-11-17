@@ -141,6 +141,15 @@ describe('AccountMenu', () => {
     expect(details()).toHaveAttribute('open')
   })
 
+  test('follows the server-computed capabilities, not the role (LASCE-SEC-001)', () => {
+    // An administrator role whose capabilities the server did not confirm offers nothing privileged.
+    renderMenu(<AccountMenu {...adminArgs} canAccessAdmin={false} canEdit={false} />)
+
+    expect(screen.queryByRole('link', { name: 'Administración' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('switch')).not.toBeInTheDocument()
+    expect(screen.getByRole('link', { name: 'Mi cuenta' })).toBeVisible()
+  })
+
   test('offers the switch to an assistant but not to a visitor', () => {
     const { unmount } = renderMenu(<AccountMenu {...adminArgs} role="ASSISTANT" />)
     expect(screen.getByRole('switch', { name: 'Modo edición' })).toBeInTheDocument()

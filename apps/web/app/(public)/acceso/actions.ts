@@ -1,14 +1,20 @@
 'use server'
 
 import { redirect } from 'next/navigation'
+import { getTranslations } from 'next-intl/server'
 
-import { loginMessages, readLoginInput, validateLogin, type LoginState } from '@/app/lib/auth/login'
+import {
+  getLoginSchema,
+  readLoginInput,
+  validateLogin,
+  type LoginState,
+} from '@/app/lib/auth/login'
 import { UNKNOWN_USER_PASSWORD_HASH, hashPassword, verifyPassword } from '@/app/lib/auth/password'
 import DuplicateEmailError from '@/app/lib/auth/errors/DuplicateEmailError'
 import {
+  getRegistrationSchema,
   initialRegistrationState,
   readRegistrationInput,
-  registrationMessages,
   toEchoValues,
   validateRegistration,
   type RegistrationState,
@@ -22,6 +28,8 @@ import { createUser, findUserByEmail } from '@/app/lib/auth/users'
  * `useActionState` expects. Validation, hashing, the password check and the
  * session itself live in `app/lib/auth`; these only turn their outcomes into
  * form state or a redirect. Neither throws to the client or echoes a password.
+ * Every message comes from the visitor's language via `getTranslations`, the
+ * same pattern `requestResourceDownload` (`(public)/datos/actions.ts`) uses.
  *
  * Gated by the Playwright specs `tests/e2e/registro.spec.ts` and
  * `tests/e2e/login.spec.ts`, like every Server Action in this app.
@@ -29,16 +37,25 @@ import { createUser, findUserByEmail } from '@/app/lib/auth/users'
 
 /** Signs a registered user in; on success it redirects, so no state comes back. */
 export async function loginUser(_previous: LoginState, formData: FormData): Promise<LoginState> {
+  const t = await getTranslations('auth.login.validation')
   const input = readLoginInput(formData)
   const values = { email: input.email }
-  const validation = validateLogin(input)
+  const validation = validateLogin(
+    input,
+    getLoginSchema({
+      emailRequired: t('emailRequired'),
+      emailInvalid: t('emailInvalid'),
+      passwordRequired: t('passwordRequired'),
+      invalidCredentials: t('invalidCredentials'),
+    }),
+  )
 
   if (!validation.ok) {
     return {
       status: 'error',
       values,
       fieldErrors: validation.fieldErrors,
-      formError: loginMessages.reviewFields,
+      formError: t('reviewFields'),
     }
   }
 
@@ -59,7 +76,7 @@ export async function loginUser(_previous: LoginState, formData: FormData): Prom
         status: 'error',
         values,
         fieldErrors: {},
-        formError: loginMessages.invalidCredentials,
+        formError: t('invalidCredentials'),
       }
     }
 
@@ -67,7 +84,7 @@ export async function loginUser(_previous: LoginState, formData: FormData): Prom
   } catch (error) {
     // The message, not the input: nothing the visitor typed belongs in a log.
     console.error('[acceso] loginUser failed:', error instanceof Error ? error.message : error)
-    return { status: 'error', values, fieldErrors: {}, formError: loginMessages.unexpected }
+    return { status: 'error', values, fieldErrors: {}, formError: t('unexpected') }
   }
 
   // Outside the try on purpose: redirect() works by throwing.
@@ -79,16 +96,34 @@ export async function registerUser(
   _previous: RegistrationState,
   formData: FormData,
 ): Promise<RegistrationState> {
+  const t = await getTranslations('auth.registration.validation')
   const input = readRegistrationInput(formData)
   const values = toEchoValues(input)
-  const validation = validateRegistration(input)
+  const validation = validateRegistration(
+    input,
+    getRegistrationSchema({
+      fullNameRequired: t('fullNameRequired'),
+      fullNameTooLong: t('fullNameTooLong'),
+      emailRequired: t('emailRequired'),
+      emailInvalid: t('emailInvalid'),
+      emailTooLong: t('emailTooLong'),
+      institutionRequired: t('institutionRequired'),
+      institutionTooLong: t('institutionTooLong'),
+      countryRequired: t('countryRequired'),
+      passwordRequired: t('passwordRequired'),
+      passwordTooShort: t('passwordTooShort'),
+      passwordTooLong: t('passwordTooLong'),
+      confirmationRequired: t('confirmationRequired'),
+      confirmationMismatch: t('confirmationMismatch'),
+    }),
+  )
 
   if (!validation.ok) {
     return {
       status: 'error',
       values,
       fieldErrors: validation.fieldErrors,
-      formError: registrationMessages.reviewFields,
+      formError: null,
     }
   }
 
@@ -104,8 +139,8 @@ export async function registerUser(
       return {
         status: 'error',
         values: { ...values, email },
-        fieldErrors: { email: registrationMessages.emailTaken },
-        formError: registrationMessages.reviewFields,
+        fieldErrors: { email: t('emailTaken') },
+        formError: null,
       }
     }
 
@@ -114,7 +149,7 @@ export async function registerUser(
       status: 'error',
       values,
       fieldErrors: {},
-      formError: registrationMessages.unexpected,
+      formError: t('unexpected'),
     }
   }
 

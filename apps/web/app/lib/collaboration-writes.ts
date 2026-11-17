@@ -26,6 +26,7 @@ export async function createCollaboration(input: CollaborationCreateInput, actor
         acronym: input.acronym,
         scope: scopes[input.scope],
         websiteUrl: input.websiteUrl,
+        logoPath: input.logoPath,
         position: earliest === null || earliest === undefined ? 0 : earliest - 1,
         ...baseContent(collaborationContent, input.content),
         translations: { create: translationRows(collaborationContent, input.content) },
@@ -77,7 +78,7 @@ export async function updateCollaboration(
       ...(content ? baseContent(collaborationContent, content) : {}),
       updatedAt: nextUpdatedAt(expected),
     }
-    for (const key of ['name', 'acronym', 'websiteUrl'] as const) {
+    for (const key of ['name', 'acronym', 'websiteUrl', 'logoPath'] as const) {
       if (input[key] !== undefined) Object.assign(data, { [key]: input[key] })
     }
     if (input.scope !== undefined) data.scope = scopes[input.scope]

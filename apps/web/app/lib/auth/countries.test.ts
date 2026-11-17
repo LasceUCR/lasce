@@ -45,6 +45,20 @@ describe('listCountries', () => {
   })
 })
 
+describe('listCountries in another language', () => {
+  test('names every code in that language, sorted by it, cached separately from Spanish', () => {
+    const countries = listCountries('en')
+
+    expect(countries).toHaveLength(COUNTRY_CODES.length)
+    expect(countries).toContainEqual({ code: 'CR', name: 'Costa Rica' })
+    expect(countries).toContainEqual({ code: 'US', name: 'United States' })
+    const names = countries.map((country) => country.name)
+    expect(names).toEqual([...names].sort((a, b) => a.localeCompare(b, 'en')))
+    expect(listCountries('en')).toBe(listCountries('en'))
+    expect(listCountries('en')).not.toBe(listCountries('es'))
+  })
+})
+
 describe('countryName', () => {
   test('names a known code in Spanish and echoes an unknown one', () => {
     expect(countryName('CR')).toBe('Costa Rica')

@@ -1,6 +1,6 @@
-import { screen, within } from '@testing-library/react'
+import { act, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import type { ReactElement } from 'react'
+import { createRef, type ReactElement } from 'react'
 import { describe, expect, test, vi } from 'vitest'
 
 const mocks = vi.hoisted(() => ({
@@ -16,6 +16,7 @@ import { renderWithIntl } from '@/app/lib/i18n/testing'
 
 import {
   RosacAcknowledgmentForm,
+  type RosacAcknowledgmentFormHandle,
   type RosacAcknowledgmentFormProps,
 } from './RosacAcknowledgmentForm'
 import { AddNew, EditExisting } from './RosacAcknowledgmentForm.stories'
@@ -80,6 +81,21 @@ describe('RosacAcknowledgmentForm', () => {
 
     await user.click(within(discardDialog).getByRole('button', { name: 'Descartar' }))
     expect(onCancel).toHaveBeenCalledTimes(1)
+  })
+
+  test('asks the same question when the modal requests closing', async () => {
+    const user = userEvent.setup()
+    const onCancel = vi.fn()
+    const ref = createRef<RosacAcknowledgmentFormHandle>()
+    render(<RosacAcknowledgmentForm {...addArgs} onCancel={onCancel} ref={ref} />)
+
+    await user.type(screen.getByRole('textbox', { name: 'Nombre de la institución' }), 'Instituto')
+    act(() => ref.current?.requestCancel())
+
+    expect(
+      screen.getByRole('dialog', { name: 'Descartar cambios no guardados' }),
+    ).toBeInTheDocument()
+    expect(onCancel).not.toHaveBeenCalled()
   })
 
   test('shows validation errors when name is empty', async () => {
@@ -185,7 +201,7 @@ describe('RosacAcknowledgmentForm', () => {
       'Instituto Tecnológico',
     )
     const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement
-    await user.upload(fileInput, new File(['logo'], 'logo.png', { type: 'image/png' }))
+    await user.upload(fileInput, new File(['logo'], 'logo.avif', { type: 'image/avif' }))
     await user.click(screen.getByRole('button', { name: 'Agregar institución' }))
 
     expect(await screen.findByText('El logo es demasiado grande.')).toBeInTheDocument()
@@ -205,7 +221,7 @@ describe('RosacAcknowledgmentForm', () => {
       'Instituto Tecnológico',
     )
     const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement
-    await user.upload(fileInput, new File(['logo'], 'logo.png', { type: 'image/png' }))
+    await user.upload(fileInput, new File(['logo'], 'logo.avif', { type: 'image/avif' }))
     await user.click(screen.getByRole('button', { name: 'Agregar institución' }))
 
     expect(

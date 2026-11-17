@@ -276,7 +276,7 @@ sessions live in `sessions` below, never in columns here.
 > `role` is never taken from the registration request. The database default is the only way a
 > self-registered account gets its role; changing it is LASCE-ADM #80.
 
-Relationships: has many `sessions` (deleted with the account).
+Relationships: has many `sessions` and `password_reset_tokens` (both deleted with the account).
 
 ### `sessions`
 
@@ -292,6 +292,24 @@ login, with no sliding renewal. The worker never writes here. See `docs/sessions
 | `token_hash` | `String`    | `text`           | `UNIQUE`, not null; base64url SHA-256 of the cookie token |
 | `expires_at` | `DateTime`  | `timestamptz(3)` | not null                                                  |
 | `created_at` | `DateTime`  | `timestamptz(3)` | not null, default `now()`                                 |
+
+Relationships: belongs to one `users` row.
+
+### `password_reset_tokens`
+
+A single-use link to choose a new password (LASCE-CON-0012-448). The email carries a random 32-byte
+token; only its SHA-256 is stored. A token works for 30 minutes and only while `used_at` is null;
+asking for a new link, or completing a reset, deletes the account's other rows. Written only by the web app; the worker
+mirrors it by convention. See `docs/password-reset.md`.
+
+| Column       | Prisma type | Postgres type    | Constraints                                                |
+| ------------ | ----------- | ---------------- | ---------------------------------------------------------- |
+| `id`         | `String`    | `uuid`           | PK, `gen_random_uuid()`                                    |
+| `user_id`    | `String`    | `uuid`           | FK → `users.id`, `ON DELETE CASCADE`, not null; indexed    |
+| `token_hash` | `String`    | `text`           | `UNIQUE`, not null; base64url SHA-256 of the emailed token |
+| `expires_at` | `DateTime`  | `timestamptz(3)` | not null                                                   |
+| `used_at`    | `DateTime?` | `timestamptz(3)` | nullable; set when the token changed the password          |
+| `created_at` | `DateTime`  | `timestamptz(3)` | not null, default `now()`                                  |
 
 Relationships: belongs to one `users` row.
 
@@ -586,6 +604,26 @@ Indexes: `(created_at)` for the recent list, `(actor_id, created_at)` for one ac
 `(entity_type, entity_id, created_at)` for one record's history. `action` is a plain string, as in
 `role_permissions`, so a new kind of event needs no migration. Rows are never updated.
 
+### `smtp_settings`
+
+The SMTP server the portal sends email through, managed on `/administracion/correo`
+(`docs/password-reset.md`). One row at most. Only the web app reads it; the worker does not mirror
+it. The password is stored encrypted (AES-256-GCM, key derived from `CRON_SECRET`), never in clear.
+
+| Column                | Prisma type | Postgres type    | Constraints                                                    |
+| --------------------- | ----------- | ---------------- | -------------------------------------------------------------- |
+| `id`                  | `String`    | `uuid`           | PK, `gen_random_uuid()`                                        |
+| `singleton`           | `Boolean`   | `boolean`        | `UNIQUE`, default `true`, `CHECK (singleton)`: one row at most |
+| `host`                | `String`    | `text`           | not null                                                       |
+| `port`                | `Int`       | `integer`        | not null; `CHECK` 1 to 65535                                   |
+| `security`            | `String`    | `text`           | not null; `CHECK` in `('tls', 'starttls', 'none')`             |
+| `username`            | `String?`   | `text`           | nullable; null means no authentication                         |
+| `password_ciphertext` | `String?`   | `text`           | nullable; `v1.<iv>.<tag>.<ciphertext>`                         |
+| `from_address`        | `String`    | `text`           | not null                                                       |
+| `from_name`           | `String`    | `text`           | not null                                                       |
+| `created_at`          | `DateTime`  | `timestamptz(3)` | not null, default `now()`                                      |
+| `updated_at`          | `DateTime`  | `timestamptz(3)` | not null, default `now()`, `@updatedAt`                        |
+
 ### `solar_physics_sections`
 
 An editable text section of the solar physics page (`/fisica-solar`). Today there is one row, with
@@ -778,6 +816,30 @@ Constraints: `UNIQUE (researcher_id, locale)`. Researchers created before this t
 no row and are shown as they are, with an unknown content language. See
 [translate-database-content.md](translate-database-content.md).
 
+### `researcher_translations`
+
+The `role` and `description` of a `researchers` row (a ROSAC profile on `/radioastronomia`) in a
+language other than Spanish, one row per researcher and locale. The Prisma model is
+`ResearcherTranslation`. Spanish stays on `researchers`, so a profile with no row here still
+renders, in its base text. The photo, `name`, `institution` and `email` are shared and stay on
+the base row. The base row's `modified_at` is the version an editor saves against. `description`
+is optional and all-or-none across languages.
+
+| Column          | Prisma type | Postgres type    | Constraints                                               |
+| --------------- | ----------- | ---------------- | --------------------------------------------------------- |
+| `id`            | `String`    | `uuid`           | PK, `gen_random_uuid()`                                   |
+| `researcher_id` | `String`    | `uuid`           | FK → `researchers.id`, `ON DELETE CASCADE`, not null      |
+| `locale`        | `String`    | `varchar(5)`     | not null: a code from `locales` in `apps/web`, never `es` |
+| `role`          | `String`    | `text`           | not null                                                  |
+| `description`   | `String?`   | `text`           | nullable                                                  |
+| `created_at`    | `DateTime`  | `timestamptz(3)` | not null, default `now()`                                 |
+| `updated_at`    | `DateTime`  | `timestamptz(3)` | not null, default `now()`, app-managed                    |
+
+Constraints: `UNIQUE (researcher_id, locale)`. The original roster's English was copied from
+`rosac.team.people` into this table. A profile that still has no row here is shown in its base
+text, and the English page can still fall back to that catalogue. See
+[translate-database-content.md](translate-database-content.md).
+
 ## `public` schema (space weather)
 
 ### `space_weather_sections` and `space_weather_section_translations`
@@ -800,6 +862,33 @@ nothing is created or deleted from the CMS. See [`space-weather.md`](space-weath
 `space_weather_section_translations`: `id`, `section_id` (FK → `space_weather_sections.id`,
 `ON DELETE CASCADE`), `locale` (`varchar(5)`), `title`, `body`, timestamps. Unique on
 `(section_id, locale)`.
+
+## `public` schema (scientific tools)
+
+### `scientific_tools` and `scientific_tool_translations`
+
+The external tools on `/herramientas-cientificas` (SWAAT, SWAPRO, ...), managed in Modo edición.
+`name` is a product name shared by every language; the Spanish `description` lives on the base row
+and every other language is a translation row. `access_url` is an `https` address opened in a new
+tab. `image_url` is the application path of an uploaded image (`/api/scientific-tools/images/…`)
+or null. New rows take the next `position`, so they are shown last. The migration
+`20261113180000_add_scientific_tools` creates the tables empty: there is no seed, and the page
+shows its empty state until an editor adds a tool. See [`scientific-tools.md`](scientific-tools.md).
+
+| Column        | Prisma type | Postgres type    | Constraints                            |
+| ------------- | ----------- | ---------------- | -------------------------------------- |
+| `id`          | `String`    | `uuid`           | PK, `gen_random_uuid()`                |
+| `name`        | `String`    | `varchar(100)`   | not null; shared                       |
+| `description` | `String`    | `text`           | not null; Spanish                      |
+| `access_url`  | `String`    | `text`           | not null; `https` only (app-validated) |
+| `image_url`   | `String?`   | `text`           | nullable                               |
+| `position`    | `Int`       | `serial`         | not null, unique                       |
+| `created_at`  | `DateTime`  | `timestamptz(3)` | not null, default `now()`              |
+| `updated_at`  | `DateTime`  | `timestamptz(3)` | not null, default `now()`, app-managed |
+
+`scientific_tool_translations`: `id`, `scientific_tool_id` (FK → `scientific_tools.id`,
+`ON DELETE CASCADE`), `locale` (`varchar(5)`), `description`, timestamps. Unique on
+`(scientific_tool_id, locale)`. The worker does not read these tables and has no model for them.
 
 ## `public` schema (ROSAC)
 
@@ -953,6 +1042,11 @@ writer (nothing calls it yet) and `getRecentActivity()` its only reader, for the
 `public.contact_channel_translations` for `/contacto`. Spanish text is the base row; English is
 upserted on save. An update writes only while `updated_at` still equals the version the editor
 loaded.
+
+`apps/web/app/lib/scientific-tool-records.ts` reads `public.scientific_tools` with its
+translations for `/herramientas-cientificas`, and `scientific-tool-writes.ts` creates, updates
+(only while `updated_at` still equals the loaded version) and deletes them in one transaction with
+their audit event.
 
 `apps/web/app/lib/space-weather-section.ts` reads and writes `public.space_weather_sections` and
 `public.space_weather_section_translations` for `/clima-espacial`: `getSpaceWeatherSection()` reads

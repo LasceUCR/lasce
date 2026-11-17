@@ -4,6 +4,7 @@ import styles from './CollaborationForm.module.css'
 import { useLocale, useTranslations } from 'next-intl'
 import { useEffect, useId, useImperativeHandle, useRef, useState, type Ref } from 'react'
 import { Button } from '@/app/components/public/Button'
+import { FileDropInput } from '@/app/components/public/FileDropInput'
 import { FormField } from '@/app/components/public/FormField'
 import { useModalHeaderSlot } from '@/app/components/public/Modal'
 import { Notice } from '@/app/components/public/Notice'
@@ -15,6 +16,11 @@ import {
   collaborationRequest,
   validateCollaborationDraft,
 } from '@/app/lib/collaboration-form'
+import { COLLABORATION_LOGO_ACCEPT } from '@/app/lib/collaboration-logo'
+import {
+  COLLABORATION_ACRONYM_MAX_LENGTH,
+  COLLABORATION_NAME_MAX_LENGTH,
+} from '@/app/lib/collaboration-schema'
 import { defaultLocale, localeLabels, type Locale } from '@/app/lib/i18n/config'
 import { resolveLocale } from '@/app/lib/i18n/locale'
 import type { ReviewConfirmation } from '@/app/lib/i18n/content/definition'
@@ -36,7 +42,8 @@ export interface CollaborationFormHandle {
 }
 export interface CollaborationFormProps {
   collaboration?: ResearchCollaboration
-  onSave: (body: Record<string, unknown> | null) => void
+  onSave: (body: Record<string, unknown> | null) => void | Promise<void>
+  onUploadLogo?: (file: File) => Promise<string | null>
   onCancel: () => void
   busy?: boolean
   ref?: Ref<CollaborationFormHandle>
@@ -46,6 +53,7 @@ export interface CollaborationFormProps {
 export function CollaborationForm({
   collaboration,
   onSave,
+  onUploadLogo,
   onCancel,
   busy = false,
   ref,
@@ -58,11 +66,20 @@ export function CollaborationForm({
   const headerSlot = useModalHeaderSlot()
   const [initial] = useState(() => collaborationDraft(collaboration))
   const [draft, setDraft] = useState(initial)
+  const [logoFile, setLogoFile] = useState<File | null>(null)
+  const uploadedLogo = useRef<{ file: File; url: string } | null>(null)
+  const uploadPromise = useRef<Promise<string | null> | null>(null)
+  const pending = useRef(false)
+  const [saving, setSaving] = useState(false)
+  const isBusy = busy || saving
   const [confirmed, setConfirmed] = useState<ReviewConfirmation<'country'>[]>([])
   const [tab, setTab] = useState<Locale>(defaultLocale)
   const [attempted, setAttempted] = useState(false)
   const [focusRequest, setFocusRequest] = useState(0)
   const [discard, setDiscard] = useState(false)
+  const [enManuallyEdited, setEnManuallyEdited] = useState(() =>
+    Boolean(collaboration?.editing?.content?.en?.country),
+  )
   const stored = collaboration?.editing?.content ?? null
   const needed = reviewsNeeded(collaborationContent, stored, draft.content)
   const validate = () =>
@@ -71,6 +88,7 @@ export function CollaborationForm({
       scope: validation('scope'),
       acronym: validation('acronym'),
       url: validation('url'),
+      logoPath: validation('logoPath'),
     })
   const errors = attempted ? validate() : {}
 
@@ -82,8 +100,13 @@ export function CollaborationForm({
   }, [focusRequest])
 
   function requestCancel() {
-    if (busy) return
-    if (JSON.stringify(initial) !== JSON.stringify(draft)) setDiscard(true)
+    if (isBusy) return
+    if (
+      logoFile ||
+      draft.logoPath !== initial.logoPath ||
+      JSON.stringify(initial) !== JSON.stringify(draft)
+    )
+      setDiscard(true)
     else onCancel()
   }
   useImperativeHandle(ref, () => ({ requestCancel }))
@@ -93,9 +116,9 @@ export function CollaborationForm({
       className="collaboration-form"
       noValidate
       ref={formRef}
-      onSubmit={(event) => {
+      onSubmit={async (event) => {
         event.preventDefault()
-        if (busy) return
+        if (isBusy || pending.current) return
         setAttempted(true)
         const found = validate()
         if (Object.keys(found).length) {
@@ -104,21 +127,44 @@ export function CollaborationForm({
           setFocusRequest((value) => value + 1)
           return
         }
-        onSave(
-          collaborationRequest(
-            collaboration,
-            initial,
-            draft,
-            confirmationsStillNeeded(confirmed, needed),
-          ),
-        )
+        pending.current = true
+        setSaving(true)
+        try {
+          let nextDraft = draft
+          if (uploadPromise.current) {
+            const url = await uploadPromise.current
+            if (url) {
+              nextDraft = { ...nextDraft, logoPath: url }
+            }
+          } else if (logoFile && !nextDraft.logoPath && onUploadLogo) {
+            const url =
+              uploadedLogo.current?.file === logoFile
+                ? uploadedLogo.current.url
+                : await onUploadLogo(logoFile)
+            if (!url) return
+            uploadedLogo.current = { file: logoFile, url }
+            nextDraft = { ...draft, logoPath: url }
+          }
+          await onSave(
+            collaborationRequest(
+              collaboration,
+              initial,
+              nextDraft,
+              confirmationsStillNeeded(confirmed, needed),
+            ),
+          )
+        } finally {
+          pending.current = false
+          setSaving(false)
+        }
       }}
     >
-      <fieldset className={styles.fields} disabled={busy}>
+      <fieldset className={styles.fields} disabled={isBusy}>
         <FormField
           id={`${formId}-name`}
           label={t('editor.name')}
           required
+          maxLength={COLLABORATION_NAME_MAX_LENGTH}
           value={draft.name}
           error={errors.name}
           onChange={(name) => setDraft((value) => ({ ...value, name }))}
@@ -127,6 +173,7 @@ export function CollaborationForm({
           <FormField
             id={`${formId}-acronym`}
             label={t('editor.acronym')}
+            maxLength={COLLABORATION_ACRONYM_MAX_LENGTH}
             value={draft.acronym}
             error={errors.acronym}
             onChange={(acronym) => setDraft((value) => ({ ...value, acronym }))}
@@ -156,21 +203,36 @@ export function CollaborationForm({
         >
           {(locale) => {
             const review = needed.find((value) => value.locale === locale)
+            const isBaseLocale = locale === defaultLocale
+            const hasBaseCountry = Boolean(draft.content[defaultLocale].country.trim())
             return (
               <>
                 {collaboration?.editing?.isLegacy ? <Notice>{t('editor.legacy')}</Notice> : null}
                 <FormField
                   id={`${formId}-${locale}-country`}
                   label={t('editor.country', { language: localeLabels[locale] })}
-                  required
+                  required={isBaseLocale || !hasBaseCountry}
+                  maxLength={collaborationContent.specs.country.maxLength}
                   lang={contentFieldLang(stored, locale)}
                   value={draft.content[locale].country}
                   error={errors[contentPath(locale, 'country')]}
                   onChange={(country) => {
-                    setDraft((value) => ({
-                      ...value,
-                      content: { ...value.content, [locale]: { country } },
-                    }))
+                    setDraft((value) => {
+                      const nextContent = {
+                        ...value.content,
+                        [locale]: { country },
+                      }
+                      if (!collaboration && isBaseLocale && !enManuallyEdited) {
+                        nextContent.en = { country }
+                      }
+                      return {
+                        ...value,
+                        content: nextContent,
+                      }
+                    })
+                    if (!isBaseLocale) {
+                      setEnManuallyEdited(true)
+                    }
                     setConfirmed([])
                   }}
                 />
@@ -194,6 +256,40 @@ export function CollaborationForm({
             )
           }}
         </LanguageTabs>
+        <FileDropInput
+          label={t('editor.logo')}
+          helperText={t('editor.logoHelp')}
+          accept={COLLABORATION_LOGO_ACCEPT}
+          disabled={isBusy}
+          existingImageUrl={draft.logoPath || initial.logoPath || undefined}
+          errorMessage={errors.logoPath}
+          onFileSelect={(file) => {
+            if (!file) {
+              setLogoFile(null)
+              uploadedLogo.current = null
+              uploadPromise.current = null
+              setDraft((value) => ({ ...value, logoPath: '' }))
+              return
+            }
+            setLogoFile(file)
+            if (onUploadLogo) {
+              const promise = onUploadLogo(file)
+              uploadPromise.current = promise
+              promise
+                .then((url) => {
+                  if (url) {
+                    uploadedLogo.current = { file, url }
+                    setDraft((value) => ({ ...value, logoPath: url }))
+                  }
+                })
+                .finally(() => {
+                  if (uploadPromise.current === promise) {
+                    uploadPromise.current = null
+                  }
+                })
+            }
+          }}
+        />
         <FormField
           id={`${formId}-website`}
           type="url"
@@ -203,11 +299,11 @@ export function CollaborationForm({
           onChange={(websiteUrl) => setDraft((value) => ({ ...value, websiteUrl }))}
         />
         <div className="cms-form-actions">
-          <Button onClick={requestCancel} variant="secondary" disabled={busy}>
+          <Button onClick={requestCancel} variant="secondary" disabled={isBusy}>
             {t('editor.cancel')}
           </Button>
-          <Button type="submit" variant="primary" disabled={busy}>
-            {t(busy ? 'editor.saving' : 'editor.save')}
+          <Button type="submit" variant="primary" disabled={isBusy}>
+            {t(isBusy ? 'editor.saving' : 'editor.save')}
           </Button>
         </div>
       </fieldset>

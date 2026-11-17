@@ -23,31 +23,6 @@ const mockResearcher: PersonProfile = {
     'Responsable de la planificación estratégica de los recursos necesarios para el adecuado montaje e instalación del radiotelescopio, así como líder en la gestión y análisis de los datos obtenidos a través de dicho instrumento.',
 }
 
-export const EditExisting: Story = {
-  args: {
-    researcher: mockResearcher,
-    onCancel: () => {},
-    onSave: () => {},
-  },
-}
-
-/** A researcher saved without a photo: the form does not ask for one. */
-export const EditWithoutPhoto: Story = {
-  args: {
-    researcher: { ...mockResearcher, src: '' },
-    onCancel: () => {},
-    onSave: () => {},
-  },
-}
-
-export const AddNew: Story = {
-  args: {
-    researcher: null,
-    onCancel: () => {},
-    onSave: () => {},
-  },
-}
-
 const bilingualResearcher: NosotrosResearcherEditingData = {
   content: {
     es: { role: mockResearcher.role, description: mockResearcher.description ?? null },
@@ -61,6 +36,34 @@ const bilingualResearcher: NosotrosResearcherEditingData = {
   version: '2026-10-15T15:00:00.000Z',
 }
 
+export const EditExisting: Story = {
+  args: {
+    researcher: mockResearcher,
+    translation: { editing: bilingualResearcher },
+    onCancel: () => {},
+    onSave: () => {},
+  },
+}
+
+/** A researcher saved without a photo: the form does not ask for one. */
+export const EditWithoutPhoto: Story = {
+  args: {
+    researcher: { ...mockResearcher, src: '' },
+    translation: { editing: bilingualResearcher },
+    onCancel: () => {},
+    onSave: () => {},
+  },
+}
+
+export const AddNew: Story = {
+  args: {
+    researcher: null,
+    translation: { editing: null },
+    onCancel: () => {},
+    onSave: () => {},
+  },
+}
+
 /** Saved before languages existed: its base text is English and it has no translation row. */
 const legacyResearcher: NosotrosResearcherEditingData = {
   content: {
@@ -71,7 +74,7 @@ const legacyResearcher: NosotrosResearcherEditingData = {
   version: '2024-07-30T12:00:00.000Z',
 }
 
-/** The opt-in bilingual form of `/nosotros`: role and description in one tab per language. */
+/** Role and description in one tab per language. */
 export const Bilingual: Story = {
   args: {
     researcher: mockResearcher,
@@ -81,7 +84,7 @@ export const Bilingual: Story = {
   },
 }
 
-/** A blank bilingual form for a new researcher. */
+/** A blank form for a new researcher. */
 export const BilingualCreate: Story = {
   args: {
     researcher: null,

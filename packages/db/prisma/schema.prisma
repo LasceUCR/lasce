@@ -63,10 +63,12 @@ model User {
   updatedAt    DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(3)
 
   sessions            Session[]
+  passwordResetTokens PasswordResetToken[]
   resourceDownloads   ResourceDownload[]
   nosotrosActivities  NosotrosActivity[]
   researchers         Researcher[]
   nosotrosResearchers NosotrosResearcher[]
+  academicActivities  AcademicActivity[]
   auditEvents         AuditEvent[]
 
   @@map("users")
@@ -89,6 +91,27 @@ model Session {
 
   @@index([userId])
   @@map("sessions")
+  @@schema("auth")
+}
+
+/// A single-use link to choose a new password (LASCE-CON-0012-448). The email holds
+/// a random token and only its SHA-256 is stored, like `Session`. A token works
+/// until `expires_at` (30 minutes after it was issued) and only while `used_at` is
+/// null. Issuing a new one deletes the account's unused tokens.
+model PasswordResetToken {
+  id        String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId    String    @map("user_id") @db.Uuid
+  /// base64url SHA-256 of the token in the emailed link. Never the token itself.
+  tokenHash String    @unique @map("token_hash")
+  expiresAt DateTime  @map("expires_at") @db.Timestamptz(3)
+  /// Set when the token changed the password. A used token never works again.
+  usedAt    DateTime? @map("used_at") @db.Timestamptz(3)
+  createdAt DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("password_reset_tokens")
   @@schema("auth")
 }
 
@@ -278,6 +301,40 @@ model InitiativeTranslation {
   @@schema("research")
 }
 
+/// External tools on /herramientas-cientificas (SWAAT, SWAPRO, ...), managed in Modo edición.
+/// The name is a product name and is shared by every language; `description` is Spanish.
+model ScientificTool {
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name        String   @db.VarChar(100)
+  description String
+  accessUrl   String   @map("access_url")
+  imageUrl    String?  @map("image_url")
+  position    Int      @unique @default(autoincrement())
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt   DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  translations ScientificToolTranslation[]
+
+  @@map("scientific_tools")
+  @@schema("public")
+}
+
+/// Spanish text stays on ScientificTool; other languages use the shared content resolver.
+model ScientificToolTranslation {
+  id               String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  scientificToolId String   @map("scientific_tool_id") @db.Uuid
+  locale           String   @db.VarChar(5)
+  description      String
+  createdAt        DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt        DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  scientificTool ScientificTool @relation(fields: [scientificToolId], references: [id], onDelete: Cascade)
+
+  @@unique([scientificToolId, locale])
+  @@map("scientific_tool_translations")
+  @@schema("public")
+}
+
 /// Many-to-many join between `Research` and `ResearchAuthor`. Keeps `position`
 /// so a record's citation order (first author, second author, ...) can be
 /// reproduced on the public page instead of coming back in arbitrary order.
@@ -416,6 +473,68 @@ model NosotrosActivity {
 
   @@map("nosotros_activities")
   @@schema("public")
+}
+
+/// A workshop, talk, course or conference organized or co-organized by LASCE, shown on
+/// `/noticias` and on its own dedicated list at `/actividades-academicas`. Every field is
+/// required except `endDate`: there is no draft state, an activity is either fully filled in or
+/// not created yet. `id` doubles as the card's stable identifier — the public types' `slug` is
+/// just this `id`, same convention as `Research`/`Publication`.
+///
+/// `title`, `category`, `description` and `photoAlt` are bilingual: the Spanish text for a new
+/// record stays here, and every other language lives in `AcademicActivityTranslation`.
+/// `startDate`, `endDate`, `location` and `photoUrl` are shared and never translated.
+model AcademicActivity {
+  id          String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  title       String
+  /// Free text, not an enum: "Taller", "Charla", "Curso", "Conferencia" and so on are editorial
+  /// categories an admin types, not a fixed set the system enforces (unlike `ResearchGroup`).
+  category    String
+  startDate   DateTime  @map("start_date") @db.Date
+  /// Null for a single-day activity. Set when it spans several days, shown as a range
+  /// ("16-20 febrero, 2026").
+  endDate     DateTime? @map("end_date") @db.Date
+  location    String
+  description String    @db.Text
+  photoUrl    String    @map("photo_url")
+  photoAlt    String    @map("photo_alt")
+  createdAt   DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+  modifiedBy  String    @map("modified_by") @db.Uuid
+  /// Also the version an editor saves against (optimistic concurrency).
+  modifiedAt  DateTime  @default(now()) @updatedAt @map("modified_at") @db.Timestamptz(3)
+
+  modifier     User                          @relation(fields: [modifiedBy], references: [id], onDelete: Restrict)
+  translations AcademicActivityTranslation[]
+
+  @@index([startDate])
+  @@map("academic_activities")
+  @@schema("news")
+}
+
+/// The translatable text of an `AcademicActivity` in a language other than Spanish (see
+/// "Dynamic content" in docs/internationalization.md). The base row keeps the source-language
+/// `title`, `category`, `description` and `photoAlt`; this table holds one row per additional
+/// locale. `startDate`, `endDate`, `location` and `photoUrl` are shared and stay on the base row.
+///
+/// `locale` is a plain string validated against `locales` in apps/web, so adding a language needs
+/// no migration. An activity created before translations existed has no row here, and its base
+/// text is in whatever language it was entered in.
+model AcademicActivityTranslation {
+  id                 String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  academicActivityId String   @map("academic_activity_id") @db.Uuid
+  locale             String   @db.VarChar(5)
+  title              String
+  category           String
+  description        String   @db.Text
+  photoAlt           String   @map("photo_alt")
+  createdAt          DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt          DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  academicActivity AcademicActivity @relation(fields: [academicActivityId], references: [id], onDelete: Cascade)
+
+  @@unique([academicActivityId, locale])
+  @@map("academic_activity_translations")
+  @@schema("news")
 }
 
 /// The translatable text of a `NosotrosActivity` in a language other than the
@@ -705,9 +824,32 @@ model Researcher {
   modifiedBy  String   @map("modified_by") @db.Uuid
   modifiedAt  DateTime @default(now()) @updatedAt @map("modified_at") @db.Timestamptz(3)
 
-  modifier User @relation(fields: [modifiedBy], references: [id], onDelete: Restrict)
+  modifier     User                    @relation(fields: [modifiedBy], references: [id], onDelete: Restrict)
+  translations ResearcherTranslation[]
 
   @@map("researchers")
+  @@schema("public")
+}
+
+/// The translatable text of a ROSAC `Researcher` in a language other than Spanish.
+/// The base row keeps the Spanish `role` and `description`; this table holds one
+/// row per additional locale. `name`, `institution`, `email` and `photoUrl` stay
+/// on the base row. A researcher created before translations existed has no row
+/// here, and the base text is in whatever language it was entered in.
+/// `description` is optional and all-or-none across languages.
+model ResearcherTranslation {
+  id           String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  researcherId String   @map("researcher_id") @db.Uuid
+  locale       String   @db.VarChar(5)
+  role         String
+  description  String?  @db.Text
+  createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt    DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  researcher Researcher @relation(fields: [researcherId], references: [id], onDelete: Cascade)
+
+  @@unique([researcherId, locale])
+  @@map("researcher_translations")
   @@schema("public")
 }
 
@@ -1251,5 +1393,31 @@ model RosacAcknowledgment {
   updatedAt DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(3)
 
   @@map("rosac_acknowledgments")
+  @@schema("public")
+}
+
+/// The SMTP server the portal sends email through (password reset links and the
+/// administrator's test message). One row at most, enforced by `singleton`, managed
+/// on `/administracion/correo`. The password is never stored in clear:
+/// `password_ciphertext` is AES-256-GCM output (`v1.<iv>.<tag>.<ciphertext>`, see
+/// apps/web/app/services/mail/crypto.ts) under a key derived from `CRON_SECRET`.
+/// Only the web app reads or writes it; the worker does not mirror it.
+model SmtpSettings {
+  id                 String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  /// Always true; its unique index and a CHECK keep the table to a single row.
+  singleton          Boolean  @unique @default(true)
+  host               String
+  port               Int
+  /// "tls" (implicit TLS, usually port 465), "starttls" (usually 587) or "none".
+  security           String
+  /// Null when the server accepts mail without authentication.
+  username           String?
+  passwordCiphertext String?  @map("password_ciphertext")
+  fromAddress        String   @map("from_address")
+  fromName           String   @map("from_name")
+  createdAt          DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt          DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  @@map("smtp_settings")
   @@schema("public")
 }

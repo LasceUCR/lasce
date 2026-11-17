@@ -26,6 +26,24 @@ describe('queryMockScientificData', () => {
     expect(result.points.at(-1)!.timestamp).toBe('2026-09-10T09:00:00Z')
   })
 
+  test('continues on the next day when the range crosses midnight', async () => {
+    const result = await queryMockScientificData({
+      source: 'ROSAC',
+      product: 'ROSAC-I1',
+      parameter: 'simulated-intensity',
+      date: '2026-09-30',
+      startTime: '23:00',
+      endTime: '01:00',
+    })
+    if (result.visualization !== 'time-series') throw new Error('Expected a time series')
+
+    expect(result.points[0]!.timestamp).toBe('2026-09-30T23:00:00Z')
+    expect(result.points[3]!.timestamp).toBe('2026-09-30T23:45:00Z')
+    expect(result.points[4]!.timestamp).toBe('2026-10-01T00:00:00Z')
+    expect(result.points.at(-1)!.timestamp).toBe('2026-10-01T01:00:00Z')
+    expect(result.points).toHaveLength(9)
+  })
+
   test('creates a time-frequency matrix for the provisional dynamic spectrum', async () => {
     const result = await queryMockScientificData({
       source: 'ROSAC',

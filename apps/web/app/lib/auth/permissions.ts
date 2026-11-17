@@ -6,8 +6,7 @@ import type { UserRole } from '@lasce/db'
  * call `requirePermission` without touching login, sessions or unrelated admin
  * screens. The mapping itself is stored in `auth.role_permissions`.
  *
- * Component create/edit/delete will gate content-management screens that do not
- * exist yet. `download_resources` covers laboratory resources: downloading them,
+ * Component create/edit/delete gate the editable content of the public pages in Modo edición. `download_resources` covers laboratory resources: downloading them,
  * including chart images and non-GOES data from `/datos`.
  * `download_goes_resources` additionally unlocks GOES data exports there
  * (`app/lib/downloads/policy.ts`).
@@ -22,6 +21,7 @@ export const PERMISSIONS = [
   'manage_permissions',
   'view_audit_log',
   'view_download_history',
+  'manage_email_settings',
 ] as const
 
 export type Permission = (typeof PERMISSIONS)[number]
@@ -36,18 +36,20 @@ export const PERMISSION_LABELS: Record<Permission, string> = {
   manage_permissions: 'Configurar permisos',
   view_audit_log: 'Consultar la auditoría',
   view_download_history: 'Consultar el historial de descargas',
+  manage_email_settings: 'Configurar el correo',
 }
 
 export const PERMISSION_DESCRIPTIONS: Record<Permission, string> = {
-  create_components: 'Crear componentes del portal cuando esa función esté disponible.',
-  edit_components: 'Editar componentes del portal cuando esa función esté disponible.',
-  delete_components: 'Eliminar componentes del portal cuando esa función esté disponible.',
+  create_components: 'Agregar contenido editable del portal desde el Modo edición.',
+  edit_components: 'Modificar el contenido editable del portal desde el Modo edición.',
+  delete_components: 'Eliminar contenido editable del portal desde el Modo edición.',
   download_resources: 'Descargar recursos del laboratorio desde la página de datos.',
   download_goes_resources: 'Descargar datos de los satélites GOES.',
   manage_users: 'Consultar cuentas y asignar o retirar roles.',
   manage_permissions: 'Ver y cambiar los permisos asociados a cada rol.',
   view_audit_log: 'Consultar el registro de acciones administrativas del portal.',
   view_download_history: 'Consultar quién descargó qué recursos del laboratorio y cuándo.',
+  manage_email_settings: 'Configurar el servidor SMTP que envía los correos del portal.',
 }
 
 export const PERMISSION_DENIED: Record<Permission, string> = {
@@ -60,6 +62,7 @@ export const PERMISSION_DENIED: Record<Permission, string> = {
   manage_permissions: 'No tienes autorización para configurar los permisos de los roles.',
   view_audit_log: 'No tienes autorización para consultar la auditoría.',
   view_download_history: 'No tienes autorización para consultar el historial de descargas.',
+  manage_email_settings: 'No tienes autorización para configurar el correo del portal.',
 }
 
 /** Seeded by the role-permissions migration; administrators can change it later. */
@@ -76,6 +79,7 @@ export const DEFAULT_ROLE_PERMISSIONS: Record<UserRole, readonly Permission[]> =
     'manage_permissions',
     'view_audit_log',
     'view_download_history',
+    'manage_email_settings',
   ],
 }
 

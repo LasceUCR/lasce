@@ -14,3 +14,4 @@ export const Default: Story = {
   },
 }
 export const Compact: Story = { args: { ...Default.args, variant: 'compact' } }
+export const TitleOnly: Story = { args: { title: 'Noticias' } }

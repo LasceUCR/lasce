@@ -92,7 +92,7 @@ describe('GeomagneticIndicators', () => {
     expect(
       screen.getByRole('heading', { name: 'Índices geomagnéticos de Costa Rica' }),
     ).toBeInTheDocument()
-    expect(screen.getByText('Datos de demostración')).toBeInTheDocument()
+    expect(screen.queryByText('Datos de demostración')).not.toBeInTheDocument()
     expect(screen.getAllByRole('article')).toHaveLength(4)
     expect(screen.getAllByRole('article')[1]).toHaveTextContent('-12 nT · Estable')
     expect(screen.queryByRole('button')).not.toBeInTheDocument()

@@ -20,6 +20,8 @@ export interface FormFieldProps {
   /** Validation message. Marks the control invalid and describes it with the text. */
   error?: string
   defaultValue?: string
+  value?: string
+  onChange?: (event: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => void
   autoComplete?: string
   required?: boolean
 }
@@ -39,6 +41,8 @@ export function FormField({
   hint,
   error,
   defaultValue,
+  value,
+  onChange,
   autoComplete,
   required = false,
 }: FormFieldProps) {
@@ -55,6 +59,7 @@ export function FormField({
     'aria-required': required || undefined,
     'aria-invalid': error ? true : undefined,
     'aria-describedby': describedBy,
+    onChange,
   }
 
   return (
@@ -66,8 +71,15 @@ export function FormField({
         // inputs need no such help because React updates their defaultValue.
         // `key` goes before the spread: after it, the JSX transform has to fall
         // back to a call that makes React treat the options as a dynamic list.
-        <select key={defaultValue ?? ''} {...shared} defaultValue={defaultValue ?? ''}>
-          <option value="">{placeholder ?? 'Selecciona una opción'}</option>
+        <select
+          key={defaultValue ?? value ?? ''}
+          {...shared}
+          defaultValue={defaultValue}
+          value={value}
+        >
+          {/* This presentational component has no catalogue of its own, so the empty option's
+              text is whatever the caller passes; every current caller always passes one. */}
+          <option value="">{placeholder ?? ''}</option>
           {options.map((option) => (
             <option key={option.value} value={option.value}>
               {option.label}
@@ -75,7 +87,13 @@ export function FormField({
           ))}
         </select>
       ) : (
-        <input {...shared} defaultValue={defaultValue} placeholder={placeholder} type={type} />
+        <input
+          {...shared}
+          defaultValue={defaultValue}
+          placeholder={placeholder}
+          type={type}
+          value={value}
+        />
       )}
       {hint ? (
         <p className="form-field-hint" id={hintId}>

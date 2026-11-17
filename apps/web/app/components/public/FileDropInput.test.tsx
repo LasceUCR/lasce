@@ -3,6 +3,7 @@ import userEvent from '@testing-library/user-event'
 import { describe, expect, test, vi } from 'vitest'
 
 import { renderWithIntl } from '@/app/lib/i18n/testing'
+import { ROSAC_IMAGE_ACCEPT, ROSAC_IMAGE_MAX_BYTES } from '@/app/lib/rosac-upload'
 import { FileDropInput, type FileDropInputProps } from './FileDropInput'
 import { Empty, WithExistingImage } from './FileDropInput.stories'
 
@@ -81,6 +82,57 @@ describe('FileDropInput', () => {
     await user.upload(container.querySelector('input[type="file"]') as HTMLInputElement, png)
 
     expect(onFileSelect).toHaveBeenCalledWith(png)
+  })
+
+  test('accepts all five image formats when configured with ROSAC requirements', async () => {
+    const user = userEvent.setup({ applyAccept: false })
+    const onFileSelect = vi.fn()
+    const { container } = renderWithIntl(
+      <FileDropInput
+        accept={ROSAC_IMAGE_ACCEPT}
+        label="Archivo"
+        maxFileSizeBytes={ROSAC_IMAGE_MAX_BYTES}
+        onFileSelect={onFileSelect}
+      />,
+    )
+    const input = container.querySelector('input[type="file"]') as HTMLInputElement
+    const files = [
+      new File(['image'], 'photo.avif', { type: 'image/avif' }),
+      new File(['<svg/>'], 'logo.svg', { type: 'image/svg+xml' }),
+      new File(['image'], 'photo.jpg', { type: 'image/jpeg' }),
+      new File(['image'], 'photo.png', { type: 'image/png' }),
+      new File(['image'], 'photo.webp', { type: 'image/webp' }),
+    ]
+
+    for (const file of files) await user.upload(input, file)
+
+    expect(onFileSelect.mock.calls.map(([file]) => file)).toEqual(files)
+  })
+
+  test('rejects unsupported formats and files above the configured size limit', async () => {
+    const user = userEvent.setup({ applyAccept: false })
+    const onFileSelect = vi.fn()
+    const { container } = renderWithIntl(
+      <FileDropInput
+        accept={ROSAC_IMAGE_ACCEPT}
+        label="Archivo"
+        maxFileSizeBytes={ROSAC_IMAGE_MAX_BYTES}
+        onFileSelect={onFileSelect}
+        rejectionFormatMessage="Use JPG, PNG, WebP, AVIF o SVG."
+        rejectionSizeMessage="El archivo no debe superar 10 MB."
+      />,
+    )
+    const input = container.querySelector('input[type="file"]') as HTMLInputElement
+    const gif = new File(['image'], 'photo.gif', { type: 'image/gif' })
+    const tooLarge = new File(['image'], 'photo.avif', { type: 'image/avif' })
+    Object.defineProperty(tooLarge, 'size', { value: 10_000_001 })
+
+    await user.upload(input, gif)
+    expect(screen.getByText('Use JPG, PNG, WebP, AVIF o SVG.')).toBeInTheDocument()
+
+    await user.upload(input, tooLarge)
+    expect(screen.getByText('El archivo no debe superar 10 MB.')).toBeInTheDocument()
+    expect(onFileSelect).not.toHaveBeenCalled()
   })
 
   test('names the file input by its label and keeps it out of the tab order', () => {

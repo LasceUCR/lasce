@@ -1,10 +1,11 @@
 'use client'
 
-import { useEffect, useId, useRef, useState } from 'react'
+import { useEffect, useId, useImperativeHandle, useRef, useState, type Ref } from 'react'
 import { useLocale, useTranslations } from 'next-intl'
 
 import { Button } from '@/app/components/public/Button'
 import { FormField, type FormFieldOption } from '@/app/components/public/FormField'
+import { useModalHeaderSlot } from '@/app/components/public/Modal'
 import { Notice } from '@/app/components/public/Notice'
 import { StandardConfirmDialog } from '@/app/components/public/StandardConfirmDialog'
 import { LanguageTabs } from '@/app/components/public/cms/LanguageTabs'
@@ -38,16 +39,24 @@ import type { RosacCharacteristicInput, RosacCharacteristicItem } from '@/app/li
 
 export type RosacCharacteristicFormBody = RosacCharacteristicInput
 
+/** What a parent can ask of the form: the modal around it routes Escape and its close here. */
+export interface RosacCharacteristicFormHandle {
+  /** Closes the form through `onCancel`, first asking to discard any unsaved changes. */
+  requestCancel: () => void
+}
+
 export interface RosacCharacteristicFormProps {
   characteristic: RosacCharacteristicItem
   onSave: (body: RosacCharacteristicFormBody) => void
   onCancel: () => void
+  ref?: Ref<RosacCharacteristicFormHandle>
 }
 
 export function RosacCharacteristicForm({
   characteristic,
   onSave,
   onCancel,
+  ref,
 }: RosacCharacteristicFormProps) {
   const t = useTranslations('rosac.editor')
   const siteLocale = useLocale()
@@ -62,6 +71,7 @@ export function RosacCharacteristicForm({
     label: t(`icons.${value}`),
   }))
 
+  const headerSlot = useModalHeaderSlot()
   const formRef = useRef<HTMLDivElement>(null)
   const formId = useId()
 
@@ -92,13 +102,15 @@ export function RosacCharacteristicForm({
   const contentChanged = hasContentChanges(rosacCharacteristicContent, stored, draft)
   const isDirty = iconChanged || contentChanged
 
-  function handleCancelClick() {
+  function requestCancel() {
     if (isDirty) {
       setConfirmDiscardOpen(true)
       return
     }
     onCancel()
   }
+
+  useImperativeHandle(ref, () => ({ requestCancel }))
 
   function setContent(locale: Locale, field: RosacCharacteristicField, value: string) {
     setDraft((current) => ({ ...current, [locale]: { ...current[locale], [field]: value } }))
@@ -155,6 +167,7 @@ export function RosacCharacteristicForm({
         label={t('languageTabs')}
         onSelect={setTab}
         selected={tab}
+        tablistContainer={headerSlot}
       >
         {(locale) => (
           <>
@@ -201,7 +214,7 @@ export function RosacCharacteristicForm({
       />
 
       <div className="cms-form-actions">
-        <Button onClick={handleCancelClick} variant="secondary">
+        <Button onClick={requestCancel} variant="secondary">
           {t('cancel')}
         </Button>
         <Button onClick={handleConfirmClick} variant="primary">

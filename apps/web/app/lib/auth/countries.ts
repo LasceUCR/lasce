@@ -3,9 +3,9 @@
  *
  * ISO 3166-1 alpha-2 has no runtime enumeration in Node (`Intl.supportedValuesOf`
  * does not cover regions), so the officially assigned codes are listed here and
- * only the Spanish display names come from ICU. `listCountries()` is meant for
- * Server Components: names are computed once on the server and passed down as
- * props, so the browser's ICU never has to agree with Node's.
+ * the display names come from ICU, in the visitor's language. `listCountries()`
+ * is meant for Server Components: names are computed once on the server and
+ * passed down as props, so the browser's ICU never has to agree with Node's.
  */
 
 // prettier-ignore
@@ -46,7 +46,7 @@ export type CountryCode = (typeof COUNTRY_CODES)[number]
 
 export interface CountryOption {
   code: CountryCode
-  /** Spanish display name, e.g. "Costa Rica". */
+  /** Display name in the requested locale, e.g. "Costa Rica". */
   name: string
 }
 
@@ -56,32 +56,31 @@ export function isCountryCode(value: string): value is CountryCode {
   return codeSet.has(value)
 }
 
-let cached: CountryOption[] | undefined
+const cache = new Map<string, CountryOption[]>()
 
 /**
- * Every country with its Spanish name, sorted the way a Spanish speaker expects
- * (accents and case folded). Computed once per process.
+ * Every country with its display name in `locale` (Spanish by default), sorted the way a
+ * speaker of that language expects (accents and case folded). Computed once per locale, per
+ * process.
  */
-export function listCountries(): CountryOption[] {
+export function listCountries(locale: string = 'es'): CountryOption[] {
+  const cached = cache.get(locale)
   if (cached) return cached
 
-  const displayNames = new Intl.DisplayNames(['es'], { type: 'region' })
-  cached = COUNTRY_CODES.map((code) => ({ code, name: displayNames.of(code) ?? code })).sort(
-    (a, b) => a.name.localeCompare(b.name, 'es'),
-  )
+  const displayNames = new Intl.DisplayNames([locale], { type: 'region' })
+  const countries = COUNTRY_CODES.map((code) => ({
+    code,
+    name: displayNames.of(code) ?? code,
+  })).sort((a, b) => a.name.localeCompare(b.name, locale))
+  cache.set(locale, countries)
 
-  return cached
+  return countries
 }
 
 /**
  * The display name of a country in `locale` (Spanish by default), or the code itself when it is
- * unknown. Only the Spanish names are sorted and cached, because they back the registration list.
+ * unknown.
  */
 export function countryName(code: string, locale: string = 'es'): string {
-  if (locale !== 'es') {
-    return isCountryCode(code)
-      ? (new Intl.DisplayNames([locale], { type: 'region' }).of(code) ?? code)
-      : code
-  }
-  return listCountries().find((country) => country.code === code)?.name ?? code
+  return listCountries(locale).find((country) => country.code === code)?.name ?? code
 }
