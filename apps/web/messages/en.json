@@ -2003,6 +2003,7 @@
       "minimum": "Minimum",
       "maximum": "Maximum",
       "latest": "Latest value",
+      "flareClass": "Flare class {flareClass}",
       "chartCaptionObserved": "Observations from {provider}.",
       "chartCaptionSimulated": "Simulated series to prepare the future ROSAC integration.",
       "tableToggle": "View chart values ({count})",
@@ -2039,6 +2040,11 @@
       "description": "Series of {count} measurements between {start} and {end} UTC. The minimum value is {minimum} and the maximum is {maximum} {unit}.",
       "empty": "There are no values to chart.",
       "caption": "{caption} Unit: {unit}.",
+      "logScale": "The vertical axis uses a logarithmic scale.",
+      "flareClasses": "The letters A, B, C, M and X on the right mark the solar flare classes.",
+      "peakClass": "The maximum is a class {flareClass} flare.",
+      "tooltip": "{time} UTC: {value} {unit}",
+      "keyboardHint": "Use the left and right arrow keys to move through the values, and Home and End to go to the first and the last.",
       "low": "Low",
       "high": "High",
       "spectrumDescription": "Intensity map by time and frequency, from {minFreq} to {maxFreq} {frequencyUnit} and from {start} to {end} UTC. Values range from {minimum} to {maximum} {unit}.",
@@ -2072,7 +2078,7 @@
       "dateNotPublished": "That date does not have published data yet. Choose {date} or an earlier date."
     },
     "origins": {
-      "sampled": "{count} observations evenly spread across the interval are shown; no values were interpolated.",
+      "sampled": "The chart shows {count} points: the lowest and highest reading of each stretch of the interval, without interpolation. The minimum, maximum and latest value are computed from every observation.",
       "full": "Not sampled: includes every valid observation in the interval.",
       "exis": {
         "provider": "GOES",

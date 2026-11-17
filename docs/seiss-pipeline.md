@@ -212,8 +212,10 @@ NOAA itself writes fill into the highest electron band when it has too few count
 instrument provider (CITIC through `query-goes-archive`) is still registered but no longer reached:
 MPSL, the only other SEISS product, is not offered. Retiring it is a follow-up. Each reader queries its measurement with the same helper as EXIS and MAG
 (`goesReadingsDataSource.ts`): only `valid = true`, only the satellite that observed last. An EHIS
-day has at most 288 readings and is never sampled; an SGPS or MPSH day of 1 440 minutes is sampled
-inside the query to at most 360 points (about 290 for a full day), and the notice says so. A day never ingested is an empty series.
+day has at most 288 readings and is never sampled; an SGPS or MPSH day of 1 440 minutes is reduced
+inside the query to at most 360 points, the lowest and the highest reading of each stretch
+([`public-scientific-data.md`](public-scientific-data.md#sampling-and-summary)), and the notice
+says how many it draws. A day never ingested is an empty series.
 
 ## Out of scope
 

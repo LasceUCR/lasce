@@ -77,7 +77,7 @@ describe('describeOrigin', () => {
     }
   })
 
-  test('says how many observations a sampled chart shows', () => {
+  test('says how many points a sampled chart shows and that the summary uses every reading', () => {
     const origin = {
       kind: 'observed',
       dataset: 'mag',
@@ -86,10 +86,10 @@ describe('describeOrigin', () => {
     } as const
 
     expect(describeOrigin(origin, translate('es')).notice).toMatch(
-      /^Promedios de 1 minuto del magnetómetro .* Se muestran 360 observaciones distribuidas uniformemente/,
+      /^Promedios de 1 minuto del magnetómetro .* La gráfica muestra 360 puntos: .* se calculan con todas las observaciones\.$/,
     )
     expect(describeOrigin(origin, translate('en')).notice).toMatch(
-      /^Magnetometer 1-minute averages .* 360 observations evenly spread/,
+      /^Magnetometer 1-minute averages .* The chart shows 360 points: .* computed from every observation\.$/,
     )
   })
 

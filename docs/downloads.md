@@ -83,7 +83,9 @@ again on every attempt, so retrying a failed download never skips a permission c
 ### Where the data comes from (`loaders.ts`)
 
 - **PNG** uses the same result the page shows (`scientificDataSources.query`). For EXIS and MAG
-  that result is sampled to 360 points, and so is SEISS, whose products (EHIS, SGPS, MPSH) all
+  that result is reduced to at most 360 points that keep each stretch's lowest and highest
+  reading ([`public-scientific-data.md`](public-scientific-data.md#sampling-and-summary)), and so
+  is SEISS, whose products (EHIS, SGPS, MPSH) all
   read InfluxDB synchronously ([`seiss-pipeline.md`](seiss-pipeline.md)). The action still
   forwards the `jobId` that answered the page's query and answers `pending` if a backend is still
   working; no `/datos` product is served by an asynchronous job any more.

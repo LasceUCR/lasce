@@ -24,6 +24,8 @@ export interface DynamicSpectrumRect {
 }
 
 export interface DynamicSpectrumLayout {
+  /** The chart's box at the width it was laid out for. */
+  frame: { width: number; height: number; top: number; right: number; bottom: number; left: number }
   minimum: number
   maximum: number
   plotWidth: number
@@ -41,15 +43,17 @@ export interface DynamicSpectrumInput {
   timestamps: string[]
 }
 
-/** Lays out a non-empty spectrum; `null` when any axis is empty. */
-export function layoutDynamicSpectrum({
-  cells,
-  frequencies,
-  timestamps,
-}: DynamicSpectrumInput): DynamicSpectrumLayout | null {
+/**
+ * Lays out a non-empty spectrum; `null` when any axis is empty. `width` is the width to lay it out
+ * for, in CSS pixels (the page passes its container's; the PNG uses the default).
+ */
+export function layoutDynamicSpectrum(
+  { cells, frequencies, timestamps }: DynamicSpectrumInput,
+  { width = DYNAMIC_SPECTRUM_CHART.width }: { width?: number } = {},
+): DynamicSpectrumLayout | null {
   if (!cells.length || !frequencies.length || !timestamps.length) return null
 
-  const chart = DYNAMIC_SPECTRUM_CHART
+  const chart = { ...DYNAMIC_SPECTRUM_CHART, width }
   const values = cells.map(({ value }) => value)
   const minimum = Math.min(...values)
   const maximum = Math.max(...values)
@@ -61,6 +65,7 @@ export function layoutDynamicSpectrum({
   const frequencyIndexes = new Map(frequencies.map((frequency, index) => [frequency, index]))
 
   return {
+    frame: chart,
     minimum,
     maximum,
     plotWidth,
