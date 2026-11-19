@@ -83,6 +83,8 @@ banner is informational; the Server Action enforces the same rules
 
 The response always includes an `origin` object. The interface displays its source and whether
 the values are `observed` or `simulated`; these states must never be inferred from styling alone.
+To integrate a new instrument, data provider, or ingestion pipeline, follow the step-by-step
+guide in [add-a-data-source.md](add-a-data-source.md).
 
 ### GOES
 
