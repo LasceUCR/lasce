@@ -184,9 +184,10 @@ test('reading pages use the portal column and keep paragraphs at a readable leng
     expect(Math.round(hero!.x)).toBe(Math.round(reference!.x))
     expect(Math.round(hero!.width)).toBe(Math.round(reference!.width))
 
-    // The lead stays near --reading-measure (68ch) while the column is much wider.
-    const lead = await page.locator('main .topic-lead').first().boundingBox()
-    expect(lead!.width).toBeLessThan(hero!.width * 0.7)
+    // Running text stays near --reading-measure (68ch) while the column is much wider. Every
+    // section intro is capped; /clima-espacial has no hero lead.
+    const intro = await page.locator('main .topic-section .topic-intro').first().boundingBox()
+    expect(intro!.width).toBeLessThan(hero!.width * 0.7)
   }
 })
 
