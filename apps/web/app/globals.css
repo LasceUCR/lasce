@@ -3688,21 +3688,6 @@ a {
   color: var(--ink);
 }
 
-/* Reading pages (/fisica-solar, /clima-espacial): one centred column of the same 65rem as the
-   /datos header, instead of the 1332px used by pages built around galleries and grids. The
-   running text inside stays capped at --reading-measure (see below). */
-.topic-page-reading .topic-hero,
-.topic-page-reading .page-width {
-  width: min(100% - 64px, 65rem);
-}
-
-@media (max-width: 760px) {
-  .topic-page-reading .topic-hero,
-  .topic-page-reading .page-width {
-    width: min(100% - 32px, 65rem);
-  }
-}
-
 .content-flag {
   width: min(100% - 64px, 1332px);
   margin: 16px auto 0;

@@ -21,10 +21,12 @@ built by `app/lib/space-weather.ts`.
 ## Layout
 
 `/clima-espacial` and `/fisica-solar` are reading pages (#507): the article carries
-`topic-page-reading`, which centres the hero and sections in a 65rem column, the same width as the
-`/datos` header. Running text (`.topic-lead`, `.topic-intro`, the concept-flow caption) is capped
-at `--reading-measure` (68ch), about 65–80 characters per line, and left-aligned like every
-paragraph on the public site.
+`topic-page-reading`. The hero and sections use the same `page-width` container as every other
+public page, so margins and alignment match across the portal; cards, the concept flow and the
+Costa Rica card use that full width. Only the running text (`.topic-lead`, `.topic-intro`, the
+concept-flow caption) is capped at `--reading-measure` (68ch), about 65–80 characters per line,
+and left-aligned like every paragraph on the public site. An earlier 65rem column, matched to the
+`/datos` header, was dropped so these pages line up with the rest of the portal.
 
 Every section is numbered in visual order through `TopicSection`'s `index`: 1. ¿Qué es el clima
 espacial?, 2. Del Sol a la Tierra, 3. ¿Qué compone el clima espacial?, 4. ¿Por qué estudiarlo
