@@ -1,6 +1,7 @@
 import { fireEvent, screen } from '@testing-library/react'
 import { afterEach, describe, expect, test, vi } from 'vitest'
 
+import { mockTextLayout } from '@/app/lib/testing/mockTextLayout'
 import { renderWithIntl } from '@/app/lib/i18n/testing'
 
 import { NewsCard, type NewsCardProps } from './NewsCard'
@@ -16,24 +17,6 @@ import {
 
 const defaultArgs = Default.args as NewsCardProps & { date: string }
 const englishArgs = English.args as NewsCardProps & { date: string }
-
-function mockAbstractOverflow(overflows: boolean) {
-  vi.stubGlobal(
-    'ResizeObserver',
-    class {
-      callback: () => void
-      constructor(callback: () => void) {
-        this.callback = callback
-      }
-      observe() {
-        this.callback()
-      }
-      disconnect() {}
-    },
-  )
-  vi.spyOn(HTMLElement.prototype, 'scrollHeight', 'get').mockReturnValue(overflows ? 200 : 80)
-  vi.spyOn(HTMLElement.prototype, 'clientHeight', 'get').mockReturnValue(80)
-}
 
 afterEach(() => {
   vi.unstubAllGlobals()
@@ -131,12 +114,12 @@ describe('NewsCard', () => {
   })
 
   test('offers "Leer más" inline when the abstract overflows, and expands it in place', () => {
-    mockAbstractOverflow(true)
+    mockTextLayout(true)
     renderWithIntl(<NewsCard {...defaultArgs} />)
 
     const abstract = screen.getByText(defaultArgs.abstract)
     const toggle = screen.getByRole('button', { name: 'Leer más' })
-    expect(abstract).toContainElement(toggle)
+    expect(abstract.closest('.truncated-text')).toContainElement(toggle)
     expect(toggle).toHaveAttribute('aria-expanded', 'false')
 
     fireEvent.click(toggle)
@@ -152,7 +135,7 @@ describe('NewsCard', () => {
   })
 
   test('does not show the toggle when the abstract fits without overflowing', () => {
-    mockAbstractOverflow(false)
+    mockTextLayout(false)
     renderWithIntl(<NewsCard {...defaultArgs} />)
 
     expect(screen.queryByRole('button', { name: 'Leer más' })).not.toBeInTheDocument()

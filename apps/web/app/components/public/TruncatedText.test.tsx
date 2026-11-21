@@ -2,6 +2,7 @@ import { screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest'
 
+import { mockTextLayout } from '@/app/lib/testing/mockTextLayout'
 import { renderWithIntl } from '@/app/lib/i18n/testing'
 
 import { TruncatedText, type TruncatedTextProps } from './TruncatedText'
@@ -11,74 +12,56 @@ const longArgs = Long.args as TruncatedTextProps
 const shortArgs = Short.args as TruncatedTextProps
 const customArgs = OneLineCustomLabels.args as TruncatedTextProps
 
-/**
- * jsdom lays nothing out, so the text's size is set here: `overflowing` decides whether its full
- * height is taller than the clamped box, and the observer reports it straight away.
- */
-let overflowing = false
-
-/** The number of lines the text is cut to, or `''` while it is shown whole. */
-function clampOf(element: HTMLElement) {
-  return element.style.getPropertyValue('--truncated-lines')
-}
+/** `mockTextLayout` models a text box whose lines hold this many characters. */
+const CHARS_PER_LINE = 40
 
 /** The element `TruncatedText` renders (`as`), around the text. */
-function blockOf(text: HTMLElement) {
-  return text.parentElement as HTMLElement
+function blockOf(element: HTMLElement) {
+  return element.closest('.truncated-text') as HTMLElement
 }
 
 beforeEach(() => {
-  vi.stubGlobal(
-    'ResizeObserver',
-    class {
-      constructor(private readonly callback: () => void) {}
-      observe() {
-        this.callback()
-      }
-      disconnect() {}
-    },
-  )
-  vi.spyOn(HTMLElement.prototype, 'scrollHeight', 'get').mockImplementation(() =>
-    overflowing ? 120 : 60,
-  )
-  vi.spyOn(HTMLElement.prototype, 'clientHeight', 'get').mockImplementation(() => 60)
+  mockTextLayout(true)
 })
 
 afterEach(() => {
-  overflowing = false
   vi.unstubAllGlobals()
   vi.restoreAllMocks()
 })
 
 describe('TruncatedText', () => {
-  test('cuts long text to the lines it is given and offers "Leer más" inside it', () => {
-    overflowing = true
+  test('cuts long text to the lines it is given and puts "… Leer más" right after the last word', () => {
     renderWithIntl(<TruncatedText {...longArgs} />)
 
-    const text = screen.getByText(longArgs.children)
-    expect(clampOf(text)).toBe('3')
     const toggle = screen.getByRole('button', { name: 'Leer más' })
     expect(toggle).toHaveAttribute('aria-expanded', 'false')
-    expect(toggle).toHaveAttribute('aria-controls', blockOf(text).id)
-    // Inline, at the end of the last visible line, after an ellipsis.
-    expect(text).toContainElement(toggle)
-    expect(text).toHaveTextContent(/… Leer más/)
+    expect(toggle).toHaveAttribute('aria-controls', blockOf(toggle).id)
+
+    // The visible text ends where the toggle starts: no gap pushes it to the right edge.
+    const visible = toggle.previousElementSibling as HTMLElement
+    expect(visible).toHaveAttribute('aria-hidden', 'true')
+    expect(visible.textContent?.endsWith('… ')).toBe(true)
+    const shown = visible.textContent!.slice(0, -2)
+    expect(longArgs.children.startsWith(shown)).toBe(true)
+    expect(shown.length).toBeLessThan(longArgs.children.length)
+    // It fits in the lines it was given, toggle included.
+    expect(`${visible.textContent}Leer más`.length).toBeLessThanOrEqual(
+      longArgs.lines * CHARS_PER_LINE,
+    )
+    // Cut between words.
+    expect(longArgs.children.charAt(shown.length)).toMatch(/\s/)
   })
 
   test('shows the whole text in place, and clamps it again', async () => {
-    overflowing = true
     const user = userEvent.setup()
     renderWithIntl(<TruncatedText {...longArgs} />)
 
     await user.click(screen.getByRole('button', { name: 'Leer más' }))
 
-    const text = screen.getByText(longArgs.children)
-    expect(clampOf(text)).toBe('')
     const toggle = screen.getByRole('button', { name: 'Leer menos' })
     expect(toggle).toHaveAttribute('aria-expanded', 'true')
     // Right after the last word, with no ellipsis left.
-    expect(text).toContainElement(toggle)
-    expect(text.textContent?.endsWith(`${longArgs.children} Leer menos`)).toBe(true)
+    expect(blockOf(toggle).textContent).toBe(`${longArgs.children} Leer menos`)
 
     await user.click(screen.getByRole('button', { name: 'Leer menos' }))
     expect(screen.getByRole('button', { name: 'Leer más' })).toBeInTheDocument()
@@ -92,28 +75,25 @@ describe('TruncatedText', () => {
   })
 
   test('keeps the whole text in the page even while clamped', () => {
-    overflowing = true
     renderWithIntl(<TruncatedText {...longArgs} />)
 
-    expect(screen.getByText(longArgs.children)).toHaveTextContent(longArgs.children)
+    expect(screen.getByText(longArgs.children)).toBeInTheDocument()
   })
 
   test('uses the labels it is given', async () => {
-    overflowing = true
     const user = userEvent.setup()
     renderWithIntl(<TruncatedText {...customArgs} />)
 
-    expect(clampOf(screen.getByText(customArgs.children))).toBe('1')
     await user.click(screen.getByRole('button', { name: 'Ver descripción completa' }))
     expect(screen.getByRole('button', { name: 'Ocultar descripción' })).toBeInTheDocument()
   })
 
   test("labels the toggle in the site's language and marks only the text's language", () => {
-    overflowing = true
     renderWithIntl(<TruncatedText {...longArgs} lang="es" />, { locale: 'en' })
 
-    expect(blockOf(screen.getByText(longArgs.children))).toHaveAttribute('lang', 'es')
-    expect(screen.getByRole('button', { name: 'Read more' })).not.toHaveAttribute('lang')
+    const toggle = screen.getByRole('button', { name: 'Read more' })
+    expect(blockOf(toggle)).toHaveAttribute('lang', 'es')
+    expect(toggle).not.toHaveAttribute('lang')
   })
 
   test('renders as the element it is asked for, with its classes', () => {

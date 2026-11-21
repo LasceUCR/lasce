@@ -1,6 +1,7 @@
 import { fireEvent, screen } from '@testing-library/react'
 import { afterEach, describe, expect, test, vi } from 'vitest'
 
+import { mockTextLayout } from '@/app/lib/testing/mockTextLayout'
 import { renderWithIntl } from '@/app/lib/i18n/testing'
 
 import { AcademicActivityCard, type AcademicActivityCardProps } from './AcademicActivityCard'
@@ -12,23 +13,6 @@ const defaultArgs = Default.args as AcademicActivityCardProps
  * jsdom has no layout and no ResizeObserver, so the clamp never overflows on its own. This stands
  * in for both: the observer reports once on `observe`, and every element measures as `overflows`.
  */
-function mockDescriptionOverflow(overflows: boolean) {
-  vi.stubGlobal(
-    'ResizeObserver',
-    class {
-      callback: () => void
-      constructor(callback: () => void) {
-        this.callback = callback
-      }
-      observe() {
-        this.callback()
-      }
-      disconnect() {}
-    },
-  )
-  vi.spyOn(HTMLElement.prototype, 'scrollHeight', 'get').mockReturnValue(overflows ? 200 : 80)
-  vi.spyOn(HTMLElement.prototype, 'clientHeight', 'get').mockReturnValue(80)
-}
 
 afterEach(() => {
   vi.unstubAllGlobals()
@@ -57,7 +41,7 @@ describe('AcademicActivityCard', () => {
   })
 
   test('offers "Leer más" inline when the description overflows, and expands it in place', () => {
-    mockDescriptionOverflow(true)
+    mockTextLayout(true)
     const { container } = renderWithIntl(<AcademicActivityCard {...defaultArgs} />)
 
     const description = container.querySelector('.academic-activity-card-description')
@@ -74,7 +58,7 @@ describe('AcademicActivityCard', () => {
   })
 
   test('leaves the description as plain text with no toggle when it fits', () => {
-    mockDescriptionOverflow(false)
+    mockTextLayout(false)
     renderWithIntl(<AcademicActivityCard {...defaultArgs} />)
 
     expect(screen.queryByRole('button', { name: /Leer más|Leer menos/ })).not.toBeInTheDocument()
