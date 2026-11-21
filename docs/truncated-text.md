@@ -52,6 +52,8 @@ text in place, followed by "**Leer menos**" right after the last word, which cut
   readers read all of it once.
 - **Accessible toggle.** It is a real `<button>` with `aria-expanded` and `aria-controls` pointing at
   the text, reachable with the keyboard, with a visible focus ring. Its chevron icon is decorative.
+- **Focus stays on the toggle.** "Leer más" and "Leer menos" are the same button, so a keyboard
+  user who presses it keeps focus on it when the text opens and closes.
 - **Language.** The default labels come from `common.truncatedText` in `apps/web/messages/`, so they
   follow the language chosen in the header. `lang` marks the text only; the toggle keeps the page's
   language.
@@ -90,6 +92,23 @@ const t = useTranslations('publications.card')
 ;<TruncatedText lines={2} readLessLabel={t('readLess')} readMoreLabel={t('readMore')}>
   {publication.abstract}
 </TruncatedText>
+```
+
+### Text in several paragraphs
+
+`children` is one string. Join the paragraphs with a blank line and keep it with
+`white-space: pre-line` on the text's class, as `InitiativeDescription` does:
+
+```tsx
+<TruncatedText className={styles.description} lines={4}>
+  {paragraphs.join('\n\n')}
+</TruncatedText>
+```
+
+```css
+.description {
+  white-space: pre-line;
+}
 ```
 
 ### Styling the text

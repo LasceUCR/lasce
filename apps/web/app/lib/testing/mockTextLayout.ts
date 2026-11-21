@@ -10,6 +10,8 @@ const CHARS_PER_LINE = 40
  * tall and always fits. Restore with `vi.restoreAllMocks()` and `vi.unstubAllGlobals()`.
  */
 export function mockTextLayout(overflows: boolean) {
+  // Calling it again (a test that differs from its `beforeEach`) replaces the layout, not wraps it.
+  vi.restoreAllMocks()
   vi.stubGlobal(
     'ResizeObserver',
     class {

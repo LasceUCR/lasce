@@ -1,6 +1,6 @@
 'use client'
 
-import { useTranslations } from 'next-intl'
+import { useLocale, useTranslations } from 'next-intl'
 import { useEffect, useId, useRef, useState, type CSSProperties } from 'react'
 
 export interface TruncatedTextProps {
@@ -104,6 +104,7 @@ export function TruncatedText({
   readLessLabel,
 }: TruncatedTextProps) {
   const t = useTranslations('common.truncatedText')
+  const uiLocale = useLocale()
   const textId = useId()
   const containerRef = useRef<HTMLElement>(null)
   const probeRef = useRef<HTMLSpanElement>(null)
@@ -112,6 +113,7 @@ export function TruncatedText({
   const [cut, setCut] = useState<number | null>(null)
 
   const moreLabel = readMoreLabel ?? t('readMore')
+  const lessLabel = readLessLabel ?? t('readLess')
 
   useEffect(() => {
     const container = containerRef.current
@@ -142,6 +144,7 @@ export function TruncatedText({
       aria-controls={textId}
       aria-expanded={expanded}
       className="truncated-text-toggle"
+      lang={uiLocale}
       onClick={() => setExpanded((current) => !current)}
       type="button"
     >
@@ -161,16 +164,17 @@ export function TruncatedText({
         className={['truncated-text-body', clamped ? 'is-clamped' : ''].filter(Boolean).join(' ')}
         style={style}
       >
+        {/* The same three slots whether cut or whole, so the toggle is one element that keeps
+            keyboard focus when it flips between "Leer más" and "Leer menos". */}
         {clamped && cut !== null ? (
-          <>
-            <span aria-hidden="true">{children.slice(0, cut).trimEnd()}… </span>
-            {toggle(moreLabel)}
-            <span className="sr-only">{children}</span>
-          </>
+          <span aria-hidden="true">{children.slice(0, cut).trimEnd()}… </span>
+        ) : expanded ? (
+          `${children} `
         ) : (
           children
         )}
-        {expanded ? <> {toggle(readLessLabel ?? t('readLess'))}</> : null}
+        {expanded || cut !== null ? toggle(expanded ? lessLabel : moreLabel) : null}
+        {clamped && cut !== null ? <span className="sr-only">{children}</span> : null}
       </span>
     </Element>
   )

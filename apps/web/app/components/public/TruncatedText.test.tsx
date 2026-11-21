@@ -67,6 +67,23 @@ describe('TruncatedText', () => {
     expect(screen.getByRole('button', { name: 'Leer más' })).toBeInTheDocument()
   })
 
+  test('keeps the same toggle, and its keyboard focus, when it expands and collapses', async () => {
+    const user = userEvent.setup()
+    renderWithIntl(<TruncatedText {...longArgs} />)
+
+    await user.tab()
+    const toggle = screen.getByRole('button', { name: 'Leer más' })
+    expect(toggle).toHaveFocus()
+
+    await user.keyboard('{Enter}')
+    expect(screen.getByRole('button', { name: 'Leer menos' })).toBe(toggle)
+    expect(toggle).toHaveFocus()
+
+    await user.keyboard(' ')
+    expect(screen.getByRole('button', { name: 'Leer más' })).toBe(toggle)
+    expect(toggle).toHaveFocus()
+  })
+
   test('leaves text that fits as it is, with no toggle', () => {
     renderWithIntl(<TruncatedText {...shortArgs} />)
 
@@ -93,7 +110,8 @@ describe('TruncatedText', () => {
 
     const toggle = screen.getByRole('button', { name: 'Read more' })
     expect(blockOf(toggle)).toHaveAttribute('lang', 'es')
-    expect(toggle).not.toHaveAttribute('lang')
+    // The toggle keeps the site's language even though it sits inside the text's element.
+    expect(toggle).toHaveAttribute('lang', 'en')
   })
 
   test('renders as the element it is asked for, with its classes', () => {
