@@ -60,8 +60,11 @@ the server's message, in their language, and it is the same with JavaScript disa
 
 Besides its length, a new password needs at least one uppercase letter, one lowercase letter, one
 number and one special character (issue #492). The classes are Unicode-aware: "Ñ" counts as
-uppercase and "é" as lowercase, any digit as a number, and a special character is anything that is
-not a letter, a combining mark, a number or whitespace, so a space does not count. A password
+uppercase and "é" as lowercase, any digit as a number, and a special character is visible
+punctuation or a symbol (Unicode `P` or `S`, emoji included), so a space or an invisible
+zero-width character does not count. Letters of scripts without case, such as Chinese, count as
+neither uppercase nor lowercase, so such a password still needs one Latin (or other cased) letter
+of each case. A password
 missing a class gets one message naming every missing class, for example "La contraseña debe
 incluir: una letra mayúscula, un número.", and no account is created. Length is checked first, so
 a short password reports that instead.
@@ -70,7 +73,9 @@ a short password reports that instead.
 it, and so does `PasswordRequirements.tsx`, the checklist under the password field that ticks each
 requirement off while the visitor types (a polite live region; a met item changes icon and has a
 visually hidden "Cumplido:" prefix, so the state does not rely on colour). Its copy is in
-`auth.passwordRequirements`. Signing in does not apply these requirements, so accounts created
+`auth.passwordRequirements`. The checklist updates from client state, so without JavaScript it
+stays as rendered (every item pending); the server's message on the field still names what is
+missing. Signing in does not apply these requirements, so accounts created
 before them keep working. The Server Action's handling of a weak password is also covered by
 `app/(public)/acceso/actions.test.ts`.
 

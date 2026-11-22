@@ -118,6 +118,8 @@ describe('password character requirements', () => {
     expect(passwordRequirements('ÉÑ')).toMatchObject({ uppercase: true, lowercase: false })
     expect(passwordRequirements('éñ')).toMatchObject({ uppercase: false, lowercase: true })
     expect(passwordRequirements('ΣΑΣ')).toMatchObject({ uppercase: true, lowercase: false })
+    // Scripts without case have no upper or lower letters to offer.
+    expect(passwordRequirements('密码')).toMatchObject({ uppercase: false, lowercase: false })
     const accepted = 'Ñandú-2026'
     expect(errorsOf({ password: accepted, passwordConfirmation: accepted })).toEqual({})
   })
@@ -126,6 +128,12 @@ describe('password character requirements', () => {
     expect(passwordRequirements('Clave segura 1').special).toBe(false)
     expect(passwordRequirements('Clave\tsegura\u00a01').special).toBe(false)
     expect(passwordRequirements('Cafe\u0301 seguro 1').special).toBe(false)
+  })
+
+  test('does not count invisible format or control characters as special', () => {
+    for (const character of ['\u200b', '\u00ad', '\ufeff', '\u200d', '\u0007']) {
+      expect(passwordRequirements(`Contrasena1${character}`).special).toBe(false)
+    }
   })
 
   test('counts punctuation, symbols and emoji as special characters', () => {

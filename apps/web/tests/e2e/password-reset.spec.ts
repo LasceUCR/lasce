@@ -158,10 +158,10 @@ test('resets a forgotten password, ends old sessions and works only once', async
     await password.fill('una contraseña nueva y larga')
     await confirmation.fill('una contraseña nueva y larga')
     await page.getByRole('button', { name: copy.reset.submit }).click()
+    // The description is the hint followed by the error, compared as plain text.
+    const { validation } = copy.reset
     await expect(password).toHaveAccessibleDescription(
-      new RegExp(
-        `${copy.reset.validation.passwordMissingCharacters} ${copy.reset.validation.passwordNeedsUppercase}, ${copy.reset.validation.passwordNeedsNumber}, ${copy.reset.validation.passwordNeedsSpecial}\\.`,
-      ),
+      `${copy.reset.passwordHint} ${validation.passwordMissingCharacters} ${validation.passwordNeedsUppercase}, ${validation.passwordNeedsNumber}, ${validation.passwordNeedsSpecial}.`,
     )
 
     await password.fill(newPassword)

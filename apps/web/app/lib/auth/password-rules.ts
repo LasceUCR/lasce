@@ -27,14 +27,16 @@ export type PasswordRequirement = (typeof PASSWORD_REQUIREMENTS)[number]
 
 /**
  * Unicode-aware, so "Ñ" is an uppercase letter and "é" a lowercase one. A special character is
- * anything that is not a letter, a combining mark (the accent of a decomposed "é"), a number or
- * whitespace: punctuation, symbols and emoji count, a space does not.
+ * visible punctuation or a symbol (emoji included). Letters, combining marks (the accent of a
+ * decomposed "é"), numbers, whitespace and invisible format or control characters (a zero-width
+ * space pasted from a document) do not count. Letters of scripts without case, such as CJK, count
+ * as neither uppercase nor lowercase.
  */
 const CHARACTER_CLASS_PATTERNS: Record<PasswordCharacterClass, RegExp> = {
   uppercase: /\p{Lu}/u,
   lowercase: /\p{Ll}/u,
   number: /\p{N}/u,
-  special: /[^\p{L}\p{M}\p{N}\s]/u,
+  special: /[\p{P}\p{S}]/u,
 }
 
 /**
@@ -73,7 +75,10 @@ export interface NewPasswordMessages {
   confirmationMismatch: string
 }
 
-const NEEDS_MESSAGE: Record<PasswordCharacterClass, keyof NewPasswordMessages> = {
+const NEEDS_MESSAGE: Record<
+  PasswordCharacterClass,
+  `passwordNeeds${Capitalize<PasswordCharacterClass>}`
+> = {
   uppercase: 'passwordNeedsUppercase',
   lowercase: 'passwordNeedsLowercase',
   number: 'passwordNeedsNumber',
