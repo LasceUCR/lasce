@@ -44,7 +44,8 @@ const changeSchema = z.object({
 })
 
 export type RoleChangeResult =
-  { ok: true; roleIds: string[] } | { ok: false; reason?: 'conflict' | 'unauthorized' }
+  | { ok: true; roleIds: string[] }
+  | { ok: false; reason?: 'conflict' | 'unauthorized' | 'lastAdministrator' }
 
 const NO_ROLE_LABEL = 'Sin rol'
 
@@ -64,6 +65,20 @@ export async function updateUserRole(input: unknown): Promise<RoleChangeResult> 
 
   // The change and its audit event are one transaction: neither is kept without the other.
   return prisma.$transaction(async (tx): Promise<RoleChangeResult> => {
+    // The platform always keeps at least one administrator, whoever makes the change (an
+    // administrator may change their own role only while another one exists). Every
+    // administrator row is locked, in a fixed order, so two concurrent demotions cannot each
+    // count the other: the second waits, then no longer sees the first one's target.
+    if (previousRole === UserRole.ADMIN && newRole !== UserRole.ADMIN) {
+      const administrators = await tx.$queryRaw<{ id: string }[]>`
+        SELECT id FROM auth.users WHERE role = 'admin' ORDER BY id FOR UPDATE`
+      // PostgreSQL prints a uuid in lower case; the validated input may be in upper case.
+      const targetId = userId.toLowerCase()
+      if (!administrators.some((administrator) => administrator.id.toLowerCase() !== targetId)) {
+        return { ok: false, reason: 'lastAdministrator' }
+      }
+    }
+
     // Compare-and-set: another administrator's intervening change is not overwritten.
     const result = await tx.user.updateMany({
       where: { id: userId, role: previousRole },

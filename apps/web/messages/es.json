@@ -2272,8 +2272,9 @@
       "panelTitle": "Usuarios y roles",
       "demoNotice": "Datos de prueba: los usuarios y roles mostrados son ficticios.",
       "demoChanges": "Los cambios son de prueba y se pierden al recargar la página.",
-      "helpEditable": "Cada usuario puede tener un solo rol. Selecciona otro para cambiarlo o pulsa el rol actual para retirarlo. Se pedirá confirmación antes de aplicar el cambio.",
-      "helpReadOnly": "Solo consulta. Las casillas indican los roles asignados y no permiten modificarlos.",
+      "helpEditable": "Cada usuario tiene un solo rol. Elige otro para cambiarlo, o «Sin rol» para retirarlo. Se pedirá confirmación antes de aplicar el cambio. La plataforma siempre conserva al menos una cuenta administradora.",
+      "helpReadOnly": "Solo consulta. La opción marcada indica el rol asignado y no permite modificarlo.",
+      "noRoleHelp": "Sin rol: la cuenta puede iniciar sesión y ver las páginas públicas, pero no tiene ningún permiso. No puede descargar recursos ni entrar a la administración.",
       "noRoles": "No hay roles disponibles para mostrar.",
       "empty": "No hay usuarios para mostrar.",
       "search": {
@@ -2287,9 +2288,10 @@
         "region": "Tabla de usuarios y roles",
         "label": "Usuarios y roles",
         "name": "Nombre",
-        "email": "Correo electrónico"
+        "email": "Correo electrónico",
+        "noRole": "Sin rol"
       },
-      "checkbox": "{role}: {name} ({email})",
+      "option": "{role}: {name} ({email})",
       "updated": "Rol actualizado para {name}: {role}.",
       "removed": "Rol retirado de {name}.",
       "details": {
@@ -2309,8 +2311,8 @@
         "removeQuestion": "¿Quieres retirar el rol de <strong>{name}</strong>?",
         "currentRole": "Rol actual: {roles}",
         "noRole": "Sin rol",
-        "ownRole": "Estás modificando tu propio rol. Al dejar de ser administrador perderás el acceso a esta pantalla.",
-        "leftWithoutRole": "El usuario quedará sin un rol asignado.",
+        "ownRole": "Estás modificando tu propio rol. Solo es posible si otra cuenta conserva el rol de administrador, y al dejar de serlo perderás el acceso a esta pantalla.",
+        "leftWithoutRole": "El usuario quedará sin rol: podrá iniciar sesión y ver las páginas públicas, pero no tendrá ningún permiso, así que no podrá descargar recursos ni entrar a la administración.",
         "replaces": "El nuevo rol reemplazará al actual. El usuario no conservará ambos roles.",
         "confirmChange": "Sí, cambiar rol",
         "confirmRemove": "Sí, retirar rol",
@@ -2322,7 +2324,8 @@
       "errors": {
         "conflict": "La información de este usuario cambió. Recarga la página para ver sus roles actuales antes de volver a intentarlo.",
         "unauthorized": "Tu sesión terminó o ya no tienes autorización para cambiar roles. Recarga la página para comprobar tu acceso.",
-        "unknown": "No pudimos confirmar el cambio. Recarga la página para comprobar el rol actual antes de volver a intentarlo."
+        "unknown": "No pudimos confirmar el cambio. Recarga la página para comprobar el rol actual antes de volver a intentarlo.",
+        "lastAdministrator": "No se cambió el rol: es la única cuenta administradora y la plataforma debe conservar al menos una. Asigna el rol de administrador a otra cuenta antes de volver a intentarlo."
       }
     },
     "audit": {

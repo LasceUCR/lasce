@@ -55,6 +55,9 @@ export function UsersOverviewPage({
         <p id="users-overview-help" className={styles.help}>
           {onSaveRoles ? t('helpEditable') : t('helpReadOnly')}
         </p>
+        <p id="users-overview-no-role" className={styles.help}>
+          {t('noRoleHelp')}
+        </p>
         {isDemo && onSaveRoles && <p className={styles.help}>{t('demoChanges')}</p>}
         {roles.length === 0 && <p>{t('noRoles')}</p>}
         <div ref={searchRef} className={styles.searchControls}>
@@ -94,6 +97,7 @@ export function UsersOverviewPage({
             visibleUserIds={onSaveRoles ? filteredUsers.map((user) => user.id) : undefined}
             roles={roles}
             describedBy="users-overview-help"
+            noRoleDescribedBy="users-overview-no-role"
             onUserSelect={(user) => setSelectedUserId(user.id)}
             onSaveRoles={onSaveRoles}
           />

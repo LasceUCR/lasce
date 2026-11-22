@@ -36,7 +36,7 @@ describe('UserRolesRow', () => {
       </NextIntlClientProvider>,
     )
     expect(within(container).getByRole('button', { name: args.user.name })).toBeDisabled()
-    for (const checkbox of within(container).getAllByRole('checkbox')) {
+    for (const checkbox of within(container).getAllByRole('radio')) {
       expect(checkbox).toBeDisabled()
     }
   })
@@ -51,7 +51,7 @@ describe('UserRolesRow', () => {
         </tbody>
       </table>,
     )
-    const visitor = screen.getByRole('checkbox', { name: /^Visitante:/ })
+    const visitor = screen.getByRole('radio', { name: /^Visitante:/ })
     await user.click(visitor)
     expect(visitor).not.toBeChecked()
     expect(save).not.toHaveBeenCalled()
@@ -62,6 +62,71 @@ describe('UserRolesRow', () => {
     await user.click(visitor)
     await user.click(screen.getByRole('button', { name: 'Sí, cambiar rol' }))
     expect(save).toHaveBeenCalledExactlyOnceWith(args.user.id, [args.roles[0]!.id])
+  })
+})
+
+describe('UserRolesRow single-choice control', () => {
+  function renderRow(props: Partial<UserRolesRowProps> = {}) {
+    return render(
+      <>
+        <p id="no-role-help">Explicación de Sin rol</p>
+        <table>
+          <tbody>
+            <UserRolesRow {...args} noRoleDescribedBy="no-role-help" {...props} />
+          </tbody>
+        </table>
+      </>,
+    )
+  }
+
+  test('offers every role and "Sin rol" as one group with exactly one option selected', () => {
+    renderRow({ onSaveRoles: vi.fn(async () => {}) })
+    const options = screen.getAllByRole('radio')
+    expect(options.map((option) => option.getAttribute('aria-label'))).toEqual([
+      ...args.roles.map((role) => `${role.name}: ${args.user.name} (${args.user.email})`),
+      `Sin rol: ${args.user.name} (${args.user.email})`,
+    ])
+    expect(new Set(options.map((option) => option.getAttribute('name'))).size).toBe(1)
+    expect(screen.getAllByRole('radio', { checked: true })).toHaveLength(1)
+    expect(screen.getByRole('radio', { name: /^Administrador:/ })).toBeChecked()
+  })
+
+  test('selects "Sin rol" for an account without a role and explains what that means', () => {
+    renderRow({ user: { ...args.user, roleIds: [] } })
+    const noRole = screen.getByRole('radio', { name: /^Sin rol:/ })
+    expect(noRole).toBeChecked()
+    expect(noRole).toHaveAccessibleDescription('Explicación de Sin rol')
+    expect(screen.getAllByRole('radio', { checked: true })).toHaveLength(1)
+  })
+
+  test('asks for confirmation before leaving an account without a role', async () => {
+    const user = userEvent.setup()
+    const save = vi.fn(async () => {})
+    renderRow({ onSaveRoles: save })
+    await user.click(screen.getByRole('radio', { name: /^Sin rol:/ }))
+    const dialog = screen.getByRole('dialog', { name: 'Confirmar retiro de rol' })
+    expect(within(dialog).getByText(/no tendrá ningún permiso/)).toBeInTheDocument()
+    expect(screen.getByRole('radio', { name: /^Administrador:/ })).toBeChecked()
+    expect(save).not.toHaveBeenCalled()
+    await user.click(within(dialog).getByRole('button', { name: 'Sí, retirar rol' }))
+    expect(save).toHaveBeenCalledExactlyOnceWith(args.user.id, [])
+  })
+
+  test('moves between options with the arrow keys and keeps the role when cancelled', async () => {
+    const user = userEvent.setup()
+    const save = vi.fn(async () => {})
+    renderRow({ onSaveRoles: save })
+    const admin = screen.getByRole('radio', { name: /^Administrador:/ })
+    admin.focus()
+    await user.keyboard('{ArrowRight}')
+    expect(screen.getByRole('dialog', { name: 'Confirmar retiro de rol' })).toBeInTheDocument()
+    await user.click(screen.getByRole('button', { name: 'No, cancelar' }))
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+    // Focus returns to the option the arrow key reached; the saved role stays selected.
+    expect(screen.getByRole('radio', { name: /^Sin rol:/ })).toHaveFocus()
+    expect(admin).toBeChecked()
+    expect(screen.getAllByRole('radio', { checked: true })).toHaveLength(1)
+    expect(save).not.toHaveBeenCalled()
   })
 })
 
@@ -77,7 +142,7 @@ describe('UserRolesRow outcomes', () => {
       locale,
     )
     const name = locale === 'en' ? /^Visitante:/ : /^Visitante:/
-    await user.click(screen.getByRole('checkbox', { name }))
+    await user.click(screen.getByRole('radio', { name }))
     await user.click(
       screen.getByRole('button', {
         name: locale === 'en' ? 'Yes, change role' : 'Sí, cambiar rol',
@@ -111,7 +176,6 @@ describe('UserRolesRow outcomes', () => {
 
   test('reports a removed role in English', async () => {
     const user = userEvent.setup()
-    const owned = args.roles.find((role) => args.user.roleIds.includes(role.id))!
     render(
       <table>
         <tbody>
@@ -121,7 +185,7 @@ describe('UserRolesRow outcomes', () => {
       'en',
     )
 
-    await user.click(screen.getByRole('checkbox', { name: new RegExp(`^${owned.name}:`) }))
+    await user.click(screen.getByRole('radio', { name: /^No role:/ }))
     await user.click(screen.getByRole('button', { name: 'Yes, remove role' }))
 
     expect(await screen.findByText(`Role removed from ${args.user.name}.`)).toBeVisible()
@@ -140,7 +204,7 @@ describe('UserRolesRow outcomes', () => {
     expect(screen.getByRole('dialog')).toBeVisible()
   })
 
-  test('labels each role checkbox in English', () => {
+  test('labels each role option in English', () => {
     render(
       <table>
         <tbody>
@@ -150,7 +214,7 @@ describe('UserRolesRow outcomes', () => {
       'en',
     )
 
-    expect(screen.getAllByRole('checkbox')[0]).toHaveAccessibleName(
+    expect(screen.getAllByRole('radio')[0]).toHaveAccessibleName(
       `${args.roles[0]!.name}: ${args.user.name} (${args.user.email})`,
     )
   })

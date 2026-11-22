@@ -1,16 +1,28 @@
 import { beforeEach, describe, expect, test, vi } from 'vitest'
 
-const { findMany, findUnique, updateMany, userHasPermission, getSessionUser, auditCreate } =
-  vi.hoisted(() => ({
-    findMany: vi.fn(),
-    findUnique: vi.fn(),
-    updateMany: vi.fn(),
-    userHasPermission: vi.fn(),
-    getSessionUser: vi.fn(),
-    auditCreate: vi.fn(),
-  }))
+const {
+  findMany,
+  findUnique,
+  updateMany,
+  queryRaw,
+  userHasPermission,
+  getSessionUser,
+  auditCreate,
+} = vi.hoisted(() => ({
+  findMany: vi.fn(),
+  findUnique: vi.fn(),
+  updateMany: vi.fn(),
+  queryRaw: vi.fn(),
+  userHasPermission: vi.fn(),
+  getSessionUser: vi.fn(),
+  auditCreate: vi.fn(),
+}))
 vi.mock('@lasce/db', () => {
-  const tx = { user: { updateMany, findUnique }, auditEvent: { create: auditCreate } }
+  const tx = {
+    user: { updateMany, findUnique },
+    auditEvent: { create: auditCreate },
+    $queryRaw: queryRaw,
+  }
   return {
     UserRole: { VISITOR: 'VISITOR', ASSISTANT: 'ASSISTANT', ADMIN: 'ADMIN' },
     prisma: {
@@ -128,6 +140,61 @@ describe('user administration', () => {
         metadata: { previousRole: 'ASSISTANT', newRole: null },
       }),
     })
+  })
+  test('refuses to demote or remove the last administrator, leaving the role unchanged', async () => {
+    queryRaw.mockResolvedValue([{ id: userId }])
+    for (const roleIds of [[], ['VISITOR'], ['ASSISTANT']]) {
+      expect(await updateUserRole({ userId, roleIds, previousRoleIds: ['ADMIN'] })).toEqual({
+        ok: false,
+        reason: 'lastAdministrator',
+      })
+    }
+    // The administrator rows are locked before they are counted.
+    expect(queryRaw.mock.calls[0]![0].join('')).toMatch(
+      /SELECT id FROM auth\.users WHERE role = 'admin' ORDER BY id FOR UPDATE/,
+    )
+    expect(updateMany).not.toHaveBeenCalled()
+    expect(auditCreate).not.toHaveBeenCalled()
+  })
+  test('refuses an administrator removing their own role when nobody else administers', async () => {
+    getSessionUser.mockResolvedValue({ id: userId, role: 'ADMIN' })
+    // A uuid in upper case still names the same, only, administrator.
+    queryRaw.mockResolvedValue([{ id: userId }])
+    expect(
+      await updateUserRole({
+        userId: userId.toUpperCase(),
+        roleIds: [],
+        previousRoleIds: ['ADMIN'],
+      }),
+    ).toEqual({ ok: false, reason: 'lastAdministrator' })
+    expect(updateMany).not.toHaveBeenCalled()
+  })
+  test('lets an administrator be demoted, even by themselves, while another one remains', async () => {
+    getSessionUser.mockResolvedValue({ id: userId, role: 'ADMIN' })
+    queryRaw.mockResolvedValue([{ id: actorId }, { id: userId }])
+    updateMany.mockResolvedValue({ count: 1 })
+    expect(
+      await updateUserRole({ userId, roleIds: ['ASSISTANT'], previousRoleIds: ['ADMIN'] }),
+    ).toEqual({ ok: true, roleIds: ['ASSISTANT'] })
+    expect(updateMany).toHaveBeenCalledWith({
+      where: { id: userId, role: 'ADMIN' },
+      data: { role: 'ASSISTANT' },
+    })
+    expect(auditCreate).toHaveBeenCalledWith({
+      data: expect.objectContaining({
+        action: 'user.role_change',
+        actorId: userId,
+        summary: 'Rol de Ana cambiado de Persona administradora a Asistente',
+        metadata: { previousRole: 'ADMIN', newRole: 'ASSISTANT' },
+      }),
+    })
+  })
+  test('does not lock administrators for a change that keeps or grants the role', async () => {
+    updateMany.mockResolvedValue({ count: 1 })
+    await updateUserRole({ userId, roleIds: ['ADMIN'], previousRoleIds: ['VISITOR'] })
+    await updateUserRole({ userId, roleIds: ['ADMIN'], previousRoleIds: ['ADMIN'] })
+    expect(queryRaw).not.toHaveBeenCalled()
+    expect(updateMany).toHaveBeenCalledTimes(2)
   })
   test('reports a stale assignment or deleted user instead of claiming success', async () => {
     updateMany.mockResolvedValue({ count: 0 })

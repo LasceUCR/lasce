@@ -58,7 +58,7 @@ test('shows the page in English, accessible names included', async ({ page, cont
     await expect(page.getByRole('columnheader', { name: 'Email address' })).toBeVisible()
     await expect(page.getByRole('columnheader', { name: 'Administrator' })).toBeVisible()
     await expect(
-      page.getByRole('checkbox', {
+      page.getByRole('radio', {
         name: `Visitor: ${fixture.target.fullName} (${fixture.target.email})`,
       }),
     ).toBeChecked()
@@ -137,7 +137,7 @@ test('stores the same role identifier whichever language assigns it', async ({ p
     const row = page.getByRole('row', { name: new RegExp(fixture.target.email) })
     await page.getByRole('searchbox', { name: 'Buscar usuarios' }).fill(fixture.target.email)
 
-    await row.getByRole('checkbox', { name: /^Asistente:/ }).click()
+    await row.getByRole('radio', { name: /^Asistente:/ }).click()
     await page.getByRole('button', { name: 'Sí, cambiar rol' }).click()
     await expect(page.getByText(`Rol actualizado para ${fixture.target.fullName}`)).toBeVisible()
     const inSpanish = (
@@ -146,7 +146,7 @@ test('stores the same role identifier whichever language assigns it', async ({ p
 
     await switchLanguage(page, 'Español', 'English')
     await page.getByRole('searchbox', { name: 'Search users' }).fill(fixture.target.email)
-    await row.getByRole('checkbox', { name: /^Visitor:/ }).click()
+    await row.getByRole('radio', { name: /^Visitor:/ }).click()
     await page.getByRole('button', { name: 'Yes, change role' }).click()
     await expect(page.getByText(`Role updated for ${fixture.target.fullName}`)).toBeVisible()
     const inEnglish = (
@@ -169,7 +169,7 @@ test('translates the confirmation dialog, the self-removal warning and the failu
     await page.goto(USUARIOS)
     await page.getByRole('searchbox', { name: 'Search users' }).fill(fixture.admin.email)
     const adminRow = page.getByRole('row', { name: new RegExp(fixture.admin.email) })
-    await adminRow.getByRole('checkbox', { name: /^Administrator:/ }).click()
+    await adminRow.getByRole('radio', { name: /^No role:/ }).click()
 
     const removal = page.getByRole('dialog', { name: 'Confirm role removal' })
     await expect(removal).toContainText('You are changing your own role.')
@@ -178,7 +178,7 @@ test('translates the confirmation dialog, the self-removal warning and the failu
 
     await page.getByRole('searchbox', { name: 'Search users' }).fill(fixture.target.email)
     const row = page.getByRole('row', { name: new RegExp(fixture.target.email) })
-    await row.getByRole('checkbox', { name: /^Assistant:/ }).click()
+    await row.getByRole('radio', { name: /^Assistant:/ }).click()
     const dialog = page.getByRole('dialog', { name: 'Confirm role change' })
     await expect(dialog).toContainText('The new role will replace the current one.')
     // Another administrator changes the user first, so the save is rejected as a conflict.

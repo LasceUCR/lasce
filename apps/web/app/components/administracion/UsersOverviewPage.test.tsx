@@ -33,7 +33,8 @@ describe('UsersOverviewPage', () => {
     expect(screen.queryByText(/usuarios y roles mostrados son ficticios/)).not.toBeInTheDocument()
     expect(screen.getByText('ana@example.com')).toBeInTheDocument()
     expect(screen.queryByText('luis@example.com')).not.toBeInTheDocument()
-    for (const checkbox of screen.getAllByRole('checkbox')) expect(checkbox).not.toBeChecked()
+    expect(screen.getByRole('radio', { name: /^Sin rol: Ana Ejemplo/ })).toBeChecked()
+    expect(screen.getAllByRole('radio', { checked: true })).toHaveLength(1)
   })
 
   test('treats a whitespace-only search as an unfiltered list', async () => {
@@ -50,14 +51,14 @@ describe('UsersOverviewPage', () => {
     expect(screen.getByText('ana@example.com')).toBeInTheDocument()
     expect(screen.queryByText('luis@example.com')).not.toBeInTheDocument()
     expect(
-      screen.getByRole('checkbox', { name: 'Administrador: Ana Ejemplo (ana@example.com)' }),
+      screen.getByRole('radio', { name: 'Administrador: Ana Ejemplo (ana@example.com)' }),
     ).toBeChecked()
     await user.clear(search)
     await user.type(search, 'LUIS@')
     expect(screen.getByText('luis@example.com')).toBeInTheDocument()
     expect(screen.queryByText('ana@example.com')).not.toBeInTheDocument()
     expect(
-      screen.getByRole('checkbox', { name: 'Asistente: Luis Ejemplo (luis@example.com)' }),
+      screen.getByRole('radio', { name: 'Asistente: Luis Ejemplo (luis@example.com)' }),
     ).toBeChecked()
   })
 
@@ -81,7 +82,9 @@ describe('UsersOverviewPage', () => {
     render(<UsersOverviewPage {...(NoRoles.args as UsersOverviewPageProps)} />)
     expect(screen.getByText('No hay roles disponibles para mostrar.')).toBeInTheDocument()
     expect(screen.getByText(args.users[0]!.email)).toBeInTheDocument()
-    expect(screen.queryAllByRole('checkbox')).toHaveLength(0)
+    // Only "Sin rol" remains to choose, with what it means explained.
+    expect(screen.getAllByRole('radio')).toHaveLength(args.users.length)
+    expect(screen.getByText(/^Sin rol: la cuenta puede iniciar sesión/)).toBeInTheDocument()
   })
 })
 
@@ -90,7 +93,12 @@ describe('UsersOverviewPage in English', () => {
     render(<UsersOverviewPage {...args} onSaveRoles={async () => {}} />, 'en')
 
     expect(screen.getByRole('heading', { name: 'Users and roles' })).toBeVisible()
-    expect(screen.getByText(/Each user can have a single role\./)).toBeVisible()
+    expect(screen.getByText(/Each user has a single role\./)).toBeVisible()
+    expect(screen.getByText(/^No role: the account can sign in/)).toBeVisible()
+    expect(screen.getByRole('columnheader', { name: 'No role' })).toBeVisible()
+    expect(
+      screen.getByRole('radio', { name: 'No role: Carlos Ejemplo (carlos@example.com)' }),
+    ).toHaveAccessibleDescription(/^No role: the account can sign in/)
     expect(screen.getByRole('searchbox', { name: 'Search users' })).toHaveAttribute(
       'placeholder',
       'Search by name or email address...',

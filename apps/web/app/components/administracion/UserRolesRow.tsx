@@ -1,6 +1,6 @@
 'use client'
 
-import { useRef, useState, useSyncExternalStore } from 'react'
+import { useId, useRef, useState, useSyncExternalStore } from 'react'
 import { useTranslations } from 'next-intl'
 import { useToast } from '@/app/components/public/toast/ToastProvider'
 import type { OverviewRole, OverviewUser } from '@/app/lib/user-overview'
@@ -10,6 +10,8 @@ import styles from './UsersRolesTable.module.css'
 const subscribeToHydration = () => () => undefined
 const getClientSnapshot = () => true
 const getServerSnapshot = () => false
+/** The value of the "Sin rol" option; never sent to the server, which receives `[]`. */
+const NO_ROLE = 'none'
 
 export interface UserRolesRowProps {
   isCurrentUser?: boolean
@@ -18,6 +20,15 @@ export interface UserRolesRowProps {
   onUserSelect?: (user: OverviewUser) => void
   onSaveRoles?: (userId: string, roleIds: string[]) => Promise<void>
   hidden?: boolean
+  /** The id of the text explaining what an account without a role can do. */
+  noRoleDescribedBy?: string
+}
+
+interface RoleOption {
+  /** `null` is the "Sin rol" option. */
+  id: string | null
+  name: string
+  role: OverviewRole | null
 }
 
 export function UserRolesRow({
@@ -27,8 +38,9 @@ export function UserRolesRow({
   onSaveRoles,
   hidden,
   isCurrentUser,
+  noRoleDescribedBy,
 }: UserRolesRowProps) {
-  // A native checkbox can change before React can ask for confirmation.
+  // A native radio button can change before React can ask for confirmation.
   const hydrated = useSyncExternalStore(subscribeToHydration, getClientSnapshot, getServerSnapshot)
   // Undefined means closed; null means confirmation to remove the current role.
   const [pendingRole, setPendingRole] = useState<OverviewRole | null | undefined>(undefined)
@@ -36,6 +48,15 @@ export function UserRolesRow({
   const toast = useToast()
   // The error toast of the previous attempt, dismissed when the next one starts.
   const errorToast = useRef<number | null>(null)
+  // One radio group per row: the browser keeps a single option checked and moves between them
+  // with the arrow keys.
+  const groupName = `role-${useId()}`
+  // A role missing from `roles` leaves every option unchecked rather than claiming "Sin rol".
+  const currentRoleId = user.roleIds[0] ?? null
+  const options: RoleOption[] = [
+    ...roles.map((role) => ({ id: role.id, name: role.name, role })),
+    { id: null, name: t('table.noRole'), role: null },
+  ]
 
   async function confirm() {
     if (!onSaveRoles || pendingRole === undefined) return
@@ -83,18 +104,23 @@ export function UserRolesRow({
         )}
       </th>
       <td>{user.email}</td>
-      {roles.map((role) => (
-        <td key={role.id} className={styles.assignment}>
-          <label className={styles.checkboxTarget}>
+      {options.map((option) => (
+        <td key={option.id ?? NO_ROLE} className={styles.assignment}>
+          <label className={styles.optionTarget}>
             <input
-              type="checkbox"
-              checked={user.roleIds.includes(role.id)}
+              type="radio"
+              name={groupName}
+              value={option.id ?? NO_ROLE}
+              checked={currentRoleId === option.id}
               disabled={!hydrated || !onSaveRoles}
               onChange={() => {
-                setPendingRole(user.roleIds.includes(role.id) ? null : role)
+                // The checked state stays controlled by the saved role: the new choice only
+                // shows once the dialog has confirmed it, and cancelling leaves it untouched.
+                setPendingRole(option.role)
               }}
               aria-haspopup={onSaveRoles ? 'dialog' : undefined}
-              aria-label={t('checkbox', { role: role.name, name: user.name, email: user.email })}
+              aria-label={t('option', { role: option.name, name: user.name, email: user.email })}
+              aria-describedby={option.id === null ? noRoleDescribedBy : undefined}
             />
           </label>
         </td>
