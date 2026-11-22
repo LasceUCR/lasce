@@ -508,11 +508,13 @@ test('shows the login and registration forms, their placeholders and validation 
     'placeholder',
     'University / Research center',
   )
-  await expect(
-    registrationCard.getByLabel('Country', { exact: true }).getByRole('option', {
-      name: 'United States',
-    }),
-  ).toHaveAttribute('value', 'US')
+  const country = registrationCard.getByLabel('Country', { exact: true })
+  await expect(country).toHaveAttribute('aria-haspopup', 'listbox')
+  await expect(country).toHaveText('Select a country')
+  await country.click()
+  await expect(page.getByRole('option', { name: 'United States', exact: true })).toBeVisible()
+  await country.press('Escape')
+  await expect(page.getByRole('listbox', { name: 'Country' })).toHaveCount(0)
   await expect(registrationCard.getByText('At least 8 characters.')).toBeVisible()
 
   await registrationCard.getByRole('button', { name: 'Create account' }).click()
