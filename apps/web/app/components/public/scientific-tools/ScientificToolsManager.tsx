@@ -141,34 +141,38 @@ export function ScientificToolsManager({
   }
 
   const showAdd = editMode && canCreate
+  const addCard = showAdd ? (
+    <div className={styles.addCard}>
+      <AddItemCard
+        label={t('editor.add')}
+        size="large"
+        onRequestClose={() => createForm.current?.requestCancel()}
+      >
+        {({ close }) => (
+          <ScientificToolForm
+            ref={createForm}
+            busy={busy}
+            onCancel={close}
+            onUploadImage={(file) => uploadImage(file, 'create')}
+            onSave={(body) => mutate('POST', undefined, body, close)}
+          />
+        )}
+      </AddItemCard>
+    </div>
+  ) : null
 
   return (
     <div>
       {tools.length === 0 ? (
-        <p className="content-empty" role="status">
-          {t('list.empty')}
-        </p>
+        <>
+          <p className="content-empty" role="status">
+            {t('list.empty')}
+          </p>
+          {addCard}
+        </>
       ) : (
         <CardGrid columns={1}>
-          {showAdd ? (
-            <div className={styles.addCard}>
-              <AddItemCard
-                label={t('editor.add')}
-                size="large"
-                onRequestClose={() => createForm.current?.requestCancel()}
-              >
-                {({ close }) => (
-                  <ScientificToolForm
-                    ref={createForm}
-                    busy={busy}
-                    onCancel={close}
-                    onUploadImage={(file) => uploadImage(file, 'create')}
-                    onSave={(body) => mutate('POST', undefined, body, close)}
-                  />
-                )}
-              </AddItemCard>
-            </div>
-          ) : null}
+          {addCard}
           {tools.map((tool) => (
             <EditableWrapper
               key={tool.id}
