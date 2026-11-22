@@ -1,6 +1,7 @@
 import AxeBuilder from '@axe-core/playwright'
 import { expect as baseExpect, test, type Page } from '@playwright/test'
 
+import { countryName } from '@/app/lib/auth/countries'
 import {
   ACCESS_PATH,
   LOGIN_CARD_ID,
@@ -87,11 +88,17 @@ const registrationUrl = () => new RegExp(`${escapeRegExp(REGISTRATION_HREF)}$`)
 // message rather than the whole string.
 const describedBy = (message: string) => new RegExp(escapeRegExp(message))
 
+// The country field is the shared dropdown, not a native select: open it and pick the option.
+async function chooseCountry(page: Page, code: string) {
+  await field(page, 'countryCode').click()
+  await page.getByRole('option', { name: countryName(code), exact: true }).click()
+}
+
 async function fillRegistration(page: Page, values: Record<RegistrationFieldName, string>) {
   await field(page, 'fullName').fill(values.fullName)
   await field(page, 'email').fill(values.email)
   await field(page, 'institution').fill(values.institution)
-  await field(page, 'countryCode').selectOption(values.countryCode)
+  await chooseCountry(page, values.countryCode)
   await field(page, 'password').fill(values.password)
   await field(page, 'passwordConfirmation').fill(values.passwordConfirmation)
 }
@@ -135,9 +142,44 @@ test('shows the six fields in the agreed order and states that all are required'
   const labels = await registrationCard(page).locator('label').allTextContents()
   expect(labels).toEqual(REGISTRATION_FIELDS.map((name) => REGISTRATION_LABELS[name]))
   await expect(page.getByText(registrationFormCopy.requiredNote)).toBeVisible()
-  await expect(
-    field(page, 'countryCode').getByRole('option', { name: 'Costa Rica' }),
-  ).toHaveAttribute('value', 'CR')
+  await field(page, 'countryCode').click()
+  await expect(page.getByRole('option', { name: 'Costa Rica', exact: true })).toBeVisible()
+})
+
+test('keeps the country menu inside the viewport and lets every option be reached', async ({
+  page,
+}) => {
+  for (const viewport of [
+    { width: 1440, height: 900 },
+    { width: 390, height: 664 },
+  ]) {
+    await page.setViewportSize(viewport)
+    await openRegistration(page)
+
+    // Put the field near the bottom edge, where the native list used to run off the screen.
+    const trigger = field(page, 'countryCode')
+    await trigger.evaluate((element) => {
+      const { bottom } = element.getBoundingClientRect()
+      window.scrollBy(0, bottom - window.innerHeight + 24)
+    })
+    await trigger.click()
+
+    const menu = page.getByRole('listbox', { name: REGISTRATION_LABELS.countryCode })
+    await expect(menu).toBeVisible()
+    const box = await menu.boundingBox()
+    if (!box) throw new Error('The country menu has no layout box')
+    expect(box.y).toBeGreaterThanOrEqual(0)
+    expect(box.y + box.height).toBeLessThanOrEqual(viewport.height)
+    expect(box.x).toBeGreaterThanOrEqual(0)
+    expect(box.x + box.width).toBeLessThanOrEqual(viewport.width)
+
+    // The list scrolls inside the menu, so the last country can still be chosen.
+    const last = menu.getByRole('option').last()
+    await last.scrollIntoViewIfNeeded()
+    const name = (await last.textContent()) ?? ''
+    await last.click()
+    await expect(trigger).toHaveText(name)
+  }
 })
 
 test('creates an account with valid data', async ({ page }) => {
@@ -215,7 +257,7 @@ test('rejects invalid formats and keeps the values that were fine', async ({ pag
   await expect(field(page, 'fullName')).not.toHaveAttribute('aria-invalid', 'true')
   await expect(field(page, 'fullName')).toHaveValue(validValues.fullName)
   await expect(field(page, 'institution')).toHaveValue(validValues.institution)
-  await expect(field(page, 'countryCode')).toHaveValue('CR')
+  await expect(field(page, 'countryCode')).toHaveText(countryName(validValues.countryCode))
   await expect(field(page, 'email')).toHaveValue('no-es-un-correo')
   await expect(field(page, 'password')).toHaveValue('1234567')
   await expect(field(page, 'passwordConfirmation')).toHaveValue('otra cosa')

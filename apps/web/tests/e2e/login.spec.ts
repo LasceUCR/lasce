@@ -2,6 +2,7 @@ import AxeBuilder from '@axe-core/playwright'
 import { expect as baseExpect, test, type Page } from '@playwright/test'
 
 import es from '@/messages/es.json' with { type: 'json' }
+import { countryName } from '@/app/lib/auth/countries'
 import {
   ACCESS_PATH,
   LOGIN_CARD_ID,
@@ -117,7 +118,8 @@ test.beforeAll(async ({ browser }) => {
   await field('fullName').fill(account.fullName)
   await field('email').fill(account.email)
   await field('institution').fill(account.institution)
-  await field('countryCode').selectOption(account.countryCode)
+  await field('countryCode').click()
+  await page.getByRole('option', { name: countryName(account.countryCode), exact: true }).click()
   await field('password').fill(account.password)
   await field('passwordConfirmation').fill(account.password)
   await card.getByRole('button', { name: registrationFormCopy.submit }).click()
