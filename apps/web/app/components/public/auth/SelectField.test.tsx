@@ -1,5 +1,6 @@
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
+import { renderToString } from 'react-dom/server'
 import { describe, expect, test } from 'vitest'
 
 import { SelectField, type SelectFieldProps } from './SelectField'
@@ -80,5 +81,18 @@ describe('SelectField', () => {
       `El país de su institución. ${withErrorArgs.error ?? ''}`,
     )
     expect(screen.getByText(withErrorArgs.error ?? '')).toBeInTheDocument()
+  })
+
+  test('renders a native select on the server, so the field works before hydration', () => {
+    const container = document.createElement('div')
+    container.innerHTML = renderToString(inForm({ ...withErrorArgs, defaultValue: 'CR' }))
+
+    const select = container.querySelector('select')
+    expect(select).toHaveAttribute('name', withErrorArgs.name)
+    expect(select).toHaveAttribute('aria-invalid', 'true')
+    expect(select).toHaveAttribute('aria-required', 'true')
+    expect(select).toHaveValue('CR')
+    expect(select?.querySelectorAll('option')).toHaveLength(withErrorArgs.options.length + 1)
+    expect(container.querySelector('[role="combobox"]')).toBeNull()
   })
 })

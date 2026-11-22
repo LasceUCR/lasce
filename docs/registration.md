@@ -54,7 +54,7 @@ exactly the same one; its default messages are Spanish, and `getRegistrationSche
 builds the same schema in the visitor's own language from the Server Action (see
 [internationalization.md](internationalization.md#translated)). The form sets `noValidate`, so the
 browser never shows its own (locale-dependent) validation bubbles: what the visitor sees is always
-the server's message, in their language.
+the server's message, in their language, and it is the same with JavaScript disabled.
 
 The country field is a `SelectField` (`components/public/auth/SelectField.tsx`): the site's shared
 `Select` dropdown with the same label, hint and error wiring as `FormField`. It replaces a native
@@ -62,8 +62,9 @@ The country field is a `SelectField` (`components/public/auth/SelectField.tsx`):
 menu is placed by `useFloatingMenu`: it opens below the trigger, flips above when there is not
 enough room, stays inside the viewport and scrolls internally, at every screen size. The chosen
 code travels in a hidden `countryCode` input, so the Server Action reads it from `FormData`
-exactly as before. The dropdown needs JavaScript; without it the other fields still submit and the
-server reports the missing country.
+exactly as before. The server-rendered HTML carries a native `<select name="countryCode">`
+instead, which is swapped for the dropdown once the page hydrates, so the field still works
+without JavaScript.
 
 The Server Action returns one flat state object:
 

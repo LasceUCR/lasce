@@ -1,6 +1,6 @@
 'use client'
 
-import { useId, useState } from 'react'
+import { useId, useState, useSyncExternalStore } from 'react'
 
 import { Select } from '../Select'
 import type { FormFieldOption } from './FormField'
@@ -21,13 +21,18 @@ export interface SelectFieldProps {
   required?: boolean
 }
 
+const subscribeToHydration = () => () => undefined
+const getClientSnapshot = () => true
+const getServerSnapshot = () => false
+
 /**
  * The `FormField` counterpart for choosing one option from a long list. It uses the site's shared
  * dropdown, which stays inside the viewport and opens upwards when there is no room below, instead
  * of a native `<select>`, whose list the browser may run off the screen. The choice is submitted
  * through a hidden input, so the field works in a plain `<form>` posted to a Server Action, and the
  * trigger carries the same label, `aria-required`, `aria-invalid` and description wiring as
- * `FormField`'s controls.
+ * `FormField`'s controls. Until the page hydrates (or without JavaScript) a native `<select>`
+ * stands in, so the field can always be filled in.
  */
 export function SelectField({
   name,
@@ -44,6 +49,7 @@ export function SelectField({
   const hintId = hint ? `${controlId}-hint` : undefined
   const errorId = error ? `${controlId}-error` : undefined
   const describedBy = [hintId, errorId].filter(Boolean).join(' ') || undefined
+  const hydrated = useSyncExternalStore(subscribeToHydration, getClientSnapshot, getServerSnapshot)
   const [value, setValue] = useState(defaultValue)
   // A new echoed value after a submission replaces whatever the control held.
   const [echoed, setEchoed] = useState(defaultValue)
@@ -55,18 +61,38 @@ export function SelectField({
   return (
     <div className="form-field">
       <label htmlFor={controlId}>{label}</label>
-      <Select
-        describedBy={describedBy}
-        id={controlId}
-        invalid={Boolean(error)}
-        label={label}
-        onChange={setValue}
-        options={options}
-        placeholder={placeholder}
-        required={required}
-        value={value}
-      />
-      <input name={name} type="hidden" value={value} />
+      {hydrated ? (
+        <>
+          <Select
+            describedBy={describedBy}
+            id={controlId}
+            invalid={Boolean(error)}
+            label={label}
+            onChange={setValue}
+            options={options}
+            placeholder={placeholder}
+            required={required}
+            value={value}
+          />
+          <input name={name} type="hidden" value={value} />
+        </>
+      ) : (
+        <select
+          aria-describedby={describedBy}
+          aria-invalid={error ? true : undefined}
+          aria-required={required || undefined}
+          defaultValue={value}
+          id={controlId}
+          name={name}
+        >
+          <option value="">{placeholder}</option>
+          {options.map((option) => (
+            <option key={option.value} value={option.value}>
+              {option.label}
+            </option>
+          ))}
+        </select>
+      )}
       {hint ? (
         <p className="form-field-hint" id={hintId}>
           {hint}

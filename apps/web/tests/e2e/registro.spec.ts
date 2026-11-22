@@ -79,6 +79,8 @@ async function waitForHydration(page: Page, selector: string) {
 async function openRegistration(page: Page) {
   await page.goto(REGISTRATION_HREF)
   await waitForHydration(page, `#${REGISTRATION_CARD_ID} form`)
+  // The server renders a native country select, swapped for the dropdown right after hydration.
+  await expect(field(page, 'countryCode')).toHaveAttribute('aria-haspopup', 'listbox')
 }
 
 // The registration tab's own URL, as the page leaves it after a submission.

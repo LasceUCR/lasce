@@ -115,6 +115,8 @@ test.beforeAll(async ({ browser }) => {
 
   await page.goto(REGISTRATION_HREF)
   await waitForHydration(page, `#${REGISTRATION_CARD_ID} form`)
+  // The server renders a native country select, swapped for the dropdown right after hydration.
+  await expect(field('countryCode')).toHaveAttribute('aria-haspopup', 'listbox')
   await field('fullName').fill(account.fullName)
   await field('email').fill(account.email)
   await field('institution').fill(account.institution)
