@@ -509,7 +509,14 @@ test('shows the login and registration forms, their placeholders and validation 
       name: 'United States',
     }),
   ).toHaveAttribute('value', 'US')
-  await expect(registrationCard.getByText('At least 8 characters.')).toBeVisible()
+  await expect(
+    registrationCard.getByText(
+      '8 to 128 characters, with at least one uppercase letter, one lowercase letter, one number and one special character.',
+    ),
+  ).toBeVisible()
+  await expect(
+    registrationCard.getByRole('list', { name: 'The password must have:' }),
+  ).toBeVisible()
 
   await registrationCard.getByRole('button', { name: 'Create account' }).click()
   await expect(
