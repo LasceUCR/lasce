@@ -2688,7 +2688,7 @@
         "countryCode": "Selecciona un país"
       },
       "requiredNote": "Todos los campos son obligatorios.",
-      "passwordHint": "Mínimo 8 caracteres.",
+      "passwordHint": "Entre 8 y 128 caracteres, con al menos una letra mayúscula, una minúscula, un número y un carácter especial.",
       "submit": "Crear cuenta",
       "submitting": "Creando cuenta...",
       "successTitle": "Cuenta creada",
@@ -2707,6 +2707,11 @@
         "passwordRequired": "Ingresa una contraseña.",
         "passwordTooShort": "La contraseña debe tener al menos 8 caracteres.",
         "passwordTooLong": "La contraseña no puede superar los 128 caracteres.",
+        "passwordMissingCharacters": "La contraseña debe incluir:",
+        "passwordNeedsUppercase": "una letra mayúscula",
+        "passwordNeedsLowercase": "una letra minúscula",
+        "passwordNeedsNumber": "un número",
+        "passwordNeedsSpecial": "un carácter especial",
         "confirmationRequired": "Repite tu contraseña.",
         "confirmationMismatch": "Las contraseñas no coinciden.",
         "reviewFields": "Revisa los campos marcados para continuar.",
@@ -2751,7 +2756,7 @@
           "password": "Nueva contraseña",
           "passwordConfirmation": "Repetir contraseña"
         },
-        "passwordHint": "Mínimo 8 caracteres.",
+        "passwordHint": "Entre 8 y 128 caracteres, con al menos una letra mayúscula, una minúscula, un número y un carácter especial.",
         "submit": "Guardar contraseña",
         "submitting": "Guardando...",
         "invalidTitle": "El enlace no es válido",
@@ -2761,6 +2766,11 @@
           "passwordRequired": "Ingresa una contraseña.",
           "passwordTooShort": "La contraseña debe tener al menos 8 caracteres.",
           "passwordTooLong": "La contraseña no puede superar los 128 caracteres.",
+          "passwordMissingCharacters": "La contraseña debe incluir:",
+          "passwordNeedsUppercase": "una letra mayúscula",
+          "passwordNeedsLowercase": "una letra minúscula",
+          "passwordNeedsNumber": "un número",
+          "passwordNeedsSpecial": "un carácter especial",
           "confirmationRequired": "Repite tu contraseña.",
           "confirmationMismatch": "Las contraseñas no coinciden.",
           "unexpected": "No pudimos guardar la contraseña. Inténtalo de nuevo en unos minutos."
@@ -2776,6 +2786,18 @@
         "ignore": "Si no solicitaste este cambio, ignora este mensaje: tu contraseña no cambiará.",
         "signature": "Laboratorio de Astrofísica Solar y Clima Espacial, Universidad de Costa Rica"
       }
+    },
+    "passwordRequirements": {
+      "title": "La contraseña debe tener:",
+      "items": {
+        "length": "Entre 8 y 128 caracteres",
+        "uppercase": "Una letra mayúscula",
+        "lowercase": "Una letra minúscula",
+        "number": "Un número",
+        "special": "Un carácter especial, como ! # $ o @"
+      },
+      "met": "Cumplido:",
+      "unmet": "Pendiente:"
     }
   },
   "account": {

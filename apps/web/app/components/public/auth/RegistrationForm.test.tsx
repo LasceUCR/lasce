@@ -13,6 +13,7 @@ import {
   type RegistrationState,
 } from '@/app/lib/auth/registration'
 import { renderWithIntl } from '@/app/lib/i18n/testing'
+import es from '@/messages/es.json' with { type: 'json' }
 
 import { RegistrationForm, type RegistrationFormProps } from './RegistrationForm'
 import {
@@ -32,6 +33,7 @@ const invalidFormatArgs = InvalidFormat.args as RegistrationFormProps
 const duplicateEmailArgs = DuplicateEmail.args as RegistrationFormProps
 const failedArgs = Failed.args as RegistrationFormProps
 const successArgs = Success.args as RegistrationFormProps
+const passwordRequirementsCopy = es.auth.passwordRequirements
 
 function renderForm(ui: React.ReactElement) {
   return renderWithIntl(<ToastProvider>{ui}</ToastProvider>)
@@ -241,5 +243,22 @@ describe('RegistrationForm', () => {
     expect(
       screen.queryByRole('button', { name: registrationFormCopy.submit }),
     ).not.toBeInTheDocument()
+  })
+
+  test('lists the password requirements and ticks them off while the password is typed', async () => {
+    const user = userEvent.setup()
+    renderForm(<RegistrationForm {...defaultArgs} />)
+    const requirements = screen.getByRole('list', { name: passwordRequirementsCopy.title })
+    const requirement = (label: string) => within(requirements).getByText(label).closest('li')
+
+    expect(requirement(passwordRequirementsCopy.items.uppercase)).toHaveTextContent(
+      passwordRequirementsCopy.unmet,
+    )
+
+    await user.type(control(REGISTRATION_LABELS.password), 'Contraseña-1')
+
+    for (const label of Object.values(passwordRequirementsCopy.items)) {
+      expect(requirement(label)).toHaveTextContent(passwordRequirementsCopy.met)
+    }
   })
 })

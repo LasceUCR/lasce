@@ -36,7 +36,7 @@ const account = {
   email: `login-${runId}@example.com`,
   institution: 'Universidad de Costa Rica',
   countryCode: 'CR',
-  password: 'una contraseña larga',
+  password: 'Una contraseña larga 1!',
 }
 
 // Every locator is scoped: "Crear cuenta", "Iniciar sesión", "Cerrar sesión",

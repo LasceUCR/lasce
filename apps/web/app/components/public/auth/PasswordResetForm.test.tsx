@@ -1,4 +1,4 @@
-import { screen, waitFor } from '@testing-library/react'
+import { screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, expect, test, vi } from 'vitest'
 
@@ -107,5 +107,22 @@ describe('PasswordResetForm', () => {
 
     const heading = await screen.findByRole('heading', { name: copy.invalidTitle })
     expect(heading).toHaveFocus()
+  })
+
+  test('lists the password requirements and ticks them off while the password is typed', async () => {
+    const user = renderForm(defaultArgs)
+    const requirements = screen.getByRole('list', { name: es.auth.passwordRequirements.title })
+    const requirement = (label: string) => within(requirements).getByText(label).closest('li')
+    const items = es.auth.passwordRequirements.items
+
+    await user.type(field(copy.labels.password), 'clave larga')
+    expect(requirement(items.length)).toHaveTextContent(es.auth.passwordRequirements.met)
+    expect(requirement(items.uppercase)).toHaveTextContent(es.auth.passwordRequirements.unmet)
+    expect(requirement(items.number)).toHaveTextContent(es.auth.passwordRequirements.unmet)
+
+    await user.type(field(copy.labels.password), 'K9!')
+    for (const label of Object.values(items)) {
+      expect(requirement(label)).toHaveTextContent(es.auth.passwordRequirements.met)
+    }
   })
 })
