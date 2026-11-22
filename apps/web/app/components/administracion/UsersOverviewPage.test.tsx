@@ -82,9 +82,9 @@ describe('UsersOverviewPage', () => {
     render(<UsersOverviewPage {...(NoRoles.args as UsersOverviewPageProps)} />)
     expect(screen.getByText('No hay roles disponibles para mostrar.')).toBeInTheDocument()
     expect(screen.getByText(args.users[0]!.email)).toBeInTheDocument()
-    // Only "Sin rol" remains to choose, with what it means explained.
-    expect(screen.getAllByRole('radio')).toHaveLength(args.users.length)
-    expect(screen.getByText(/^Sin rol: la cuenta puede iniciar sesión/)).toBeInTheDocument()
+    // Nothing to choose, not even "Sin rol".
+    expect(screen.queryAllByRole('radio')).toHaveLength(0)
+    expect(screen.queryByText(/^Sin rol: la cuenta puede iniciar sesión/)).not.toBeInTheDocument()
   })
 })
 

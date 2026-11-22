@@ -112,18 +112,32 @@ describe('UserRolesRow single-choice control', () => {
     expect(save).toHaveBeenCalledExactlyOnceWith(args.user.id, [])
   })
 
-  test('moves between options with the arrow keys and keeps the role when cancelled', async () => {
+  test('browses the options with the arrow keys and chooses with Space', async () => {
     const user = userEvent.setup()
     const save = vi.fn(async () => {})
     renderRow({ onSaveRoles: save })
     const admin = screen.getByRole('radio', { name: /^Administrador:/ })
+    const noRole = screen.getByRole('radio', { name: /^Sin rol:/ })
+    const visitor = screen.getByRole('radio', { name: /^Visitante:/ })
     admin.focus()
     await user.keyboard('{ArrowRight}')
+    expect(noRole).toHaveFocus()
+    // Past the last option, the arrow keys wrap around, and browsing opens no dialog.
+    await user.keyboard('{ArrowDown}')
+    expect(visitor).toHaveFocus()
+    await user.keyboard('{ArrowUp}{ArrowLeft}')
+    expect(admin).toHaveFocus()
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+    expect(admin).toBeChecked()
+    expect(admin).not.toHaveAttribute('aria-haspopup')
+    expect(noRole).toHaveAttribute('aria-haspopup', 'dialog')
+
+    noRole.focus()
+    await user.keyboard(' ')
     expect(screen.getByRole('dialog', { name: 'Confirmar retiro de rol' })).toBeInTheDocument()
     await user.click(screen.getByRole('button', { name: 'No, cancelar' }))
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
-    // Focus returns to the option the arrow key reached; the saved role stays selected.
-    expect(screen.getByRole('radio', { name: /^Sin rol:/ })).toHaveFocus()
+    expect(noRole).toHaveFocus()
     expect(admin).toBeChecked()
     expect(screen.getAllByRole('radio', { checked: true })).toHaveLength(1)
     expect(save).not.toHaveBeenCalled()

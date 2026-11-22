@@ -7,15 +7,18 @@ Available columns come from Prisma's `UserRole` enum; their names come from the 
 The existing dialogs and search remain presentational. Mocks are used only in stories/tests.
 
 One role can be assigned at a time. Each row is one native radio group (#505): a radio per role
-plus "Sin rol", sharing a `name`, so only one option can ever be selected and the arrow keys move
-between them. Each radio is labelled "<rol>: <nombre> (<correo>)". Choosing a different option
-opens the confirmation dialog; the selection stays on the saved role until the change is
+plus "Sin rol", sharing a `name`, so only one option can ever be selected. The arrow keys move
+focus between the options (wrapping around) **without** checking them, unlike a plain radio group,
+because every choice opens a dialog; Space or a click chooses. Each radio is labelled "<rol>:
+<nombre> (<correo>)", and only the unselected ones announce `aria-haspopup="dialog"`. Choosing a
+different option opens the confirmation dialog; the selection stays on the saved role until the change is
 confirmed, and cancelling leaves it untouched. Choosing "Sin rol" stores NULL, shown as "Sin rol
 asignado" in the account page. The text under the help explains what that means, and the "Sin
 rol" radios reference it with `aria-describedby`: an account without a role can sign in and view
 the public pages, but holds no permission (`getPermissionsForRole(null)` is empty), so it cannot
 download resources or enter the administration area. New public registrations still default to
-VISITOR. The nullable migration is mirrored in the Python model.
+VISITOR. With no role to offer, the table shows no options at all, "Sin rol" included. The
+nullable migration is mirrored in the Python model.
 
 The page requires a session and the `manage_users` permission; the write action independently
 repeats that check. A visitor or assistant without that grant sees "Acceso denegado" and cannot

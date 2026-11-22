@@ -55,9 +55,11 @@ export function UsersOverviewPage({
         <p id="users-overview-help" className={styles.help}>
           {onSaveRoles ? t('helpEditable') : t('helpReadOnly')}
         </p>
-        <p id="users-overview-no-role" className={styles.help}>
-          {t('noRoleHelp')}
-        </p>
+        {roles.length > 0 && (
+          <p id="users-overview-no-role" className={styles.help}>
+            {t('noRoleHelp')}
+          </p>
+        )}
         {isDemo && onSaveRoles && <p className={styles.help}>{t('demoChanges')}</p>}
         {roles.length === 0 && <p>{t('noRoles')}</p>}
         <div ref={searchRef} className={styles.searchControls}>

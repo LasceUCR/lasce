@@ -74,7 +74,10 @@ export async function updateUserRole(input: unknown): Promise<RoleChangeResult> 
         SELECT id FROM auth.users WHERE role = 'admin' ORDER BY id FOR UPDATE`
       // PostgreSQL prints a uuid in lower case; the validated input may be in upper case.
       const targetId = userId.toLowerCase()
-      if (!administrators.some((administrator) => administrator.id.toLowerCase() !== targetId)) {
+      const ids = administrators.map((administrator) => administrator.id.toLowerCase())
+      // A target that is no longer an administrator is a stale page: the compare-and-set below
+      // reports it as a conflict, which asks for a reload.
+      if (ids.includes(targetId) && ids.every((id) => id === targetId)) {
         return { ok: false, reason: 'lastAdministrator' }
       }
     }

@@ -1,6 +1,6 @@
 'use client'
 
-import { useId, useRef, useState, useSyncExternalStore } from 'react'
+import { useId, useRef, useState, useSyncExternalStore, type KeyboardEvent } from 'react'
 import { useTranslations } from 'next-intl'
 import { useToast } from '@/app/components/public/toast/ToastProvider'
 import type { OverviewRole, OverviewUser } from '@/app/lib/user-overview'
@@ -12,6 +12,29 @@ const getClientSnapshot = () => true
 const getServerSnapshot = () => false
 /** The value of the "Sin rol" option; never sent to the server, which receives `[]`. */
 const NO_ROLE = 'none'
+const ARROW_STEPS: Record<string, number> = {
+  ArrowDown: 1,
+  ArrowRight: 1,
+  ArrowUp: -1,
+  ArrowLeft: -1,
+}
+
+/**
+ * Moves focus to the previous or next option of the row without checking it. A native radio
+ * group would check each option it reaches, and every check here opens a confirmation dialog,
+ * so the arrow keys only browse; Space or a click chooses.
+ */
+function moveFocus(event: KeyboardEvent<HTMLInputElement>) {
+  const step = ARROW_STEPS[event.key]
+  if (!step || event.altKey || event.ctrlKey || event.metaKey) return
+  event.preventDefault()
+  const current = event.currentTarget
+  const group = Array.from(
+    current.closest('tr')?.querySelectorAll<HTMLInputElement>('input[type="radio"]') ?? [],
+  ).filter((input) => input.name === current.name && !input.disabled)
+  const index = group.indexOf(current)
+  group[(index + step + group.length) % group.length]?.focus()
+}
 
 export interface UserRolesRowProps {
   isCurrentUser?: boolean
@@ -48,15 +71,19 @@ export function UserRolesRow({
   const toast = useToast()
   // The error toast of the previous attempt, dismissed when the next one starts.
   const errorToast = useRef<number | null>(null)
-  // One radio group per row: the browser keeps a single option checked and moves between them
-  // with the arrow keys.
+  // One radio group per row: the browser keeps a single option checked, and the arrow keys
+  // move between the options (see `moveFocus`).
   const groupName = `role-${useId()}`
   // A role missing from `roles` leaves every option unchecked rather than claiming "Sin rol".
   const currentRoleId = user.roleIds[0] ?? null
-  const options: RoleOption[] = [
-    ...roles.map((role) => ({ id: role.id, name: role.name, role })),
-    { id: null, name: t('table.noRole'), role: null },
-  ]
+  // With no role to offer there is nothing to choose, "Sin rol" included.
+  const options: RoleOption[] =
+    roles.length === 0
+      ? []
+      : [
+          ...roles.map((role) => ({ id: role.id, name: role.name, role })),
+          { id: null, name: t('table.noRole'), role: null },
+        ]
 
   async function confirm() {
     if (!onSaveRoles || pendingRole === undefined) return
@@ -118,7 +145,9 @@ export function UserRolesRow({
                 // shows once the dialog has confirmed it, and cancelling leaves it untouched.
                 setPendingRole(option.role)
               }}
-              aria-haspopup={onSaveRoles ? 'dialog' : undefined}
+              onKeyDown={moveFocus}
+              // The selected option changes nothing when chosen again, so it opens no dialog.
+              aria-haspopup={onSaveRoles && currentRoleId !== option.id ? 'dialog' : undefined}
               aria-label={t('option', { role: option.name, name: user.name, email: user.email })}
               aria-describedby={option.id === null ? noRoleDescribedBy : undefined}
             />

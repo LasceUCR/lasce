@@ -48,9 +48,11 @@ export function UsersRolesTable({
                 {role.name}
               </th>
             ))}
-            <th scope="col" className={styles.assignment}>
-              {t('noRole')}
-            </th>
+            {roles.length > 0 && (
+              <th scope="col" className={styles.assignment}>
+                {t('noRole')}
+              </th>
+            )}
           </tr>
         </thead>
         <tbody>

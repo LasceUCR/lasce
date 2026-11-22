@@ -189,6 +189,15 @@ describe('user administration', () => {
       }),
     })
   })
+  test('reports a target that is no longer an administrator as a conflict', async () => {
+    queryRaw.mockResolvedValue([])
+    updateMany.mockResolvedValue({ count: 0 })
+    expect(await updateUserRole({ userId, roleIds: [], previousRoleIds: ['ADMIN'] })).toEqual({
+      ok: false,
+      reason: 'conflict',
+    })
+    expect(auditCreate).not.toHaveBeenCalled()
+  })
   test('does not lock administrators for a change that keeps or grants the role', async () => {
     updateMany.mockResolvedValue({ count: 1 })
     await updateUserRole({ userId, roleIds: ['ADMIN'], previousRoleIds: ['VISITOR'] })
