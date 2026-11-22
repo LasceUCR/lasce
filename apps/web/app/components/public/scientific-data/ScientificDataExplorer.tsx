@@ -538,13 +538,8 @@ export function ScientificDataExplorer({
             )}
           />
           <div className="data-field-details" id="scientific-product-hint">
-            {selected?.product.description && selected.product.wavelength ? (
-              <span className="data-field-hint">
-                {t('bandHint', {
-                  wavelength: selected.product.wavelength,
-                  description: selected.product.description,
-                })}
-              </span>
+            {selected?.product.description ? (
+              <span className="data-field-hint">{selected.product.description}</span>
             ) : null}
             {selected?.product.availabilityNote ? (
               <span className="data-field-hint">{selected.product.availabilityNote}</span>

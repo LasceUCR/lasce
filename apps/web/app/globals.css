@@ -2255,6 +2255,10 @@ a {
   font-weight: 400;
 }
 
+.select-option[aria-selected='true'] .select-option-description {
+  color: inherit;
+}
+
 .select-option > span,
 .select-group {
   min-width: 0;
@@ -2420,12 +2424,9 @@ a {
   font-size: 0.875rem;
 }
 
-/* Six metadata tiles: three by two, and two by three on a phone, so none sits alone on a row. */
-.data-metadata {
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-}
-
-/* Minimum, maximum and latest value share one row at every width. */
+/* Six metadata tiles: three by two, and two by three on a phone, so none sits alone on a row.
+   Minimum, maximum and latest value share one row at every width. */
+.data-metadata,
 .data-summary {
   grid-template-columns: repeat(3, minmax(0, 1fr));
 }
@@ -2596,18 +2597,24 @@ a {
     gap: 0.5rem;
   }
 
-  .data-metadata div,
-  .data-summary div {
+  .data-metadata div {
     padding: 0.5rem 0.625rem;
+  }
+
+  .data-summary div {
+    padding: 0.5rem;
   }
 
   /* Three values side by side on a phone: smaller type, and a long unit wraps under the number. */
   .data-summary strong {
     font-size: 0.8125rem;
   }
+}
 
-  .data-summary div {
-    padding-inline: 0.5rem;
+/* The narrowest phones: small enough that a value like -1,2346E-6 fits its tile unbroken. */
+@media (max-width: 400px) {
+  .data-summary strong {
+    font-size: 0.75rem;
   }
 }
 

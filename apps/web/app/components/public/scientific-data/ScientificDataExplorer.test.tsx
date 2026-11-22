@@ -99,7 +99,7 @@ describe('ScientificDataExplorer', () => {
     expect(screen.getByLabelText('Fecha')).not.toHaveAttribute('min')
     expect(screen.getByText('Datos medidos por satélite')).toBeInTheDocument()
     expect(
-      screen.getByText('Mediciones reales registradas por los instrumentos de los satélites GOES.'),
+      screen.getByText('Mediciones reales registradas por instrumentos a bordo de satélites.'),
     ).toBeInTheDocument()
   })
 
@@ -125,7 +125,7 @@ describe('ScientificDataExplorer', () => {
     await user.click(screen.getByRole('treeitem', { name: /304 Å/ }))
     expect(
       screen.getByRole('combobox', { name: 'Instrumento y producto' }),
-    ).toHaveAccessibleDescription(/304 Å: Cromosfera y protuberancias/)
+    ).toHaveAccessibleDescription(/Cromosfera y protuberancias/)
   })
 
   test('describes the SUVI bands in English', async () => {
