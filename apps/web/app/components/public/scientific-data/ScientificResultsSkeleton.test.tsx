@@ -16,7 +16,7 @@ describe('ScientificResultsSkeleton', () => {
   test('takes the shape of a time series: metadata, summary tiles and a chart', () => {
     const { container } = renderSkeleton(TimeSeries.args as ScientificResultsSkeletonProps)
 
-    expect(container.querySelectorAll('.data-metadata > div')).toHaveLength(5)
+    expect(container.querySelectorAll('.data-metadata > div')).toHaveLength(6)
     expect(container.querySelector('[style*="760 / 320"]')).not.toBeNull()
     expect(container.querySelector('li')).toBeNull()
   })

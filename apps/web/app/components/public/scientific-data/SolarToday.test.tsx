@@ -2,6 +2,8 @@ import { screen, within } from '@testing-library/react'
 import { renderWithIntl } from '@/app/lib/i18n/testing'
 import userEvent from '@testing-library/user-event'
 import { describe, expect, test, vi } from 'vitest'
+import { getScientificSources } from '@/app/lib/scientific-data'
+import en from '@/messages/en.json' with { type: 'json' }
 import { SolarToday, type SolarTodayProps } from './SolarToday'
 import { Default, Loading, Empty, SourceError } from './SolarToday.stories'
 
@@ -19,6 +21,35 @@ describe('SolarToday', () => {
     expect(screen.getByRole('radio', { name: '195 Å' })).toBeChecked()
     expect(screen.queryByRole('combobox', { name: 'Producto científico' })).not.toBeInTheDocument()
   })
+  test('says under each band what it shows, without changing the band names', () => {
+    renderWithIntl(<SolarToday {...(Default.args as SolarTodayProps)} />)
+
+    expect(screen.getByRole('radio', { name: '94 Å' })).toHaveAccessibleDescription(
+      'Fulguraciones y plasma muy caliente',
+    )
+    expect(screen.getByRole('radio', { name: '171 Å' })).toHaveAccessibleDescription(
+      'Corona tranquila y bucles',
+    )
+    expect(screen.getByRole('radio', { name: '304 Å' })).toHaveAccessibleDescription(
+      'Cromosfera y protuberancias',
+    )
+    expect(screen.getByText('Regiones activas')).toBeVisible()
+  })
+
+  test('describes the bands in English', () => {
+    renderWithIntl(
+      <SolarToday
+        {...(Default.args as SolarTodayProps)}
+        instrument={getScientificSources(en)[0]!.instruments.find((item) => item.code === 'SUVI')!}
+      />,
+      { locale: 'en' },
+    )
+
+    expect(screen.getByRole('radio', { name: '195 Å' })).toHaveAccessibleDescription(
+      'Corona and coronal holes',
+    )
+  })
+
   test('communicates band and range choices and supports refreshing', async () => {
     const user = userEvent.setup()
     const onProductChange = vi.fn()
