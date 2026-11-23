@@ -17,6 +17,8 @@ export interface ScientificDataChartProps {
   label: string
   points: ScientificDataPoint[]
   unit: string
+  /** Localized quantity measured on the Y-axis; the unit is supplied separately. */
+  quantityLabel?: string
   /** Log scale and flare classes; see `timeSeriesStyle`. Linear when omitted. */
   chartStyle?: TimeSeriesStyle
 }
@@ -25,7 +27,7 @@ const TOOLTIP_WIDTH = 168
 const TOOLTIP_HEIGHT = 44
 
 function formatTime(timestamp: string) {
-  return timestamp.slice(11, 16)
+  return new Date(timestamp).toISOString().slice(11, 16)
 }
 
 /** The index of the coordinate closest to `x` (coordinates are in time order). */
@@ -46,6 +48,7 @@ export function ScientificDataChart({
   label,
   points,
   unit,
+  quantityLabel,
   chartStyle,
 }: ScientificDataChartProps) {
   const t = useTranslations('scientificData.charts')
@@ -55,10 +58,23 @@ export function ScientificDataChart({
   const hintId = useId()
   const { ref: viewportRef, width } = useElementWidth<HTMLDivElement>()
   const [active, setActive] = useState<number | null>(null)
-  const layout = layoutTimeSeries(points, { ...chartStyle, width })
+  const layout = layoutTimeSeries(points, { ...chartStyle, width, withYAxisLabel: !!quantityLabel })
 
   function formatValue(value: number) {
     return format.number(value, { maximumSignificantDigits: 4, notation: 'scientific' })
+  }
+
+  function formatDateTime(timestamp: string) {
+    return format.dateTime(new Date(timestamp), {
+      timeZone: 'UTC',
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+      hourCycle: 'h23',
+    })
   }
 
   if (!layout) {
@@ -165,14 +181,24 @@ export function ScientificDataChart({
           <desc id={descriptionId}>
             {t('description', {
               count: coordinates.length,
-              start: formatTime(firstTimestamp),
-              end: formatTime(lastTimestamp),
+              start: formatDateTime(firstTimestamp),
+              end: formatDateTime(lastTimestamp),
               minimum: formatValue(minimum),
               maximum: formatValue(maximum),
               unit,
             })}
             {peakClass ? ` ${t('peakClass', { flareClass: peakClass.label })}` : null}
           </desc>
+
+          {quantityLabel ? (
+            <text
+              className="data-chart-axis-label"
+              textAnchor="middle"
+              transform={`translate(18 ${frame.top + plotHeight / 2}) rotate(-90)`}
+            >
+              {t('axisLabel', { quantity: quantityLabel, unit })}
+            </text>
+          ) : null}
 
           {gridLines.map(({ y, value }) => (
             <g aria-hidden="true" key={value}>
@@ -292,6 +318,12 @@ export function ScientificDataChart({
         </p>
       </div>
       <figcaption>
+        <span className="data-chart-time-range">
+          {t('timeRange', {
+            start: formatDateTime(firstTimestamp),
+            end: formatDateTime(lastTimestamp),
+          })}
+        </span>
         {t('caption', { caption, unit })}
         {notes.length ? ` ${notes.join(' ')}` : null}
       </figcaption>

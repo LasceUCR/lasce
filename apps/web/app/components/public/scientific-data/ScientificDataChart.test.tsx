@@ -4,7 +4,14 @@ import { renderWithIntl } from '@/app/lib/i18n/testing'
 import { describe, expect, test } from 'vitest'
 
 import { ScientificDataChart } from './ScientificDataChart'
-import { Default, Empty, SinglePoint, XrayFlare } from './ScientificDataChart.stories'
+import {
+  AcrossUtcMidnight,
+  Default,
+  Empty,
+  EnglishFlux,
+  SinglePoint,
+  XrayFlare,
+} from './ScientificDataChart.stories'
 import type { ScientificDataChartProps } from './ScientificDataChart'
 import { type ScientificDataExplorerProps } from './ScientificDataExplorer'
 import { WithObservedResults } from './ScientificDataExplorer.stories'
@@ -21,6 +28,86 @@ describe('ScientificDataChart', () => {
   test('describes a single available observation', () => {
     renderWithIntl(<ScientificDataChart {...(SinglePoint.args as ScientificDataChartProps)} />)
     expect(screen.getByRole('img')).toHaveAccessibleDescription(/Serie de 1 mediciones/)
+    expect(screen.getByText(/^Intervalo:/)).toHaveTextContent(
+      'Intervalo: 10 sept 2026, 08:00:00 – 10 sept 2026, 08:00:00 UTC',
+    )
+  })
+
+  test('labels the quantity with the supplied unit and shows the plotted interval in UTC', () => {
+    renderWithIntl(<ScientificDataChart {...(XrayFlare.args as ScientificDataChartProps)} />)
+
+    expect(screen.getByText('Flujo (W/m²)')).toBeInTheDocument()
+    expect(screen.getByText(/^Intervalo:/)).toHaveTextContent(
+      'Intervalo: 5 nov 2026, 08:00:00 – 5 nov 2026, 09:00:00 UTC',
+    )
+  })
+
+  test('updates the dates, times and unit when the plotted series changes', () => {
+    const { rerender } = renderWithIntl(
+      <ScientificDataChart {...(XrayFlare.args as ScientificDataChartProps)} />,
+    )
+    rerender(
+      <ScientificDataChart
+        {...(AcrossUtcMidnight.args as ScientificDataChartProps)}
+        unit="mW/m²"
+      />,
+    )
+
+    expect(screen.getByText('Flujo (mW/m²)')).toBeInTheDocument()
+    expect(screen.queryByText('Flujo (W/m²)')).not.toBeInTheDocument()
+    expect(screen.getByText(/^Intervalo:/)).toHaveTextContent(
+      'Intervalo: 31 dic 2026, 23:45:00 – 1 ene 2027, 00:15:00 UTC',
+    )
+    expect(screen.getByRole('img')).toHaveAccessibleDescription(
+      /31 dic 2026, 23:45:00 y 1 ene 2027, 00:15:00 UTC/,
+    )
+  })
+
+  test('localizes the interval in English without changing the UTC dates', () => {
+    renderWithIntl(<ScientificDataChart {...(EnglishFlux.args as ScientificDataChartProps)} />, {
+      locale: 'en',
+    })
+
+    expect(screen.getByText('Flux (W/m²)')).toBeInTheDocument()
+    expect(screen.getByText(/^Interval:/)).toHaveTextContent(
+      'Interval: Dec 31, 2026, 23:45:00 – Jan 1, 2027, 00:15:00 UTC',
+    )
+  })
+
+  test('converts timestamps with offsets to UTC for the interval and point readout', async () => {
+    const user = userEvent.setup()
+    renderWithIntl(
+      <ScientificDataChart
+        {...(XrayFlare.args as ScientificDataChartProps)}
+        points={[
+          { timestamp: '2026-11-05T17:45:00-06:00', value: 2.1e-7 },
+          { timestamp: '2026-11-05T18:15:00-06:00', value: 4.2e-7 },
+        ]}
+      />,
+    )
+
+    expect(screen.getByText(/^Intervalo:/)).toHaveTextContent(
+      'Intervalo: 5 nov 2026, 23:45:00 – 6 nov 2026, 00:15:00 UTC',
+    )
+    await user.tab()
+    expect(screen.getByText('00:15 UTC: 4,2E-7 W/m²')).toBeInTheDocument()
+  })
+
+  test('uses the bounds of the drawn points when a logarithmic chart omits zeroes', () => {
+    renderWithIntl(
+      <ScientificDataChart
+        {...(XrayFlare.args as ScientificDataChartProps)}
+        points={[
+          { timestamp: '2026-11-05T07:00:00Z', value: 0 },
+          ...XrayFlare.args!.points!,
+          { timestamp: '2026-11-05T10:00:00Z', value: 0 },
+        ]}
+      />,
+    )
+
+    expect(screen.getByText(/^Intervalo:/)).toHaveTextContent(
+      'Intervalo: 5 nov 2026, 08:00:00 – 5 nov 2026, 09:00:00 UTC',
+    )
   })
   test('describes the visualized series through the accessibility tree', () => {
     if (resultFixture.visualization !== 'time-series') throw new Error('Expected a time series')

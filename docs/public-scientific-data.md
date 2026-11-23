@@ -247,7 +247,11 @@ These styles use scoped classes in `globals.css`; shared selects and other page 
 
 - `Notice` exposes information, warning and error tones with an explicit accessible role.
 - `DataTable` provides a collapsible, keyboard-scrollable table with a visible caption.
-- `ScientificDataChart` accepts values, labels and units through props; the time axis uses actual
+- `ScientificDataChart` accepts values, labels and units through props. EXIS flux channels label
+  the Y-axis as `Flujo (<unit>)` / `Flux (<unit>)` using the result's unit; the Mg II index is not
+  labeled as flux. A wrapping caption below every time-series chart gives the first and last
+  plotted dates and times in UTC, localized to the site language. These are the plotted bounds
+  (after log-scale filtering), which can be narrower than the requested interval. The time axis uses actual
   timestamps rather than evenly spacing irregular observations.
 - `DynamicSpectrumChart` receives its title, caption and frequency unit from the caller, without
   assuming a source or whether the observations are simulated.

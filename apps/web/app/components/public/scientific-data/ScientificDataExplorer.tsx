@@ -112,6 +112,7 @@ export function ScientificDataExplorer({
   const tValidation = useTranslations('scientificData.validation')
   const tErrors = useTranslations('scientificData.errors')
   const tOrigins = useTranslations('scientificData.origins')
+  const tCharts = useTranslations('scientificData.charts')
   const format = useFormatter()
   const querySchema = useMemo(
     () =>
@@ -773,6 +774,11 @@ export function ScientificDataExplorer({
                     points={result.points}
                     unit={result.parameter.unit}
                     chartStyle={chartStyle ?? undefined}
+                    quantityLabel={
+                      result.instrument.code === 'EXIS' && result.parameter.code !== 'mgii_index'
+                        ? tCharts('flux')
+                        : undefined
+                    }
                   />
 
                   <DataTable

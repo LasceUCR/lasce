@@ -3,7 +3,7 @@ import userEvent from '@testing-library/user-event'
 import { afterEach, describe, expect, test, vi } from 'vitest'
 
 import { renderWithIntl } from '@/app/lib/i18n/testing'
-import { getScientificSources } from '@/app/lib/scientific-data'
+import { findScientificProduct, getScientificSources } from '@/app/lib/scientific-data'
 import { scientificDataHref } from '@/app/lib/scientific-data-navigation'
 import en from '@/messages/en.json' with { type: 'json' }
 
@@ -39,6 +39,38 @@ afterEach(() => {
 })
 
 describe('ScientificDataExplorer', () => {
+  test.each([
+    ['es', 'SFXR', '0.05-0.4nm', 'Flujo (W/m²)'],
+    ['en', 'SFXR', '0.1-0.8nm', 'Flux (W/m²)'],
+    ['es', 'SFEU', '1216', 'Flujo (W/m²)'],
+    ['en', 'SFEU', '304', 'Flux (W/m²)'],
+    ['es', 'SFEU', 'mgii_index', null],
+    ['en', 'SFEU', 'mgii_index', null],
+  ] as const)(
+    'labels %s %s %s with its quantity and unit',
+    (locale, productCode, parameterCode, axisLabel) => {
+      const sources = locale === 'en' ? getScientificSources(en) : defaultArgs.sources
+      const selection = findScientificProduct('GOES', productCode, sources)!
+      const parameter = selection.product.parameters.find(({ code }) => code === parameterCode)!
+      renderWithIntl(
+        <ScientificDataExplorer
+          {...withResultsArgs}
+          sources={sources}
+          initialResult={{
+            ...resultFixture,
+            query: { ...resultFixture.query, product: productCode, parameter: parameterCode },
+            product: { code: productCode, name: selection.product.name },
+            parameter,
+          }}
+        />,
+        { locale },
+      )
+
+      if (axisLabel) expect(screen.getByText(axisLabel)).toBeInTheDocument()
+      else expect(screen.queryByText(/^(Flujo|Flux) \(/)).not.toBeInTheDocument()
+    },
+  )
+
   test('accepts historical dates and lets visitors stop waiting for a pending query', async () => {
     const fetchMock = vi.fn().mockResolvedValue({
       ok: true,
@@ -134,6 +166,10 @@ describe('ScientificDataExplorer', () => {
       expect.objectContaining({ signal: expect.any(AbortSignal) }),
     )
     expect(within(results).getByRole('img', { name: /Gráfica de Flujo solar/ })).toBeInTheDocument()
+    expect(within(results).getByText('Flujo (W/m²)')).toBeInTheDocument()
+    expect(within(results).getByText(/^Intervalo:/)).toHaveTextContent(
+      'Intervalo: 10 sept 2026, 08:00:00 – 10 sept 2026, 08:45:00 UTC',
+    )
     expect(within(results).getByText('08:00–09:00 UTC')).toBeInTheDocument()
     expect(within(results).getByText(/Observaciones históricas/)).toBeInTheDocument()
     expect(within(results).queryByRole('link')).not.toBeInTheDocument()

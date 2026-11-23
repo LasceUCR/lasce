@@ -1641,6 +1641,20 @@ a {
   stroke-width: 1;
 }
 
+.data-chart-time-range {
+  display: block;
+  margin-bottom: 0.25rem;
+  color: var(--blue-dark);
+  font-size: 0.875rem;
+  overflow-wrap: anywhere;
+}
+
+.data-chart-axis-label {
+  fill: var(--blue-dark);
+  font-size: 14px;
+  font-weight: 600;
+}
+
 .data-chart-axis {
   stroke: var(--muted);
   stroke-width: 1;

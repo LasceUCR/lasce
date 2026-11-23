@@ -2035,6 +2035,9 @@
       }
     },
     "charts": {
+      "flux": "Flux",
+      "axisLabel": "{quantity} ({unit})",
+      "timeRange": "Interval: {start} – {end} UTC",
       "areaLabel": "Chart area: {label}",
       "title": "Chart of {label}",
       "description": "Series of {count} measurements between {start} and {end} UTC. The minimum value is {minimum} and the maximum is {maximum} {unit}.",

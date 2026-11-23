@@ -29,6 +29,7 @@ export const XrayFlare: Story = {
     label: 'Flujo solar: rayos X',
     caption: 'Observaciones de GOES.',
     unit: 'W/m²',
+    quantityLabel: 'Flujo',
     chartStyle: { scale: 'log', flareClasses: true },
     points: [
       { timestamp: '2026-11-05T08:00:00Z', value: 2.1e-7 },
@@ -37,5 +38,25 @@ export const XrayFlare: Story = {
       { timestamp: '2026-11-05T08:45:00Z', value: 6.1e-6 },
       { timestamp: '2026-11-05T09:00:00Z', value: 8.4e-7 },
     ],
+  },
+}
+
+export const AcrossUtcMidnight: Story = {
+  args: {
+    ...XrayFlare.args,
+    points: [
+      { timestamp: '2026-12-31T23:45:00Z', value: 2.1e-7 },
+      { timestamp: '2027-01-01T00:15:00Z', value: 4.2e-7 },
+    ],
+  },
+}
+
+export const EnglishFlux: Story = {
+  globals: { locale: 'en' },
+  args: {
+    ...AcrossUtcMidnight.args,
+    label: 'Solar flux: X-rays',
+    caption: 'GOES observations.',
+    quantityLabel: 'Flux',
   },
 }
