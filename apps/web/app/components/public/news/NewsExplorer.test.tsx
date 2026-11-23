@@ -260,11 +260,38 @@ describe('NewsExplorer: listing', () => {
     expect(screen.queryAllByRole('heading', { level: 3 })).toHaveLength(0)
   })
 
-  test('shows the add card instead of the empty state to someone who can add news', () => {
+  test('shows the empty state above the add card to someone who can add news', () => {
     renderExplorerInEditMode({ news: [] })
 
+    expect(screen.getByRole('status')).toHaveTextContent('No hay noticias publicadas todavía.')
     expect(screen.getByRole('button', { name: 'Agregar noticia' })).toBeInTheDocument()
-    expect(screen.queryByRole('status')).not.toBeInTheDocument()
+  })
+
+  test('keeps saying nothing matched the search once edit mode is on', () => {
+    renderExplorerInEditMode({ news: [], query: 'not found', totalItems: 0 })
+
+    expect(screen.getByRole('status')).toHaveTextContent(
+      'No se encontraron noticias para “not found”.',
+    )
+    expect(screen.getByRole('button', { name: 'Agregar noticia' })).toBeInTheDocument()
+    expect(screen.queryAllByRole('heading', { level: 3 })).toHaveLength(0)
+    expect(screen.queryByRole('navigation')).not.toBeInTheDocument()
+  })
+
+  test('says nothing matched the search in edit mode to someone who cannot add news', () => {
+    renderExplorerInEditMode({
+      news: [],
+      query: 'not found',
+      totalItems: 0,
+      canCreate: false,
+      canEdit: true,
+      canDelete: false,
+    })
+
+    expect(screen.getByRole('status')).toHaveTextContent(
+      'No se encontraron noticias para “not found”.',
+    )
+    expect(screen.queryByRole('button', { name: 'Agregar noticia' })).not.toBeInTheDocument()
   })
 
   test('shows an empty state when nothing matches the search query, without losing the heading', () => {
