@@ -39,16 +39,21 @@ text in place, followed by "**Leer menos**" right after the last word, which cut
 - **Only when needed.** A `ResizeObserver` compares the text's full height with its clamped box, at
   whatever width it gets. Text that fits in `lines` is shown exactly as it was, with no toggle, and
   a text that starts to overflow when the window narrows gets one.
-- **Inline toggle.** Collapsed, the toggle sits at the end of the last visible line after an
-  ellipsis, and the text wraps around it; expanded, it follows the last word. It never adds a line
-  of its own.
+- **Inline toggle.** Collapsed, the toggle follows the last visible word after an ellipsis, not the
+  right edge of the box; expanded, it follows the last word of the whole text. It never adds a line
+  of its own. To place it, an invisible copy of the text box (`.truncated-text-probe`) finds the
+  longest start of the text that fits in `lines` lines together with "… Leer más", cut between
+  words, and that is what is shown.
 - **Expanding in place.** "Leer más" removes the clamp; nothing navigates or opens. The container
   grows to fit, so put it in a layout that can grow (a flex column or a normal block), not in a box
   with a fixed height.
-- **The whole text is always in the page.** The clamp is visual only, so search, copying and
-  assistive technology read all of it.
+- **The whole text is always in the page.** While cut, the shown start is hidden from assistive
+  technology and the full text sits next to it, visually hidden (`sr-only`), so search and screen
+  readers read all of it once.
 - **Accessible toggle.** It is a real `<button>` with `aria-expanded` and `aria-controls` pointing at
   the text, reachable with the keyboard, with a visible focus ring. Its chevron icon is decorative.
+- **Focus stays on the toggle.** "Leer más" and "Leer menos" are the same button, so a keyboard
+  user who presses it keeps focus on it when the text opens and closes.
 - **Language.** The default labels come from `common.truncatedText` in `apps/web/messages/`, so they
   follow the language chosen in the header. `lang` marks the text only; the toggle keeps the page's
   language.
@@ -89,12 +94,29 @@ const t = useTranslations('publications.card')
 </TruncatedText>
 ```
 
+### Text in several paragraphs
+
+`children` is one string. Join the paragraphs with a blank line and keep it with
+`white-space: pre-line` on the text's class, as `InitiativeDescription` does:
+
+```tsx
+<TruncatedText className={styles.description} lines={4}>
+  {paragraphs.join('\n\n')}
+</TruncatedText>
+```
+
+```css
+.description {
+  white-space: pre-line;
+}
+```
+
 ### Styling the text
 
 `className` styles the text element (`as`); keep layout properties out of it. The component owns
 the layout (`.truncated-text*` in `globals.css`): the element is a flex box, and the text inside it
-is cut to `lines` lines of height (`--truncated-lines`, with the line height it measures) while an
-empty float pushes the toggle onto the last visible line. A class of yours only needs the look:
+is cut to `lines` lines of height (`--truncated-lines`) until it has been measured and cut where the
+toggle fits. A class of yours only needs the look:
 
 ```css
 .research-area-card-description {
@@ -110,22 +132,13 @@ it and does not compete with a card's own actions. It takes the text's font size
 
 ## Testing
 
-jsdom lays nothing out, so a component test has to say whether the text overflows. Stub
-`ResizeObserver` and the two heights it compares, then assert what the visitor gets:
+jsdom lays nothing out, so a component test has to say how tall the text is. `mockTextLayout` (in
+`app/lib/testing/mockTextLayout.ts`) stubs `ResizeObserver`, the line height and `scrollHeight`:
+with `true`, a line holds 40 characters, so a long text overflows and a cut can be found; with
+`false` the text always fits. Then assert what the visitor gets:
 
 ```tsx
-vi.stubGlobal(
-  'ResizeObserver',
-  class {
-    constructor(private readonly callback: () => void) {}
-    observe() {
-      this.callback()
-    }
-    disconnect() {}
-  },
-)
-vi.spyOn(HTMLElement.prototype, 'scrollHeight', 'get').mockReturnValue(120)
-vi.spyOn(HTMLElement.prototype, 'clientHeight', 'get').mockReturnValue(60)
+mockTextLayout(true)
 
 renderWithIntl(<TruncatedText lines={3}>{longText}</TruncatedText>)
 
@@ -134,10 +147,10 @@ expect(screen.getByRole('button', { name: 'Leer menos' })).toHaveAttribute('aria
 ```
 
 - Render with `renderWithIntl`, since the default labels come from the catalogue.
-- To check the cut, read `element.style.getPropertyValue('--truncated-lines')` on the element
-  `getByText` returns for the text: `'3'` while cut,
-  `''` while whole. The toggle is inside that element (`expect(text).toContainElement(toggle)`);
-  the `id`, `lang` and classes are on its parent, the element `as` names.
+- Collapsed, the shown start is the `aria-hidden` element right before the toggle
+  (`toggle.previousElementSibling`) and ends in "… "; the whole text is in a `sr-only` element, which
+  is what `getByText(text)` returns. The `id`, `lang` and classes are on the element `as` names
+  (`toggle.closest('.truncated-text')`).
 - Restore the stubs afterwards (`vi.unstubAllGlobals()`, `vi.restoreAllMocks()`).
 - A real overflow, at a real width, belongs in a Playwright spec: see the "Leer más" test in
   `apps/web/tests/e2e/research-areas-i18n.spec.ts` and `apps/web/tests/e2e/public-portal.spec.ts`.
