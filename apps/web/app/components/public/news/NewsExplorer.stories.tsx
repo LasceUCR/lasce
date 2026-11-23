@@ -62,6 +62,12 @@ export const EditMode: Story = {
   ],
 }
 
+/** A search with no results in edit mode: the message stays, with the add card below it. */
+export const EmptySearchInEditMode: Story = {
+  args: { ...EditMode.args, news: [], query: 'not found', totalItems: 0 },
+  decorators: EditMode.decorators,
+}
+
 /** An assistant account: `edit_components` only */
 export const AssistantMode: Story = {
   args: { ...Default.args, canCreate: false, canEdit: true, canDelete: false },
