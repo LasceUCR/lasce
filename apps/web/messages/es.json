@@ -2038,6 +2038,15 @@
       "flux": "Flujo",
       "axisLabel": "{quantity} ({unit})",
       "timeRange": "Intervalo: {start} – {end} UTC",
+      "guide": {
+        "title": "Cómo leer esta gráfica",
+        "verticalTitle": "Eje vertical: flujo solar",
+        "verticalMeaning": "Indica la energía del Sol recibida por segundo y por metro cuadrado en la banda seleccionada. Cuanto más alta está la línea, mayor es el flujo.",
+        "unitMeaning": "W/m² significa vatios por metro cuadrado.",
+        "horizontalTitle": "Eje horizontal: tiempo",
+        "horizontalMeaning": "Indica cuándo se tomó cada medición. El tiempo avanza de izquierda a derecha. Las horas están en UTC (tiempo universal coordinado), una referencia horaria común para comparar observaciones.",
+        "logScaleMeaning": "{small} equivale a {decimal}. Pasar de {small} a {large} representa diez veces más flujo (escala logarítmica)."
+      },
       "areaLabel": "Área de gráfica: {label}",
       "title": "Gráfica de {label}",
       "description": "Serie de {count} mediciones entre {start} y {end} UTC. El valor mínimo es {minimum} y el máximo es {maximum} {unit}.",

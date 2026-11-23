@@ -1,4 +1,4 @@
-import { screen } from '@testing-library/react'
+import { screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { renderWithIntl } from '@/app/lib/i18n/testing'
 import { describe, expect, test } from 'vitest'
@@ -9,6 +9,7 @@ import {
   Default,
   Empty,
   EnglishFlux,
+  EuvFlux,
   SinglePoint,
   XrayFlare,
 } from './ScientificDataChart.stories'
@@ -135,8 +136,9 @@ describe('ScientificDataChart', () => {
     )
 
     expect(screen.getByRole('img')).toHaveAccessibleDescription(/clase M3\.4/)
-    expect(screen.getByText(/Observaciones de GOES/)).toHaveTextContent(/escala logarítmica/)
-    expect(screen.getByText(/Observaciones de GOES/)).toHaveTextContent(/clases de fulguración/)
+    const guide = screen.getByRole('note', { name: 'Cómo leer esta gráfica' })
+    expect(guide).toHaveTextContent(/escala logarítmica/)
+    expect(guide).toHaveTextContent(/clases de fulguración/)
     const letters = [...container.querySelectorAll('.data-chart-flare-class')].map(
       (letter) => letter.textContent,
     )
@@ -155,6 +157,51 @@ describe('ScientificDataChart', () => {
       .map((tick) => tick.textContent)
       .filter((tick) => tick && !tick.includes('UTC'))
     expect(ticks).toEqual(['1E1', '1,5E1', '2E1', '2,5E1', '3E1'])
+    expect(screen.queryByRole('note', { name: 'Cómo leer esta gráfica' })).not.toBeInTheDocument()
+  })
+
+  test('explains both axes, the physical unit and scientific notation in everyday language', () => {
+    renderWithIntl(<ScientificDataChart {...(XrayFlare.args as ScientificDataChartProps)} />)
+    const guide = screen.getByRole('note', { name: 'Cómo leer esta gráfica' })
+
+    expect(within(guide).getByText('Eje vertical: flujo solar')).toBeInTheDocument()
+    expect(guide).toHaveTextContent('Cuanto más alta está la línea, mayor es el flujo.')
+    expect(guide).toHaveTextContent('W/m² significa vatios por metro cuadrado.')
+    expect(within(guide).getByText('Eje horizontal: tiempo')).toBeInTheDocument()
+    expect(guide).toHaveTextContent('El tiempo avanza de izquierda a derecha.')
+    expect(guide).toHaveTextContent('UTC (tiempo universal coordinado)')
+    expect(guide).toHaveTextContent('1E-7 equivale a 0,0000001.')
+    expect(guide).toHaveTextContent('Pasar de 1E-7 a 1E-6 representa diez veces más flujo')
+  })
+
+  test('explains a linear EUV chart without describing a logarithmic scale or flare classes', () => {
+    renderWithIntl(<ScientificDataChart {...(EuvFlux.args as ScientificDataChartProps)} />)
+    const guide = screen.getByRole('note', { name: 'Cómo leer esta gráfica' })
+
+    expect(guide).toHaveTextContent('W/m² significa vatios por metro cuadrado.')
+    expect(guide).not.toHaveTextContent(/logarítmica|fulguración/)
+  })
+
+  test('translates the reading guide and its decimal example into English', () => {
+    renderWithIntl(<ScientificDataChart {...(EnglishFlux.args as ScientificDataChartProps)} />, {
+      locale: 'en',
+    })
+    const guide = screen.getByRole('note', { name: 'How to read this chart' })
+
+    expect(within(guide).getByText('Vertical axis: solar flux')).toBeInTheDocument()
+    expect(within(guide).getByText('Horizontal axis: time')).toBeInTheDocument()
+    expect(guide).toHaveTextContent('W/m² means watts per square metre.')
+    expect(guide).toHaveTextContent('UTC (Coordinated Universal Time)')
+    expect(guide).toHaveTextContent('1E-7 equals 0.0000001.')
+  })
+
+  test('does not explain watts per square metre for data with a different unit', () => {
+    renderWithIntl(
+      <ScientificDataChart {...(XrayFlare.args as ScientificDataChartProps)} unit="mW/m²" />,
+    )
+
+    expect(screen.getByText('Flujo (mW/m²)')).toBeInTheDocument()
+    expect(screen.queryByRole('note', { name: 'Cómo leer esta gráfica' })).not.toBeInTheDocument()
   })
 
   test('reads out a point from the keyboard with a single tab stop', async () => {

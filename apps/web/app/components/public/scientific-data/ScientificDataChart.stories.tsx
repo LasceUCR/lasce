@@ -30,6 +30,7 @@ export const XrayFlare: Story = {
     caption: 'Observaciones de GOES.',
     unit: 'W/m²',
     quantityLabel: 'Flujo',
+    explainSolarFlux: true,
     chartStyle: { scale: 'log', flareClasses: true },
     points: [
       { timestamp: '2026-11-05T08:00:00Z', value: 2.1e-7 },
@@ -47,6 +48,20 @@ export const AcrossUtcMidnight: Story = {
     points: [
       { timestamp: '2026-12-31T23:45:00Z', value: 2.1e-7 },
       { timestamp: '2027-01-01T00:15:00Z', value: 4.2e-7 },
+    ],
+  },
+}
+
+/** EUV irradiance stays linear: the reading guide must not describe a logarithmic axis. */
+export const EuvFlux: Story = {
+  args: {
+    ...XrayFlare.args,
+    label: 'Flujo solar: EUV',
+    chartStyle: { scale: 'linear', flareClasses: false },
+    points: [
+      { timestamp: '2026-11-05T08:00:00Z', value: 0.006 },
+      { timestamp: '2026-11-05T08:30:00Z', value: 0.0062 },
+      { timestamp: '2026-11-05T09:00:00Z', value: 0.0061 },
     ],
   },
 }

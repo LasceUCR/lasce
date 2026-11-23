@@ -66,8 +66,14 @@ describe('ScientificDataExplorer', () => {
         { locale },
       )
 
-      if (axisLabel) expect(screen.getByText(axisLabel)).toBeInTheDocument()
-      else expect(screen.queryByText(/^(Flujo|Flux) \(/)).not.toBeInTheDocument()
+      const guideName = locale === 'es' ? 'Cómo leer esta gráfica' : 'How to read this chart'
+      if (axisLabel) {
+        expect(screen.getByText(axisLabel)).toBeInTheDocument()
+        expect(screen.getByRole('note', { name: guideName })).toBeInTheDocument()
+      } else {
+        expect(screen.queryByText(/^(Flujo|Flux) \(/)).not.toBeInTheDocument()
+        expect(screen.queryByRole('note', { name: guideName })).not.toBeInTheDocument()
+      }
     },
   )
 

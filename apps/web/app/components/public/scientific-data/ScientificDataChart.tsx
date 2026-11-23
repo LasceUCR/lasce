@@ -1,5 +1,6 @@
 'use client'
 
+import { ArrowRight, ArrowUp } from 'lucide-react'
 import { useFormatter, useTranslations } from 'next-intl'
 import { useId, useState, type KeyboardEvent, type PointerEvent } from 'react'
 
@@ -19,6 +20,8 @@ export interface ScientificDataChartProps {
   unit: string
   /** Localized quantity measured on the Y-axis; the unit is supplied separately. */
   quantityLabel?: string
+  /** Explain how to read EXIS solar irradiance in W/m², including the time axis. */
+  explainSolarFlux?: boolean
   /** Log scale and flare classes; see `timeSeriesStyle`. Linear when omitted. */
   chartStyle?: TimeSeriesStyle
 }
@@ -49,6 +52,7 @@ export function ScientificDataChart({
   points,
   unit,
   quantityLabel,
+  explainSolarFlux = false,
   chartStyle,
 }: ScientificDataChartProps) {
   const t = useTranslations('scientificData.charts')
@@ -56,6 +60,7 @@ export function ScientificDataChart({
   const titleId = useId()
   const descriptionId = useId()
   const hintId = useId()
+  const guideTitleId = useId()
   const { ref: viewportRef, width } = useElementWidth<HTMLDivElement>()
   const [active, setActive] = useState<number | null>(null)
   const layout = layoutTimeSeries(points, { ...chartStyle, width, withYAxisLabel: !!quantityLabel })
@@ -102,6 +107,7 @@ export function ScientificDataChart({
     timeTicks,
   } = layout
   const plotBottom = frame.top + plotHeight
+  const showReadingGuide = explainSolarFlux && unit === 'W/m²'
   const activePoint = active === null ? null : (coordinates[active] ?? null)
   const readout = activePoint
     ? t('tooltip', {
@@ -325,7 +331,41 @@ export function ScientificDataChart({
           })}
         </span>
         {t('caption', { caption, unit })}
-        {notes.length ? ` ${notes.join(' ')}` : null}
+        {!showReadingGuide && notes.length ? ` ${notes.join(' ')}` : null}
+        {showReadingGuide ? (
+          <div className="data-chart-guide" role="note" aria-labelledby={guideTitleId}>
+            <h3 id={guideTitleId}>{t('guide.title')}</h3>
+            <dl className="data-chart-guide-axes">
+              <div>
+                <dt>
+                  <ArrowUp aria-hidden="true" size={18} />
+                  {t('guide.verticalTitle')}
+                </dt>
+                <dd>{t('guide.verticalMeaning')}</dd>
+                <dd className="data-chart-guide-unit">{t('guide.unitMeaning')}</dd>
+              </div>
+              <div>
+                <dt>
+                  <ArrowRight aria-hidden="true" size={18} />
+                  {t('guide.horizontalTitle')}
+                </dt>
+                <dd>{t('guide.horizontalMeaning')}</dd>
+              </div>
+            </dl>
+            {scale === 'log' ? (
+              <p className="data-chart-guide-detail">
+                {t('guide.logScaleMeaning', {
+                  small: formatValue(1e-7),
+                  large: formatValue(1e-6),
+                  decimal: format.number(1e-7, { maximumFractionDigits: 7 }),
+                })}
+              </p>
+            ) : null}
+            {flareBands.length ? (
+              <p className="data-chart-guide-detail">{t('flareClasses')}</p>
+            ) : null}
+          </div>
+        ) : null}
       </figcaption>
     </figure>
   )
