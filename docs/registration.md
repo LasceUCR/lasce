@@ -56,6 +56,16 @@ builds the same schema in the visitor's own language from the Server Action (see
 browser never shows its own (locale-dependent) validation bubbles: what the visitor sees is always
 the server's message, in their language, and it is the same with JavaScript disabled.
 
+The country field is a `SelectField` (`components/public/auth/SelectField.tsx`): the site's shared
+`Select` dropdown with the same label, hint and error wiring as `FormField`. It replaces a native
+`<select>`, whose 249-entry list some browsers opened upwards and ran off the screen. The shared
+menu is placed by `useFloatingMenu`: it opens below the trigger, flips above when there is not
+enough room, stays inside the viewport and scrolls internally, at every screen size. The chosen
+code travels in a hidden `countryCode` input, so the Server Action reads it from `FormData`
+exactly as before. The server-rendered HTML carries a native `<select name="countryCode">`
+instead, which is swapped for the dropdown once the page hydrates, so the field still works
+without JavaScript.
+
 The Server Action returns one flat state object:
 
 ```ts
