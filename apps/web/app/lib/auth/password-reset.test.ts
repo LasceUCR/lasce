@@ -47,11 +47,11 @@ describe('validateRecovery', () => {
 describe('validateReset', () => {
   test('accepts a valid matching password and keeps its spaces', () => {
     expect(
-      validateReset({ password: ' nueva clave ', passwordConfirmation: ' nueva clave ' }),
-    ).toEqual({ ok: true, password: ' nueva clave ' })
+      validateReset({ password: ' Nueva clave 1! ', passwordConfirmation: ' Nueva clave 1! ' }),
+    ).toEqual({ ok: true, password: ' Nueva clave 1! ' })
   })
 
-  test('applies the shared rule: required, length and confirmation', () => {
+  test('applies the shared rule: required, length, character classes and confirmation', () => {
     expect(validateReset({ password: '', passwordConfirmation: '' })).toEqual({
       ok: false,
       fieldErrors: {
@@ -68,7 +68,15 @@ describe('validateReset', () => {
       ok: false,
       fieldErrors: { password: resetMessages.passwordTooLong },
     })
-    expect(validateReset({ password: 'una clave larga', passwordConfirmation: 'otra' })).toEqual({
+    expect(validateReset({ password: 'Clave-larga', passwordConfirmation: 'Clave-larga' })).toEqual(
+      {
+        ok: false,
+        fieldErrors: {
+          password: `${resetMessages.passwordMissingCharacters} ${resetMessages.passwordNeedsNumber}.`,
+        },
+      },
+    )
+    expect(validateReset({ password: 'Una clave 1!', passwordConfirmation: 'otra' })).toEqual({
       ok: false,
       fieldErrors: { passwordConfirmation: resetMessages.confirmationMismatch },
     })

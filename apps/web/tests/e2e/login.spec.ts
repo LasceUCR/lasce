@@ -37,7 +37,7 @@ const account = {
   email: `login-${runId}@example.com`,
   institution: 'Universidad de Costa Rica',
   countryCode: 'CR',
-  password: 'una contraseña larga',
+  password: 'Una contraseña larga 1!',
 }
 
 // Every locator is scoped: "Crear cuenta", "Iniciar sesión", "Cerrar sesión",
@@ -515,7 +515,14 @@ test('shows the login and registration forms, their placeholders and validation 
   await expect(page.getByRole('option', { name: 'United States', exact: true })).toBeVisible()
   await country.press('Escape')
   await expect(page.getByRole('listbox', { name: 'Country' })).toHaveCount(0)
-  await expect(registrationCard.getByText('At least 8 characters.')).toBeVisible()
+  await expect(
+    registrationCard.getByText(
+      '8 to 128 characters, with at least one uppercase letter, one lowercase letter, one number and one special character.',
+    ),
+  ).toBeVisible()
+  await expect(
+    registrationCard.getByRole('list', { name: 'The password must have:' }),
+  ).toBeVisible()
 
   await registrationCard.getByRole('button', { name: 'Create account' }).click()
   await expect(

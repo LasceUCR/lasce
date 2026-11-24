@@ -14,6 +14,7 @@ import {
 
 import { Button } from '../Button'
 import { FormField } from './FormField'
+import { PasswordRequirements } from './PasswordRequirements'
 import { SelectField } from './SelectField'
 
 export interface RegistrationFormHeading {
@@ -172,6 +173,7 @@ export function RegistrationForm({
           type="password"
           value={password}
         />
+        <PasswordRequirements password={password} />
         <FormField
           autoComplete="new-password"
           error={state.fieldErrors.passwordConfirmation}

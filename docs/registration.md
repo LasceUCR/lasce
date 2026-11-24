@@ -45,7 +45,7 @@ also has an English translation in `auth.registration.labels`
 | `email`                | Correo electrónico | trimmed, lower-cased, valid address, at most 254 characters |
 | `institution`          | Institución        | trimmed, 1 to 160 characters                                |
 | `countryCode`          | País               | one of the 249 ISO 3166-1 alpha-2 codes in `countries.ts`   |
-| `password`             | Contraseña         | 8 to 128 characters, not trimmed                            |
+| `password`             | Contraseña         | 8 to 128 characters, not trimmed, mixed character types     |
 | `passwordConfirmation` | Repetir contraseña | equal to `password`; reported only when it is not empty     |
 
 Every rule lives in `registration.ts`, except the password rule, which lives in
@@ -65,6 +65,29 @@ code travels in a hidden `countryCode` input, so the Server Action reads it from
 exactly as before. The server-rendered HTML carries a native `<select name="countryCode">`
 instead, which is swapped for the dropdown once the page hydrates, so the field still works
 without JavaScript.
+
+### Password requirements
+
+Besides its length, a new password needs at least one uppercase letter, one lowercase letter, one
+number and one special character (issue #492). The classes are Unicode-aware: "Ñ" counts as
+uppercase and "é" as lowercase, any digit as a number, and a special character is visible
+punctuation or a symbol (Unicode `P` or `S`, emoji included), so a space or an invisible
+zero-width character does not count. Letters of scripts without case, such as Chinese, count as
+neither uppercase nor lowercase, so such a password still needs one Latin (or other cased) letter
+of each case. A password
+missing a class gets one message naming every missing class, for example "La contraseña debe
+incluir: una letra mayúscula, un número.", and no account is created. Length is checked first, so
+a short password reports that instead.
+
+`passwordRequirements(password)` in `password-rules.ts` is the single definition: the schema uses
+it, and so does `PasswordRequirements.tsx`, the checklist under the password field that ticks each
+requirement off while the visitor types (a polite live region; a met item changes icon and has a
+visually hidden "Cumplido:" prefix, so the state does not rely on colour). Its copy is in
+`auth.passwordRequirements`. The checklist updates from client state, so without JavaScript it
+stays as rendered (every item pending); the server's message on the field still names what is
+missing. Signing in does not apply these requirements, so accounts created
+before them keep working. The Server Action's handling of a weak password is also covered by
+`app/(public)/acceso/actions.test.ts`.
 
 The Server Action returns one flat state object:
 
