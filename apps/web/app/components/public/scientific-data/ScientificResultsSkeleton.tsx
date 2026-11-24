@@ -9,8 +9,8 @@ import type { VisualizationKind } from '@/app/lib/scientific-data'
  */
 export const RESULT_IMAGE_PLACEHOLDERS = 4
 
-/** Metadata tiles of a result: instrument, wavelength or channel, date, interval and source. */
-const METADATA_TILES = 5
+/** Metadata tiles: instrument, wavelength or channel, date, UTC and local interval, source. */
+const METADATA_TILES = 6
 
 export interface ScientificResultsSkeletonProps {
   /** The visualization the query will return, from the selected product. */
