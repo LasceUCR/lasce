@@ -1800,9 +1800,24 @@ a {
   margin-bottom: 0.5rem;
 }
 
-.data-section-heading > svg {
+.data-section-heading > svg,
+.data-results-tags > svg {
   flex-shrink: 0;
   color: var(--blue-dark);
+}
+
+.data-results-tags {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+/* What the badge beside the query heading means: measured or simulated values. */
+.data-kind-hint {
+  margin: 0.5rem 0 0;
+  color: var(--muted);
+  font-size: 0.8125rem;
+  line-height: 1.5;
 }
 
 .data-query-form,
@@ -1884,9 +1899,10 @@ a {
   font-weight: 700;
 }
 
+/* Six bands: three by two, and two by three on a phone, so none sits alone on a row. */
 .data-wavelength-options {
-  display: flex;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 0.625rem;
 }
 
@@ -1900,6 +1916,24 @@ a {
   border-radius: 8px;
   font-size: 0.875rem;
   cursor: pointer;
+}
+
+/* The wavelength over a short line saying what the band shows. */
+.data-wavelength-text {
+  display: grid;
+  gap: 0.125rem;
+  min-width: 0;
+  line-height: 1.3;
+}
+
+.data-wavelength-description {
+  color: var(--muted);
+  font-size: 0.75rem;
+  font-weight: 400;
+}
+
+.data-wavelength-options label:has(:checked) .data-wavelength-description {
+  color: inherit;
 }
 
 .data-wavelength-options label:has(:checked) {
@@ -2210,6 +2244,21 @@ a {
   transition: background-color 120ms ease;
 }
 
+.select-option-text {
+  display: grid;
+  gap: 0.125rem;
+}
+
+.select-option-description {
+  color: var(--muted);
+  font-size: 0.8125rem;
+  font-weight: 400;
+}
+
+.select-option[aria-selected='true'] .select-option-description {
+  color: inherit;
+}
+
 .select-option > span,
 .select-group {
   min-width: 0;
@@ -2370,10 +2419,16 @@ a {
 .data-metadata,
 .data-summary {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr));
   gap: 0.75rem;
   margin: 1rem 0 0;
   font-size: 0.875rem;
+}
+
+/* Six metadata tiles: three by two, and two by three on a phone, so none sits alone on a row.
+   Minimum, maximum and latest value share one row at every width. */
+.data-metadata,
+.data-summary {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
 .data-metadata div,
@@ -2531,6 +2586,38 @@ a {
   }
 }
 
+@media (max-width: 560px) {
+  .data-metadata,
+  .data-wavelength-options {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .data-metadata,
+  .data-summary {
+    gap: 0.5rem;
+  }
+
+  .data-metadata div {
+    padding: 0.5rem 0.625rem;
+  }
+
+  .data-summary div {
+    padding: 0.5rem;
+  }
+
+  /* Three values side by side on a phone: smaller type, and a long unit wraps under the number. */
+  .data-summary strong {
+    font-size: 0.8125rem;
+  }
+}
+
+/* The narrowest phones: small enough that a value like -1,2346E-6 fits its tile unbroken. */
+@media (max-width: 400px) {
+  .data-summary strong {
+    font-size: 0.75rem;
+  }
+}
+
 /* Today's solar observations are independent of the historical query form. */
 .solar-today {
   width: min(100% - 64px, 65rem);
@@ -2587,6 +2674,7 @@ a {
 }
 
 .solar-today-controls .data-wavelengths {
+  flex: 1 1 32rem;
   padding: 0;
   border: 0;
 }
