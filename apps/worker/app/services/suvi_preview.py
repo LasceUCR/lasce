@@ -6,6 +6,10 @@ channel's SunPy SUVI colormap to an 8-bit RGB image, no resizing, no scientific-
 behind it. WebP (lossy, ``WEBP_QUALITY``) is chosen over PNG purely for size — a lossless format
 buys nothing here since the source is already an illustration, not the archived signal.
 
+The frame is also turned to the orientation every solar viewer uses (solar north up, east left),
+because an L1b matrix is stored in the detector's own frame: FITS rows run bottom-up, and the
+spacecraft is rolled from solar north by the header's ``CROTA``. See :func:`orient`.
+
 Each frame gets two copies of the same WebP image in MinIO:
 
 - A per-frame archival copy at `frame_key`, so a specific frame's image stays browsable later.
@@ -103,9 +107,53 @@ def frame_key(satellite: str, channel: str, observed_at: datetime) -> str:
     return f"suvi/{slug(satellite)}/{slug(channel)}/{stamp}.webp"
 
 
-def render_webp(matrix: np.ndarray, channel: str) -> bytes:
-    """A pixel matrix -> an 8-bit RGB WebP, log-stretched to its own maximum and coloured with
-    the SunPy SUVI colormap of ``channel`` (grayscale for an unknown channel).
+def orient(
+    pixels: np.ndarray, roll_deg: float | None, sun_center: tuple[float, float] | None
+) -> np.ndarray:
+    """Turn an 8-bit detector-frame matrix into a north-up image, top row first.
+
+    Two corrections, in this order:
+
+    - **Flip vertically.** FITS stores the bottom row first; an image library draws the first row
+      at the top. Without this every frame is upside down.
+    - **Undo the roll.** ``roll_deg`` (``CROTA``) is how far the detector is rolled from solar
+      north. Rotating the flipped image by it about the disc centre puts north up — verified
+      against the frame's WCS on real GOES-19 frames, whose roll is around 336 degrees. The disc
+      is shifted to the middle of the image at the same time, and the corners the rotation
+      exposes are filled with black, so no tilted frame edge shows.
+
+    ``sun_center`` is ``(CRPIX1, CRPIX2)``: 1-based FITS pixel coordinates, counted from the
+    bottom-left. Without a roll only the flip happens. Without a centre the image's own middle is
+    the pivot.
+    """
+    flipped = np.flipud(pixels)
+    if roll_deg is None:
+        return np.ascontiguousarray(flipped)
+
+    height, width = flipped.shape
+    if sun_center is None:
+        cx, cy = (width - 1) / 2, (height - 1) / 2
+    else:
+        cx, cy = sun_center[0] - 1, (height - 1) - (sun_center[1] - 1)
+    rotated = Image.fromarray(flipped, mode="L").rotate(
+        roll_deg,
+        resample=Image.Resampling.BICUBIC,
+        center=(cx, cy),
+        translate=((width - 1) / 2 - cx, (height - 1) / 2 - cy),
+        fillcolor=0,
+    )
+    return np.asarray(rotated)
+
+
+def render_webp(
+    matrix: np.ndarray,
+    channel: str,
+    roll_deg: float | None = None,
+    sun_center: tuple[float, float] | None = None,
+) -> bytes:
+    """A pixel matrix -> an 8-bit RGB WebP, log-stretched to its own maximum, turned north-up
+    (:func:`orient`) and coloured with the SunPy SUVI colormap of ``channel`` (grayscale for an
+    unknown channel).
 
     Pure and CPU-bound (no I/O); the caller runs it in a worker thread. Negative pixels (raw FITS
     radiance carries background noise below zero) are clipped to zero first — `log1p` of anything
@@ -121,7 +169,7 @@ def render_webp(matrix: np.ndarray, channel: str) -> bytes:
         pixels = (values / peak * 255).astype(np.uint8)
 
     buffer = io.BytesIO()
-    rgb = color_table(channel)[pixels]
+    rgb = color_table(channel)[orient(pixels, roll_deg, sun_center)]
     Image.fromarray(rgb, mode="RGB").save(buffer, format="WEBP", quality=WEBP_QUALITY)
     return buffer.getvalue()
 
@@ -142,7 +190,14 @@ async def publish_preview(
 
     Returns the archival frame key, which is also written back onto the frame's row.
     """
-    image = await asyncio.to_thread(render_webp, matrix, fields.channel)
+    sun_center = (
+        (fields.sun_center_x, fields.sun_center_y)
+        if fields.sun_center_x is not None and fields.sun_center_y is not None
+        else None
+    )
+    image = await asyncio.to_thread(
+        render_webp, matrix, fields.channel, fields.roll_deg, sun_center
+    )
     archival_key = frame_key(fields.satellite, fields.channel, fields.observed_at)
     latest_key = preview_key(fields.satellite, fields.channel)
     await storage.put_object(archival_key, image, content_type="image/webp")

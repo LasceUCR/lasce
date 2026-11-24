@@ -34,6 +34,7 @@ def header(**overrides: Any) -> dict[str, Any]:
         "CRPIX1": 666.8828548,
         "CRPIX2": 657.5104303,
         "RSUN": 381.9732042,
+        "CROTA": 336.3187256,
         "CONT_FLG": 0,
         "ECLIPSE": 0,
         "IMG_MEAN": 0.038145,
@@ -96,6 +97,21 @@ def test_a_missing_optional_card_yields_none_not_zero() -> None:
 
     assert "sat_pix" not in fields.metrics
     assert fields.exposure_time == pytest.approx(0.999728)
+
+
+def test_the_roll_angle_comes_from_crota_for_the_preview() -> None:
+    fields = ProcessHeaders.parse(header(), suvi_file())
+
+    assert fields.roll_deg == pytest.approx(336.3187256)
+
+
+def test_a_missing_crota_leaves_the_roll_unknown() -> None:
+    without_crota = header()
+    del without_crota["CROTA"]
+
+    fields = ProcessHeaders.parse(without_crota, suvi_file())
+
+    assert fields.roll_deg is None
 
 
 def test_nan_in_the_header_does_not_reach_raw_header_or_metrics() -> None:

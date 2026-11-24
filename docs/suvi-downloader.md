@@ -180,6 +180,20 @@ into an 8-bit RGB image (a port of SunPy's SUVI/AIA colormaps, grayscale for an 
 saves it as **lossy WebP** (`WEBP_QUALITY = 80`) rather than PNG, purely for size: a lossless
 format buys nothing for an illustration that already discards precision in the log stretch.
 
+Before colouring, `orient` turns the frame north-up. An L1b matrix is stored in the detector's own
+frame, so rendering it as-is gives an image that is both **upside down** and **rolled**:
+
+- FITS stores the bottom row first and Pillow draws the first row at the top, so the matrix is
+  flipped vertically.
+- The spacecraft is rolled from solar north by the header's `CROTA` (about 336° on GOES-19), which
+  `ProcessHeaders.parse` reads into `SuviHeaderFields.roll_deg`. The flipped image is rotated by
+  that angle about the disc centre (`CRPIX1/2`), the disc is moved to the middle of the image, and
+  the exposed corners are filled with black. The result is solar north up, east left, matching
+  NOAA's own viewer. `CROTA` is not a catalogue column; it stays in `raw_header`.
+
+A frame without `CROTA` is only flipped. Previews written before this correction are still in
+the detector orientation until their frame is processed again.
+
 `publish_preview` uploads two copies of that WebP image to MinIO:
 
 - A **per-frame archival copy**, keyed
