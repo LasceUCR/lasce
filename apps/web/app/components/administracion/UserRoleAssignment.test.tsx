@@ -29,7 +29,7 @@ describe('persisted role assignments', () => {
       <UserRoleAssignment {...(meta.args as UserRoleAssignmentProps)} saveAction={saveAction} />,
     )
     await user.click(
-      screen.getByRole('checkbox', { name: 'Visitante: Ana Ejemplo (ana@example.com)' }),
+      screen.getByRole('radio', { name: 'Visitante: Ana Ejemplo (ana@example.com)' }),
     )
     await user.click(
       within(screen.getByRole('dialog')).getByRole('button', { name: 'Sí, cambiar rol' }),
@@ -41,14 +41,14 @@ describe('persisted role assignments', () => {
     })
     if (ok)
       expect(
-        screen.getByRole('checkbox', { name: 'Visitante: Ana Ejemplo (ana@example.com)' }),
+        screen.getByRole('radio', { name: 'Visitante: Ana Ejemplo (ana@example.com)' }),
       ).toBeChecked()
     else {
       // A failure is reported as a toast, in the site's language, and the dialog stays open.
       expect(await screen.findByText(/No pudimos confirmar el cambio/)).toBeVisible()
       expect(screen.getByRole('dialog')).toBeVisible()
       expect(
-        screen.getByRole('checkbox', { name: 'Administrador: Ana Ejemplo (ana@example.com)' }),
+        screen.getByRole('radio', { name: 'Administrador: Ana Ejemplo (ana@example.com)' }),
       ).toBeChecked()
     }
   })
@@ -69,7 +69,7 @@ describe('translated failures', () => {
     )
 
     await user.click(
-      screen.getByRole('checkbox', { name: 'Visitante: Ana Ejemplo (ana@example.com)' }),
+      screen.getByRole('radio', { name: 'Visitante: Ana Ejemplo (ana@example.com)' }),
     )
     await user.click(
       within(screen.getByRole('dialog')).getByRole('button', {
@@ -80,7 +80,43 @@ describe('translated failures', () => {
     expect(await screen.findByText(message)).toBeVisible()
     expect(screen.getByRole('dialog')).toBeVisible()
     expect(
-      screen.getByRole('checkbox', { name: 'Administrador: Ana Ejemplo (ana@example.com)' }),
+      screen.getByRole('radio', { name: 'Administrador: Ana Ejemplo (ana@example.com)' }),
+    ).toBeChecked()
+  })
+})
+
+describe('last administrator', () => {
+  test.each([
+    ['es', 'Sin rol', 'Sí, retirar rol', /es la única cuenta administradora/],
+    ['en', 'No role', 'Yes, remove role', /this is the only administrator account/],
+  ] as const)('explains in %s why the role was kept', async (locale, noRole, confirm, message) => {
+    const saveAction = vi.fn(async () => ({
+      ok: false as const,
+      reason: 'lastAdministrator' as const,
+    }))
+    const user = userEvent.setup()
+    render(
+      <UserRoleAssignment {...(meta.args as UserRoleAssignmentProps)} saveAction={saveAction} />,
+      locale,
+    )
+
+    await user.click(
+      screen.getByRole('radio', { name: `${noRole}: Ana Ejemplo (ana@example.com)` }),
+    )
+    const dialog = screen.getByRole('dialog')
+    await user.click(within(dialog).getByRole('button', { name: confirm }))
+
+    expect(saveAction).toHaveBeenCalledWith({
+      userId: 'demo-1',
+      roleIds: [],
+      previousRoleIds: ['demo-admin'],
+    })
+    expect(await screen.findByText(message)).toBeVisible()
+    // Nothing changed and the page is current, so the dialog stays open without a reload.
+    expect(dialog).toBeVisible()
+    expect(within(dialog).queryByRole('button', { name: /Recargar|Reload/ })).toBeNull()
+    expect(
+      screen.getByRole('radio', { name: 'Administrador: Ana Ejemplo (ana@example.com)' }),
     ).toBeChecked()
   })
 })

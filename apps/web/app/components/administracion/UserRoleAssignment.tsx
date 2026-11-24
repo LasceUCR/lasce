@@ -41,6 +41,10 @@ export function UserRoleAssignment({
       if (result.reason === 'unauthorized') {
         throw new RoleAssignmentError(t('unauthorized'), true)
       }
+      // Nothing changed and the page is current: cancelling is enough, no reload needed.
+      if (result.reason === 'lastAdministrator') {
+        throw new RoleAssignmentError(t('lastAdministrator'))
+      }
       throw new RoleAssignmentError(t('unknown'), true)
     }
     setUsers((current) =>

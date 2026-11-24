@@ -67,7 +67,11 @@ describe('UserRoleChangeDialog', () => {
 
   test('explains removal without promising an automatic replacement role', () => {
     render(<UserRoleChangeDialog {...(RemoveRole.args as UserRoleChangeDialogProps)} />)
-    expect(screen.getByText('El usuario quedará sin un rol asignado.')).toBeInTheDocument()
+    expect(
+      screen.getByText(
+        /^El usuario quedará sin rol: podrá iniciar sesión .* no tendrá ningún permiso/,
+      ),
+    ).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Sí, retirar rol' })).toBeInTheDocument()
   })
 
@@ -149,7 +153,7 @@ describe('UserRoleChangeDialog in English', () => {
     render(<UserRoleChangeDialog {...(OwnRole.args as UserRoleChangeDialogProps)} />, 'en')
 
     expect(screen.getByRole('heading', { name: 'Confirm role removal' })).toBeVisible()
-    expect(screen.getByText('The user will be left without an assigned role.')).toBeVisible()
+    expect(screen.getByText(/^The user will have no role: .* no permissions/)).toBeVisible()
     expect(screen.getByText(/You are changing your own role\./)).toBeVisible()
     expect(screen.getByRole('button', { name: 'Yes, remove role' })).toBeVisible()
   })

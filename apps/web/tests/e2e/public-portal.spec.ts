@@ -171,6 +171,26 @@ test('navigates through every public option and exposes the active page', async 
   }
 })
 
+test('reading pages use the portal column and keep paragraphs at a readable length', async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1920, height: 1000 })
+  await page.goto('/nosotros')
+  const reference = await page.locator('main .topic-hero').first().boundingBox()
+
+  for (const path of ['/fisica-solar', '/clima-espacial']) {
+    await page.goto(path)
+    const hero = await page.locator('main .topic-hero').first().boundingBox()
+    expect(Math.round(hero!.x)).toBe(Math.round(reference!.x))
+    expect(Math.round(hero!.width)).toBe(Math.round(reference!.width))
+
+    // Running text stays near --reading-measure (68ch) while the column is much wider. Every
+    // section intro is capped; /clima-espacial has no hero lead.
+    const intro = await page.locator('main .topic-section .topic-intro').first().boundingBox()
+    expect(intro!.width).toBeLessThan(hero!.width * 0.7)
+  }
+})
+
 test('displays space weather information without authentication', async ({ page }) => {
   const response = await page.goto('/clima-espacial')
 
