@@ -38,8 +38,9 @@ The job asks for "whatever is newest in this window," never for a specific frame
 why `lookbackMinutes` exists at all: given the archive's own ~15 minute publication lag (see
 [`suvi-downloader.md`](suvi-downloader.md#the-archive-lags-about-15-minutes)), a short window can
 legitimately come back empty, and the pipeline treats that as a normal outcome rather than a
-failure. `packages/jobs/src/schedules.ts` currently fires this job every 3 minutes per channel with
-a 5 minute lookback, so most runs are catching up on a frame the previous run had not seen yet.
+failure. `packages/jobs/src/schedules.ts` currently fires this job every minute for each of the six
+channels with a 30 minute lookback, so most runs are catching up on a frame the previous run had not
+seen yet. `schedules.test.ts` fails if a channel the contract accepts has no schedule.
 
 ## The four stages of `run()`
 
