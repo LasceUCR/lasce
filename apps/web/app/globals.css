@@ -2744,7 +2744,19 @@ a {
    `--truncated-line-height` is measured by the component; `1lh` covers the first paint. The
    outer element is a flex box so the float's percentage height resolves. */
 .truncated-text {
+  position: relative;
   display: flex;
+}
+
+/* An invisible copy of the text box, used to measure how much text fits (see `fitPrefix`). */
+.truncated-text-probe {
+  position: absolute;
+  top: 0;
+  right: 0;
+  left: 0;
+  display: block;
+  pointer-events: none;
+  visibility: hidden;
 }
 
 .truncated-text-body {
@@ -2753,22 +2765,10 @@ a {
 }
 
 .truncated-text-body.is-clamped {
-  --truncated-line: var(--truncated-line-height, 1lh);
+  --truncated-line: 1lh;
 
   overflow: hidden;
   max-height: calc(var(--truncated-lines) * var(--truncated-line));
-}
-
-.truncated-text-body.is-clamped::before {
-  content: '';
-  height: calc(100% - var(--truncated-line));
-  float: right;
-}
-
-.truncated-text-more {
-  margin-left: 4px;
-  float: right;
-  clear: both;
 }
 
 /* A text link at the end of the text, so it reads as part of it and does not compete with a
@@ -3686,21 +3686,6 @@ a {
 
   background: var(--page);
   color: var(--ink);
-}
-
-/* Reading pages (/fisica-solar, /clima-espacial): one centred column of the same 65rem as the
-   /datos header, instead of the 1332px used by pages built around galleries and grids. The
-   running text inside stays capped at --reading-measure (see below). */
-.topic-page-reading .topic-hero,
-.topic-page-reading .page-width {
-  width: min(100% - 64px, 65rem);
-}
-
-@media (max-width: 760px) {
-  .topic-page-reading .topic-hero,
-  .topic-page-reading .page-width {
-    width: min(100% - 32px, 65rem);
-  }
 }
 
 .content-flag {
@@ -6281,6 +6266,17 @@ a.acknowledgments-card:focus-visible {
 }
 
 .form-field input::placeholder {
+  color: #6b7f8f;
+}
+
+/* The shared dropdown (`Select`) takes the size of the inputs around it. */
+.form-field .select-trigger {
+  min-height: 56px;
+  padding: 0 16px;
+  font-size: 17px;
+}
+
+.form-field .select-trigger > [data-placeholder] {
   color: #6b7f8f;
 }
 
