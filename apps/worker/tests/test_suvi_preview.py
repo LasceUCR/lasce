@@ -21,6 +21,7 @@ from app.services.process_headers import SuviHeaderFields
 from app.services.suvi_preview import (
     color_table,
     frame_key,
+    orient,
     preview_key,
     publish_preview,
     render_webp,
@@ -103,7 +104,8 @@ def test_render_webp_colors_the_brightest_pixel_for_a_known_channel() -> None:
     pixels = decode(render_webp(matrix, "Fe171"))
 
     assert pixels.shape == (8, 8, 3)
-    r, g, b = (int(v) for v in pixels[-1, -1])
+    # The last FITS row is the top of the image once the frame is flipped north-up.
+    r, g, b = (int(v) for v in pixels[0, -1])
     assert not r == g == b
 
 
@@ -160,7 +162,7 @@ async def test_publish_preview_renders_with_the_frame_channel(
 ) -> None:
     seen: list[str] = []
 
-    def fake_render(matrix: np.ndarray, channel: str) -> bytes:
+    def fake_render(matrix: np.ndarray, channel: str, *_orientation: Any) -> bytes:
         seen.append(channel)
         return b"RIFF....WEBP"
 
@@ -170,3 +172,98 @@ async def test_publish_preview_renders_with_the_frame_channel(
     await publish_preview(AsyncMock(), np.zeros((2, 2)), header_fields(channel="He303"), FRAME_ID)
 
     assert seen == ["He303"]
+
+
+def marker(shape: tuple[int, int], row: int, col: int) -> np.ndarray:
+    pixels = np.zeros(shape, dtype=np.uint8)
+    pixels[row - 1 : row + 2, col - 1 : col + 2] = 255
+    return pixels
+
+
+def centroid(pixels: np.ndarray) -> tuple[float, float]:
+    rows, cols = np.nonzero(pixels > 64)
+    return float(rows.mean()), float(cols.mean())
+
+
+def test_orient_flips_the_bottom_up_fits_rows_so_the_first_row_lands_at_the_bottom() -> None:
+    pixels = marker((16, 16), 2, 8)
+
+    row, col = centroid(orient(pixels, None, None))
+
+    assert (row, col) == (13.0, 8.0)
+
+
+def test_orient_undoes_the_roll_so_solar_north_points_up() -> None:
+    """With ``CROTA`` = 90 the detector's +column axis is solar north (the frame's WCS puts north
+    along ``(sin CROTA, cos CROTA)`` in column/row terms). A marker 20 px that way from the disc
+    centre has to end up 20 px straight above it.
+    """
+    pixels = marker((64, 64), 32, 52)
+
+    row, col = centroid(orient(pixels, 90.0, (33.0, 33.0)))
+
+    assert row == pytest.approx(31.5 - 20, abs=1)
+    assert col == pytest.approx(31.5, abs=1)
+
+
+def test_orient_moves_an_off_centre_disc_to_the_middle_of_the_image() -> None:
+    pixels = marker((64, 64), 10, 10)
+
+    row, col = centroid(orient(pixels, 0.0, (11.0, 11.0)))
+
+    assert row == pytest.approx(31.5, abs=1)
+    assert col == pytest.approx(31.5, abs=1)
+
+
+def test_orient_pivots_on_the_image_middle_when_the_disc_centre_is_unknown() -> None:
+    pixels = marker((65, 65), 32, 52)
+
+    row, col = centroid(orient(pixels, 90.0, None))
+
+    assert row == pytest.approx(12, abs=1)
+    assert col == pytest.approx(32, abs=1)
+
+
+def test_orient_fills_the_corners_a_rotation_exposes_with_black() -> None:
+    pixels = np.full((32, 32), 200, dtype=np.uint8)
+
+    oriented = orient(pixels, 45.0, (16.5, 16.5))
+
+    assert oriented[0, 0] == 0
+    assert oriented[16, 16] == 200
+
+
+async def test_publish_preview_renders_with_the_frame_roll_and_disc_centre(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    seen: list[tuple[Any, ...]] = []
+
+    def fake_render(matrix: np.ndarray, *args: Any) -> bytes:
+        seen.append(args)
+        return b"RIFF....WEBP"
+
+    monkeypatch.setattr(suvi_preview, "render_webp", fake_render)
+    monkeypatch.setattr(suvi_preview, "_update_frame", AsyncMock())
+    fields = header_fields(roll_deg=336.3, sun_center_x=613.7, sun_center_y=623.3)
+
+    await publish_preview(AsyncMock(), np.zeros((2, 2)), fields, FRAME_ID)
+
+    assert seen == [("Fe093", 336.3, (613.7, 623.3))]
+
+
+async def test_publish_preview_skips_the_pivot_when_the_disc_centre_is_missing(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    seen: list[tuple[Any, ...]] = []
+
+    def fake_render(matrix: np.ndarray, *args: Any) -> bytes:
+        seen.append(args)
+        return b"RIFF....WEBP"
+
+    monkeypatch.setattr(suvi_preview, "render_webp", fake_render)
+    monkeypatch.setattr(suvi_preview, "_update_frame", AsyncMock())
+    fields = header_fields(roll_deg=10.0, sun_center_x=None)
+
+    await publish_preview(AsyncMock(), np.zeros((2, 2)), fields, FRAME_ID)
+
+    assert seen == [("Fe093", 10.0, None)]

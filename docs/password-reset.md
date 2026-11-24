@@ -29,7 +29,7 @@ email link ──▶ /restablecer-contrasena?token=…
 | Piece                                  | File                                                                                               | Covered by                                      |
 | -------------------------------------- | -------------------------------------------------------------------------------------------------- | ----------------------------------------------- |
 | Request page and action                | `apps/web/app/(public)/recuperar-contrasena/{page,actions}.ts(x)`                                  | Playwright (`tests/e2e/password-reset.spec.ts`) |
-| Reset page and action                  | `apps/web/app/(public)/restablecer-contrasena/{page,actions}.ts(x)`                                | Playwright                                      |
+| Reset page and action                  | `apps/web/app/(public)/restablecer-contrasena/{page,actions}.ts(x)`                                | Playwright, Vitest (`actions.test.ts`)          |
 | Routes, fields, schemas, states        | `apps/web/app/lib/auth/password-reset.ts`                                                          | Vitest, colocated                               |
 | Shared new-password rule               | `apps/web/app/lib/auth/password-rules.ts`                                                          | Vitest, colocated                               |
 | Tokens, hashing, expiry, the link      | `apps/web/app/lib/auth/password-reset-token.ts`                                                    | Vitest, colocated, no mocks                     |
@@ -84,10 +84,13 @@ the token up before hashing the password, so a made-up token costs no scrypt wor
 
 ## The password rule
 
-`password-rules.ts` holds the rule (8 to 128 characters, not trimmed, confirmation must match) and
-both registration and the reset form build their schemas from it. Issue #492 tightens the rule in
-that one file. Messages appear next to each field; an unexpected failure is a toast and the form
-keeps what was typed.
+`password-rules.ts` holds the rule (8 to 128 characters, not trimmed, at least one uppercase
+letter, one lowercase letter, one number and one special character, confirmation must match) and
+both registration and the reset form build their schemas from it. The character classes and the
+`PasswordRequirements` checklist shown under the new-password field are described in
+[registration.md](registration.md#password-requirements). A weak password is refused before the
+token is looked up, so the link keeps working and nothing changes. Messages appear next to each
+field; an unexpected failure is a toast and the form keeps what was typed.
 
 ## Rate limits
 

@@ -14,6 +14,7 @@ import {
 
 import { Button } from '../Button'
 import { FormField } from './FormField'
+import { PasswordRequirements } from './PasswordRequirements'
 
 export interface PasswordResetFormProps {
   /** The Server Action. It arrives as a prop so the component stays presentational. */
@@ -95,6 +96,7 @@ export function PasswordResetForm({
           type="password"
           value={password}
         />
+        <PasswordRequirements password={password} />
         <FormField
           autoComplete="new-password"
           error={state.fieldErrors.passwordConfirmation}

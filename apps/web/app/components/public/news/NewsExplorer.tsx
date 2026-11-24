@@ -240,11 +240,14 @@ export function NewsExplorer({
         {summary}
       </p>
 
-      {news.length === 0 && !(editMode && canCreate) ? (
+      {news.length === 0 && (
         <p className="content-empty" role="status">
           {hasQuery ? t('page.emptyQuery', { query }) : t('page.empty')}
         </p>
-      ) : (
+      )}
+
+      {/* In edit mode the list stays mounted even when empty, so the add card can appear. */}
+      {(news.length > 0 || (editMode && canCreate)) && (
         <div aria-busy={navigating || undefined} className="news-list">
           {editMode && canCreate && (
             <AddItemCard

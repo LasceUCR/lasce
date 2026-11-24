@@ -1,6 +1,7 @@
 import { fireEvent, screen } from '@testing-library/react'
 import { afterEach, describe, expect, test, vi } from 'vitest'
 
+import { mockTextLayout } from '@/app/lib/testing/mockTextLayout'
 import { renderWithIntl } from '@/app/lib/i18n/testing'
 
 import { PublicationCard, type PublicationCardProps } from './PublicationCard'
@@ -14,23 +15,6 @@ const institutionalArgs = InstitutionalReport.args as PublicationCardProps
  * in for both: the observer reports once on `observe`, and every element measures as `overflows`.
  * Same recipe as `TruncatedText`'s own tests (see `docs/truncated-text.md`).
  */
-function mockAbstractOverflow(overflows: boolean) {
-  vi.stubGlobal(
-    'ResizeObserver',
-    class {
-      callback: () => void
-      constructor(callback: () => void) {
-        this.callback = callback
-      }
-      observe() {
-        this.callback()
-      }
-      disconnect() {}
-    },
-  )
-  vi.spyOn(HTMLElement.prototype, 'scrollHeight', 'get').mockReturnValue(overflows ? 200 : 80)
-  vi.spyOn(HTMLElement.prototype, 'clientHeight', 'get').mockReturnValue(80)
-}
 
 afterEach(() => {
   vi.unstubAllGlobals()
@@ -80,12 +64,12 @@ describe('PublicationCard', () => {
   })
 
   test('offers "Leer más" inline when the abstract overflows, and expands it in place', () => {
-    mockAbstractOverflow(true)
+    mockTextLayout(true)
     renderWithIntl(<PublicationCard {...defaultArgs} />)
 
     const abstract = screen.getByText(defaultArgs.abstract)
     const toggle = screen.getByRole('button', { name: 'Leer más' })
-    expect(abstract).toContainElement(toggle)
+    expect(abstract.closest('.truncated-text')).toContainElement(toggle)
     expect(toggle).toHaveAttribute('aria-expanded', 'false')
 
     fireEvent.click(toggle)
@@ -101,7 +85,7 @@ describe('PublicationCard', () => {
   })
 
   test('leaves the abstract as plain text with no toggle when it fits', () => {
-    mockAbstractOverflow(false)
+    mockTextLayout(false)
     renderWithIntl(<PublicationCard {...defaultArgs} />)
 
     expect(screen.queryByRole('button', { name: /Leer más|Leer menos/ })).not.toBeInTheDocument()

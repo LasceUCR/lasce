@@ -275,7 +275,8 @@ alt text is `scientificData.images.alt`, written by `SuviImageSequence`.
 the login and registration cards (`auth.login`, `auth.registration`), each read directly by
 `LoginForm.tsx`/`RegistrationForm.tsx` for their own fixed text (labels, placeholders, button
 copy), while the card heading shown beside the other card is built server-side in `page.tsx` and
-passed down as a prop. `lib/auth/login.ts` and `lib/auth/registration.ts` re-export the Spanish
+passed down as a prop. The requirements checklist under both new-password fields (`PasswordRequirements.tsx`, also on
+`/restablecer-contrasena`) reads the shared `auth.passwordRequirements` namespace. `lib/auth/login.ts` and `lib/auth/registration.ts` re-export the Spanish
 text as `loginMessages`/`LOGIN_LABELS`/... and `registrationMessages`/`REGISTRATION_LABELS`/...,
 the default for request-less call sites (`login.test.ts`, `registration.test.ts`, the Playwright
 specs, which run with no cookie and so see Spanish). Their validation follows the same schema

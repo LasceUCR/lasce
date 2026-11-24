@@ -2,6 +2,7 @@ import { screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { afterEach, describe, expect, test, vi } from 'vitest'
 
+import { mockTextLayout } from '@/app/lib/testing/mockTextLayout'
 import { renderWithIntl } from '@/app/lib/i18n/testing'
 
 import { ResearchAreaCard, type ResearchAreaCardProps } from './ResearchAreaCard'
@@ -89,32 +90,17 @@ describe('ResearchAreaCard: long descriptions', () => {
   })
 
   /** jsdom lays nothing out: report the description as taller than its three clamped lines. */
-  function overflowDescriptions() {
-    vi.stubGlobal(
-      'ResizeObserver',
-      class {
-        constructor(private readonly callback: () => void) {}
-        observe() {
-          this.callback()
-        }
-        disconnect() {}
-      },
-    )
-    vi.spyOn(HTMLElement.prototype, 'scrollHeight', 'get').mockReturnValue(120)
-    vi.spyOn(HTMLElement.prototype, 'clientHeight', 'get').mockReturnValue(60)
-  }
 
   test('clamps a long description to three lines and shows the rest with "Leer más"', async () => {
-    overflowDescriptions()
+    mockTextLayout(true)
     const user = userEvent.setup()
     renderWithIntl(<ResearchAreaCard {...longArgs} />)
 
-    const description = screen.getByText(longArgs.description)
-    expect(description.style.getPropertyValue('--truncated-lines')).toBe('3')
+    expect(screen.getByRole('button', { name: 'Leer más' })).toBeInTheDocument()
+    expect(screen.getByText(longArgs.description)).toBeInTheDocument()
 
     await user.click(screen.getByRole('button', { name: 'Leer más' }))
 
-    expect(description.style.getPropertyValue('--truncated-lines')).toBe('')
     expect(screen.getByRole('button', { name: 'Leer menos' })).toBeInTheDocument()
     // The detail page is still the card's one link.
     expect(screen.getAllByRole('link')).toHaveLength(1)

@@ -28,6 +28,17 @@ export const Conflict: Story = {
     },
   },
 }
+/** The only administrator removing their own role: refused, nothing to reload. */
+export const LastAdministrator: Story = {
+  args: {
+    ...OwnRole.args,
+    onConfirm: async () => {
+      throw new RoleAssignmentError(
+        'No se cambió el rol: es la única cuenta administradora y la plataforma debe conservar al menos una. Asigna el rol de administrador a otra cuenta antes de volver a intentarlo.',
+      )
+    },
+  },
+}
 export const SaveFailure: Story = {
   args: {
     ...Default.args,

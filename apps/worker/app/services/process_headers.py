@@ -91,6 +91,9 @@ class SuviHeaderFields:
     # Only the metrics a card actually carried; a missing one is omitted
     # rather than written as a misleading zero.
     metrics: dict[str, float | int] = field(default_factory=dict)
+    # ``CROTA``: degrees the detector is rolled from solar north. Not a catalogue column (it
+    # stays in ``raw_header``); the preview needs it to render the disc north-up.
+    roll_deg: float | None = None
 
 
 def _require(header: Mapping[str, Any], keyword: str) -> Any:
@@ -252,6 +255,7 @@ class ProcessHeaders:
             quality_flag=quality_flag,
             raw_header=_jsonable(header),
             metrics=metrics,
+            roll_deg=_get_float(header, "CROTA"),
         )
 
     async def persist(self, fields: SuviHeaderFields) -> uuid.UUID:

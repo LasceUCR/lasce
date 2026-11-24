@@ -91,6 +91,8 @@ export interface TimeSeriesLayout {
 export interface TimeSeriesLayoutOptions extends Partial<TimeSeriesStyle> {
   /** The width to lay the chart out for, in CSS pixels; the default suits the PNG. */
   width?: number
+  /** Reserve a separate margin for a vertical quantity and unit label. */
+  withYAxisLabel?: boolean
 }
 
 /** Cleans floating-point noise from a tick (0.30000000000000004 → 0.3). */
@@ -161,7 +163,7 @@ export function layoutTimeSeries(
     ...TIME_SERIES_CHART,
     width,
     height: narrow ? 280 : TIME_SERIES_CHART.height,
-    left: narrow ? NARROW_LEFT : TIME_SERIES_CHART.left,
+    left: (narrow ? NARROW_LEFT : TIME_SERIES_CHART.left) + (options.withYAxisLabel ? 28 : 0),
     right: flareClasses
       ? narrow
         ? NARROW_FLARE_CLASS_MARGIN

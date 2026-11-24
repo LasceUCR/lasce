@@ -1641,6 +1641,70 @@ a {
   stroke-width: 1;
 }
 
+.data-chart-time-range {
+  display: block;
+  margin-bottom: 0.25rem;
+  color: var(--blue-dark);
+  font-size: 0.875rem;
+  overflow-wrap: anywhere;
+}
+
+.data-chart-axis-label {
+  fill: var(--blue-dark);
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.data-chart-guide {
+  margin-top: 1rem;
+  padding: 1rem;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--alice-blue);
+  color: var(--blue-dark);
+  font-size: 0.875rem;
+  line-height: 1.6;
+}
+
+.data-chart-guide h3 {
+  margin: 0 0 0.75rem;
+  font-size: 1rem;
+}
+
+.data-chart-guide-axes {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 17rem), 1fr));
+  gap: 1rem 1.5rem;
+  margin: 0;
+}
+
+.data-chart-guide-axes dt {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  margin-bottom: 0.375rem;
+  font-weight: 600;
+}
+
+.data-chart-guide-axes svg {
+  flex-shrink: 0;
+  color: var(--bright-teal-blue);
+}
+
+.data-chart-guide-axes dd {
+  margin: 0;
+}
+
+.data-chart-guide-axes .data-chart-guide-unit {
+  margin-top: 0.5rem;
+}
+
+.data-chart-guide .data-chart-guide-detail {
+  margin: 0.75rem 0 0;
+  color: var(--muted);
+  font-size: 0.8125rem;
+}
+
 .data-chart-axis {
   stroke: var(--muted);
   stroke-width: 1;
@@ -1800,9 +1864,24 @@ a {
   margin-bottom: 0.5rem;
 }
 
-.data-section-heading > svg {
+.data-section-heading > svg,
+.data-results-tags > svg {
   flex-shrink: 0;
   color: var(--blue-dark);
+}
+
+.data-results-tags {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+/* What the badge beside the query heading means: measured or simulated values. */
+.data-kind-hint {
+  margin: 0.5rem 0 0;
+  color: var(--muted);
+  font-size: 0.8125rem;
+  line-height: 1.5;
 }
 
 .data-query-form,
@@ -1884,9 +1963,10 @@ a {
   font-weight: 700;
 }
 
+/* Six bands: three by two, and two by three on a phone, so none sits alone on a row. */
 .data-wavelength-options {
-  display: flex;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 0.625rem;
 }
 
@@ -1900,6 +1980,24 @@ a {
   border-radius: 8px;
   font-size: 0.875rem;
   cursor: pointer;
+}
+
+/* The wavelength over a short line saying what the band shows. */
+.data-wavelength-text {
+  display: grid;
+  gap: 0.125rem;
+  min-width: 0;
+  line-height: 1.3;
+}
+
+.data-wavelength-description {
+  color: var(--muted);
+  font-size: 0.75rem;
+  font-weight: 400;
+}
+
+.data-wavelength-options label:has(:checked) .data-wavelength-description {
+  color: inherit;
 }
 
 .data-wavelength-options label:has(:checked) {
@@ -2210,6 +2308,21 @@ a {
   transition: background-color 120ms ease;
 }
 
+.select-option-text {
+  display: grid;
+  gap: 0.125rem;
+}
+
+.select-option-description {
+  color: var(--muted);
+  font-size: 0.8125rem;
+  font-weight: 400;
+}
+
+.select-option[aria-selected='true'] .select-option-description {
+  color: inherit;
+}
+
 .select-option > span,
 .select-group {
   min-width: 0;
@@ -2370,10 +2483,16 @@ a {
 .data-metadata,
 .data-summary {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr));
   gap: 0.75rem;
   margin: 1rem 0 0;
   font-size: 0.875rem;
+}
+
+/* Six metadata tiles: three by two, and two by three on a phone, so none sits alone on a row.
+   Minimum, maximum and latest value share one row at every width. */
+.data-metadata,
+.data-summary {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
 .data-metadata div,
@@ -2531,6 +2650,38 @@ a {
   }
 }
 
+@media (max-width: 560px) {
+  .data-metadata,
+  .data-wavelength-options {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .data-metadata,
+  .data-summary {
+    gap: 0.5rem;
+  }
+
+  .data-metadata div {
+    padding: 0.5rem 0.625rem;
+  }
+
+  .data-summary div {
+    padding: 0.5rem;
+  }
+
+  /* Three values side by side on a phone: smaller type, and a long unit wraps under the number. */
+  .data-summary strong {
+    font-size: 0.8125rem;
+  }
+}
+
+/* The narrowest phones: small enough that a value like -1,2346E-6 fits its tile unbroken. */
+@media (max-width: 400px) {
+  .data-summary strong {
+    font-size: 0.75rem;
+  }
+}
+
 /* Today's solar observations are independent of the historical query form. */
 .solar-today {
   width: min(100% - 64px, 65rem);
@@ -2587,6 +2738,7 @@ a {
 }
 
 .solar-today-controls .data-wavelengths {
+  flex: 1 1 32rem;
   padding: 0;
   border: 0;
 }
@@ -2744,7 +2896,19 @@ a {
    `--truncated-line-height` is measured by the component; `1lh` covers the first paint. The
    outer element is a flex box so the float's percentage height resolves. */
 .truncated-text {
+  position: relative;
   display: flex;
+}
+
+/* An invisible copy of the text box, used to measure how much text fits (see `fitPrefix`). */
+.truncated-text-probe {
+  position: absolute;
+  top: 0;
+  right: 0;
+  left: 0;
+  display: block;
+  pointer-events: none;
+  visibility: hidden;
 }
 
 .truncated-text-body {
@@ -2753,22 +2917,10 @@ a {
 }
 
 .truncated-text-body.is-clamped {
-  --truncated-line: var(--truncated-line-height, 1lh);
+  --truncated-line: 1lh;
 
   overflow: hidden;
   max-height: calc(var(--truncated-lines) * var(--truncated-line));
-}
-
-.truncated-text-body.is-clamped::before {
-  content: '';
-  height: calc(100% - var(--truncated-line));
-  float: right;
-}
-
-.truncated-text-more {
-  margin-left: 4px;
-  float: right;
-  clear: both;
 }
 
 /* A text link at the end of the text, so it reads as part of it and does not compete with a
@@ -3686,21 +3838,6 @@ a {
 
   background: var(--page);
   color: var(--ink);
-}
-
-/* Reading pages (/fisica-solar, /clima-espacial): one centred column of the same 65rem as the
-   /datos header, instead of the 1332px used by pages built around galleries and grids. The
-   running text inside stays capped at --reading-measure (see below). */
-.topic-page-reading .topic-hero,
-.topic-page-reading .page-width {
-  width: min(100% - 64px, 65rem);
-}
-
-@media (max-width: 760px) {
-  .topic-page-reading .topic-hero,
-  .topic-page-reading .page-width {
-    width: min(100% - 32px, 65rem);
-  }
 }
 
 .content-flag {
@@ -6284,6 +6421,17 @@ a.acknowledgments-card:focus-visible {
   color: #6b7f8f;
 }
 
+/* The shared dropdown (`Select`) takes the size of the inputs around it. */
+.form-field .select-trigger {
+  min-height: 56px;
+  padding: 0 16px;
+  font-size: 17px;
+}
+
+.form-field .select-trigger > [data-placeholder] {
+  color: #6b7f8f;
+}
+
 .form-field [aria-invalid='true'] {
   border-color: #b42318;
 }
@@ -6301,6 +6449,44 @@ a.acknowledgments-card:focus-visible {
 
 .form-field-error {
   color: #b42318;
+}
+
+/* Checklist under a new-password field (PasswordRequirements). A met requirement changes icon
+   and weight as well as colour, so the state does not rely on colour alone. */
+.password-requirements {
+  /* Sits right under its field, closer than the form's 22px gap between fields. */
+  margin-top: -12px;
+  color: var(--muted);
+  font-size: 14px;
+  line-height: 1.4;
+}
+
+.password-requirements-title {
+  margin: 0 0 6px;
+}
+
+.password-requirements-list {
+  display: grid;
+  gap: 4px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.password-requirement {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.password-requirement-icon {
+  flex: 0 0 1em;
+  text-align: center;
+}
+
+.password-requirement.is-met {
+  color: #067647;
+  font-weight: 600;
 }
 
 /* --- Registration card and page ------------------------------------------- */

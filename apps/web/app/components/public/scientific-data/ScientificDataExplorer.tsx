@@ -112,6 +112,7 @@ export function ScientificDataExplorer({
   const tValidation = useTranslations('scientificData.validation')
   const tErrors = useTranslations('scientificData.errors')
   const tOrigins = useTranslations('scientificData.origins')
+  const tCharts = useTranslations('scientificData.charts')
   const format = useFormatter()
   const querySchema = useMemo(
     () =>
@@ -427,6 +428,7 @@ export function ScientificDataExplorer({
     result?.visualization === 'time-series'
       ? timeSeriesStyle(result.product.code, result.parameter.code)
       : null
+  const isExisFlux = result?.instrument.code === 'EXIS' && result.parameter.code !== 'mgii_index'
   // The class of the real maximum, from every reading, not only the points drawn.
   const peakClass = chartStyle?.flareClasses && summary ? flareClass(summary.maximum) : null
 
@@ -454,6 +456,9 @@ export function ScientificDataExplorer({
           {selectedSource.dataKind === 'observed' ? t('badgeObserved') : t('badgeSimulated')}
         </span>
       </div>
+      <p className="data-kind-hint">
+        {selectedSource.dataKind === 'observed' ? t('badgeObservedHint') : t('badgeSimulatedHint')}
+      </p>
 
       {hasConsulted && (
         <>
@@ -529,11 +534,15 @@ export function ScientificDataExplorer({
                 value: product.code,
                 label: `${product.name}${product.name.includes(`(${product.code})`) ? '' : ` (${product.code})`}${product.available ? '' : t('pendingSuffix')}`,
                 group: `${instrument.code} — ${instrument.name}`,
+                description: product.description,
                 disabled: !product.available,
               })),
             )}
           />
           <div className="data-field-details" id="scientific-product-hint">
+            {selected?.product.description ? (
+              <span className="data-field-hint">{selected.product.description}</span>
+            ) : null}
             {selected?.product.availabilityNote ? (
               <span className="data-field-hint">{selected.product.availabilityNote}</span>
             ) : null}
@@ -672,11 +681,20 @@ export function ScientificDataExplorer({
                       : ` (${result.product.code})`}
                   </h2>
                 </div>
-                {result.visualization === 'image-sequence' ? (
-                  <Images aria-hidden="true" size={25} strokeWidth={1.6} />
-                ) : (
-                  <ChartNoAxesCombined aria-hidden="true" size={25} strokeWidth={1.6} />
-                )}
+                {/* The satellite sits here rather than in the metadata, which keeps those tiles to
+                    six so they fill whole rows. */}
+                <div className="data-results-tags">
+                  {result.origin.satellite ? (
+                    <span className="topic-badge">
+                      {t('satelliteBadge', { number: result.origin.satellite })}
+                    </span>
+                  ) : null}
+                  {result.visualization === 'image-sequence' ? (
+                    <Images aria-hidden="true" size={25} strokeWidth={1.6} />
+                  ) : (
+                    <ChartNoAxesCombined aria-hidden="true" size={25} strokeWidth={1.6} />
+                  )}
+                </div>
               </div>
 
               <dl className="data-metadata">
@@ -718,12 +736,6 @@ export function ScientificDataExplorer({
                   <dt>{t('sourceResultLabel')}</dt>
                   <dd>{origin?.provider}</dd>
                 </div>
-                {result.origin.satellite ? (
-                  <div>
-                    <dt>{t('satelliteResultLabel')}</dt>
-                    <dd>{t('satelliteValue', { number: result.origin.satellite })}</dd>
-                  </div>
-                ) : null}
               </dl>
 
               <Notice tone="info">{origin?.notice}</Notice>
@@ -773,6 +785,8 @@ export function ScientificDataExplorer({
                     points={result.points}
                     unit={result.parameter.unit}
                     chartStyle={chartStyle ?? undefined}
+                    quantityLabel={isExisFlux ? tCharts('flux') : undefined}
+                    explainSolarFlux={isExisFlux}
                   />
 
                   <DataTable

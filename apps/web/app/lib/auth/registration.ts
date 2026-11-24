@@ -67,6 +67,11 @@ export type RegistrationValidationMessages = Pick<
   | 'passwordRequired'
   | 'passwordTooShort'
   | 'passwordTooLong'
+  | 'passwordMissingCharacters'
+  | 'passwordNeedsUppercase'
+  | 'passwordNeedsLowercase'
+  | 'passwordNeedsNumber'
+  | 'passwordNeedsSpecial'
   | 'confirmationRequired'
   | 'confirmationMismatch'
 >
