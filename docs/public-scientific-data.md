@@ -257,8 +257,19 @@ These styles use scoped classes in `globals.css`; shared selects and other page 
 
 - `Notice` exposes information, warning and error tones with an explicit accessible role.
 - `DataTable` provides a collapsible, keyboard-scrollable table with a visible caption.
-- `ScientificDataChart` accepts values, labels and units through props; the time axis uses actual
+- `ScientificDataChart` accepts values, labels and units through props. EXIS flux channels label
+  the Y-axis as `Flujo (<unit>)` / `Flux (<unit>)` using the result's unit; the Mg II index is not
+  labeled as flux. A wrapping caption below every time-series chart gives the first and last
+  plotted dates and times in UTC, localized to the site language. These are the plotted bounds
+  (after log-scale filtering), which can be narrower than the requested interval. The time axis uses actual
   timestamps rather than evenly spacing irregular observations.
+  EXIS flux charts in W/m² also include a localized **How to read this chart** note: the vertical
+  axis measures solar energy received per second and per square metre in the selected band; the
+  horizontal axis shows when each measurement was taken in UTC. The note expands the unit and,
+  only for logarithmic charts, explains scientific notation with a decimal example and a tenfold
+  increase. The Mg II index and other quantities do not receive the solar-flux explanation.
+  Scientific references: [GOES X-ray axes (NASA)](https://hdrl.gsfc.nasa.gov/LWS_Space_Weather/GOES_Xray_descrip.html)
+  and [UTC as an international time reference (BIPM)](https://www.bipm.org/en/time-metrology).
 - `DynamicSpectrumChart` receives its title, caption and frequency unit from the caller, without
   assuming a source or whether the observations are simulated.
 

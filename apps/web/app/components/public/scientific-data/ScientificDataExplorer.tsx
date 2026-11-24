@@ -112,6 +112,7 @@ export function ScientificDataExplorer({
   const tValidation = useTranslations('scientificData.validation')
   const tErrors = useTranslations('scientificData.errors')
   const tOrigins = useTranslations('scientificData.origins')
+  const tCharts = useTranslations('scientificData.charts')
   const format = useFormatter()
   const querySchema = useMemo(
     () =>
@@ -427,6 +428,7 @@ export function ScientificDataExplorer({
     result?.visualization === 'time-series'
       ? timeSeriesStyle(result.product.code, result.parameter.code)
       : null
+  const isExisFlux = result?.instrument.code === 'EXIS' && result.parameter.code !== 'mgii_index'
   // The class of the real maximum, from every reading, not only the points drawn.
   const peakClass = chartStyle?.flareClasses && summary ? flareClass(summary.maximum) : null
 
@@ -783,6 +785,8 @@ export function ScientificDataExplorer({
                     points={result.points}
                     unit={result.parameter.unit}
                     chartStyle={chartStyle ?? undefined}
+                    quantityLabel={isExisFlux ? tCharts('flux') : undefined}
+                    explainSolarFlux={isExisFlux}
                   />
 
                   <DataTable

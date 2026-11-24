@@ -2044,6 +2044,18 @@
       }
     },
     "charts": {
+      "flux": "Flux",
+      "axisLabel": "{quantity} ({unit})",
+      "timeRange": "Interval: {start} – {end} UTC",
+      "guide": {
+        "title": "How to read this chart",
+        "verticalTitle": "Vertical axis: solar flux",
+        "verticalMeaning": "Shows the solar energy received per second and per square metre in the selected wavelength band. The higher the line, the greater the flux.",
+        "unitMeaning": "W/m² means watts per square metre.",
+        "horizontalTitle": "Horizontal axis: time",
+        "horizontalMeaning": "Shows when each measurement was taken. Time moves from left to right. Times are in UTC (Coordinated Universal Time), a shared time reference for comparing observations.",
+        "logScaleMeaning": "{small} equals {decimal}. Going from {small} to {large} means ten times more flux (logarithmic scale)."
+      },
       "areaLabel": "Chart area: {label}",
       "title": "Chart of {label}",
       "description": "Series of {count} measurements between {start} and {end} UTC. The minimum value is {minimum} and the maximum is {maximum} {unit}.",
