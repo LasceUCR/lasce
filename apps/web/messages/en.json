@@ -1857,7 +1857,15 @@
       },
       "suvi": {
         "name": "Solar Ultraviolet Imager",
-        "imageProductName": "Solar images: {wavelength} ({code})"
+        "imageProductName": "Solar images: {wavelength} ({code})",
+        "bands": {
+          "Fe093": "Flares and very hot plasma",
+          "Fe131": "Flares (the hottest plasma)",
+          "Fe171": "Quiet corona and loops",
+          "Fe195": "Corona and coronal holes",
+          "Fe284": "Active regions",
+          "He303": "Chromosphere and prominences"
+        }
       },
       "rosacI1": {
         "name": "Instrument 1 (to be defined)",
@@ -1967,8 +1975,10 @@
     "explorer": {
       "kicker": "Public query",
       "title": "Configure the data you want to visualize",
-      "badgeObserved": "Observed data",
+      "badgeObserved": "Satellite-measured data",
       "badgeSimulated": "Simulation",
+      "badgeObservedHint": "Real measurements recorded by instruments on board satellites.",
+      "badgeSimulatedHint": "Computer-generated demonstration values; not real measurements.",
       "sourceLabel": "Data source",
       "productLabel": "Instrument and product",
       "parameterLabel": "Channel or parameter",
@@ -1994,8 +2004,6 @@
       "dateResultLabel": "Date",
       "intervalResultLabel": "Interval",
       "sourceResultLabel": "Source",
-      "satelliteResultLabel": "Satellite",
-      "satelliteValue": "GOES-{number}",
       "emptyTitle": "No data available",
       "emptyImageMessage": "No solar images are available for the selected band, date and time range. Select another band or try again later.",
       "emptyDataMessage": "No observations were found for the selected product, date and time range. Adjust the criteria and try again.",
@@ -2023,7 +2031,8 @@
       "localIntervalResultLabel": "Costa Rica time (UTC−6)",
       "localDayBefore": "{time} (previous day)",
       "localDayAfter": "{time} (next day)",
-      "crossesMidnightResult": "(ends the next day)"
+      "crossesMidnightResult": "(ends the next day)",
+      "satelliteBadge": "Satellite GOES-{number}"
     },
     "downloads": {
       "title": "Downloads",
