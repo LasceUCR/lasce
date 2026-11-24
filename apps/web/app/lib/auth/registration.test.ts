@@ -16,8 +16,8 @@ const valid: RegistrationInput = {
   email: 'ana.perez@ucr.ac.cr',
   institution: 'Universidad de Costa Rica',
   countryCode: 'CR',
-  password: 'una contraseña larga',
-  passwordConfirmation: 'una contraseña larga',
+  password: 'Una contraseña larga 1!',
+  passwordConfirmation: 'Una contraseña larga 1!',
 }
 
 function formDataFrom(entries: Record<string, string | Blob>) {
@@ -110,6 +110,21 @@ describe('validateRegistration', () => {
         countryCode: registrationMessages.countryRequired,
         password: registrationMessages.passwordTooShort,
         passwordConfirmation: registrationMessages.confirmationMismatch,
+      },
+    })
+  })
+
+  test('rejects a password missing a character class and names what is missing', () => {
+    const result = validateRegistration({
+      ...valid,
+      password: 'una contraseña larga',
+      passwordConfirmation: 'una contraseña larga',
+    })
+
+    expect(result).toEqual({
+      ok: false,
+      fieldErrors: {
+        password: `${registrationMessages.passwordMissingCharacters} ${registrationMessages.passwordNeedsUppercase}, ${registrationMessages.passwordNeedsNumber}, ${registrationMessages.passwordNeedsSpecial}.`,
       },
     })
   })

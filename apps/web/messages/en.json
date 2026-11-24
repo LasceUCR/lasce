@@ -2704,7 +2704,7 @@
         "countryCode": "Select a country"
       },
       "requiredNote": "All fields are required.",
-      "passwordHint": "At least 8 characters.",
+      "passwordHint": "8 to 128 characters, with at least one uppercase letter, one lowercase letter, one number and one special character.",
       "submit": "Create account",
       "submitting": "Creating account...",
       "successTitle": "Account created",
@@ -2723,6 +2723,11 @@
         "passwordRequired": "Enter a password.",
         "passwordTooShort": "The password must be at least 8 characters long.",
         "passwordTooLong": "The password cannot exceed 128 characters.",
+        "passwordMissingCharacters": "The password must include:",
+        "passwordNeedsUppercase": "an uppercase letter",
+        "passwordNeedsLowercase": "a lowercase letter",
+        "passwordNeedsNumber": "a number",
+        "passwordNeedsSpecial": "a special character",
         "confirmationRequired": "Repeat your password.",
         "confirmationMismatch": "The passwords do not match.",
         "reviewFields": "Review the marked fields to continue.",
@@ -2767,7 +2772,7 @@
           "password": "New password",
           "passwordConfirmation": "Repeat password"
         },
-        "passwordHint": "At least 8 characters.",
+        "passwordHint": "8 to 128 characters, with at least one uppercase letter, one lowercase letter, one number and one special character.",
         "submit": "Save password",
         "submitting": "Saving...",
         "invalidTitle": "This link is not valid",
@@ -2777,6 +2782,11 @@
           "passwordRequired": "Enter a password.",
           "passwordTooShort": "The password must be at least 8 characters long.",
           "passwordTooLong": "The password cannot be longer than 128 characters.",
+          "passwordMissingCharacters": "The password must include:",
+          "passwordNeedsUppercase": "an uppercase letter",
+          "passwordNeedsLowercase": "a lowercase letter",
+          "passwordNeedsNumber": "a number",
+          "passwordNeedsSpecial": "a special character",
           "confirmationRequired": "Repeat your password.",
           "confirmationMismatch": "The passwords do not match.",
           "unexpected": "We could not save the password. Try again in a few minutes."
@@ -2792,6 +2802,18 @@
         "ignore": "If you did not ask for this, ignore this message: your password will not change.",
         "signature": "Solar Astrophysics and Space Weather Laboratory, University of Costa Rica"
       }
+    },
+    "passwordRequirements": {
+      "title": "The password must have:",
+      "items": {
+        "length": "8 to 128 characters",
+        "uppercase": "An uppercase letter",
+        "lowercase": "A lowercase letter",
+        "number": "A number",
+        "special": "A special character, such as ! # $ or @"
+      },
+      "met": "Met:",
+      "unmet": "Not met:"
     }
   },
   "account": {

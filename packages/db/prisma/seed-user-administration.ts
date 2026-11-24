@@ -12,7 +12,9 @@ if (!['localhost', '127.0.0.1', '[::1]'].includes(database.hostname)) {
 const { prisma } = await import('../src/index')
 const { UserRole } = await import('../generated/client/enums')
 const suffix = randomUUID().slice(0, 8)
-const password = randomBytes(18).toString('base64url')
+// The fixed tail guarantees every character class the new-password rule asks for (issue #492),
+// so the printed password is also accepted by the registration and reset forms.
+const password = `${randomBytes(18).toString('base64url')}-Aa1`
 const passwordHash = await hashPassword(password)
 try {
   const roles = [...Object.values(UserRole), null]

@@ -19,6 +19,7 @@ import {
   registroIntro,
   type RegistrationFieldName,
 } from '@/app/lib/auth/registration'
+import es from '@/messages/es.json' with { type: 'json' }
 
 // The local database persists between runs and CI starts from an empty one, so
 // every account created here gets an address no earlier run could have used.
@@ -30,12 +31,14 @@ const expect = baseExpect.configure({ timeout: 15_000 })
 const runId = `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`
 const uniqueEmail = (tag: string) => `registro-${tag}-${runId}@example.com`
 
+const passwordRequirementsCopy = es.auth.passwordRequirements
+
 const validValues = {
   fullName: 'Ana Pérez Rojas',
   institution: 'Universidad de Costa Rica',
   countryCode: 'CR',
-  password: 'una contraseña larga',
-  passwordConfirmation: 'una contraseña larga',
+  password: 'Una contraseña larga 1!',
+  passwordConfirmation: 'Una contraseña larga 1!',
 }
 
 const requiredMessages: Record<RegistrationFieldName, string> = {
@@ -263,6 +266,40 @@ test('rejects invalid formats and keeps the values that were fine', async ({ pag
   await expect(field(page, 'email')).toHaveValue('no-es-un-correo')
   await expect(field(page, 'password')).toHaveValue('1234567')
   await expect(field(page, 'passwordConfirmation')).toHaveValue('otra cosa')
+})
+
+test('refuses a password without every character type and creates no account', async ({ page }) => {
+  const email = uniqueEmail('weak')
+  const requirements = registrationCard(page).getByRole('list', {
+    name: passwordRequirementsCopy.title,
+  })
+
+  await openRegistration(page)
+  await fillRegistration(page, {
+    ...validValues,
+    email,
+    password: 'una contraseña larga',
+    passwordConfirmation: 'una contraseña larga',
+  })
+  // The checklist already shows what is missing before the form is sent.
+  await expect(
+    requirements.getByRole('listitem').filter({ hasText: passwordRequirementsCopy.items.number }),
+  ).toContainText(passwordRequirementsCopy.unmet)
+  await submitButton(page).click()
+
+  await expect(field(page, 'password')).toBeFocused()
+  await expect(field(page, 'password')).toHaveAccessibleDescription(
+    describedBy(
+      `${registrationMessages.passwordMissingCharacters} ${registrationMessages.passwordNeedsUppercase}, ${registrationMessages.passwordNeedsNumber}, ${registrationMessages.passwordNeedsSpecial}.`,
+    ),
+  )
+  await expect(page.getByRole('status')).toHaveCount(0)
+
+  // No account was created: the same address registers once the password is fixed.
+  await openRegistration(page)
+  await fillRegistration(page, { ...validValues, email })
+  await submitButton(page).click()
+  await expect(page.getByRole('status')).toBeVisible()
 })
 
 test('does not create a second account for an email that is already registered', async ({

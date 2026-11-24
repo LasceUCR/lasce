@@ -20,7 +20,7 @@ const SMTP_PORT = process.env.MAILPIT_SMTP_PORT ?? '1025'
 
 const copy = es.auth.passwordReset
 const admin = es.administration.email
-const newPassword = 'una contraseña nueva y larga'
+const newPassword = 'Una contraseña nueva y larga 1!'
 
 interface MailpitSummary {
   ID: string
@@ -155,6 +155,15 @@ test('resets a forgotten password, ends old sessions and works only once', async
     await waitForHydration(page, '.registration-form')
     const password = page.getByLabel(copy.reset.labels.password, { exact: true })
     const confirmation = page.getByLabel(copy.reset.labels.passwordConfirmation, { exact: true })
+    await password.fill('una contraseña nueva y larga')
+    await confirmation.fill('una contraseña nueva y larga')
+    await page.getByRole('button', { name: copy.reset.submit }).click()
+    // The description is the hint followed by the error, compared as plain text.
+    const { validation } = copy.reset
+    await expect(password).toHaveAccessibleDescription(
+      `${copy.reset.passwordHint} ${validation.passwordMissingCharacters} ${validation.passwordNeedsUppercase}, ${validation.passwordNeedsNumber}, ${validation.passwordNeedsSpecial}.`,
+    )
+
     await password.fill(newPassword)
     await confirmation.fill('otra contraseña distinta')
     await page.getByRole('button', { name: copy.reset.submit }).click()

@@ -6387,6 +6387,44 @@ a.acknowledgments-card:focus-visible {
   color: #b42318;
 }
 
+/* Checklist under a new-password field (PasswordRequirements). A met requirement changes icon
+   and weight as well as colour, so the state does not rely on colour alone. */
+.password-requirements {
+  /* Sits right under its field, closer than the form's 22px gap between fields. */
+  margin-top: -12px;
+  color: var(--muted);
+  font-size: 14px;
+  line-height: 1.4;
+}
+
+.password-requirements-title {
+  margin: 0 0 6px;
+}
+
+.password-requirements-list {
+  display: grid;
+  gap: 4px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.password-requirement {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.password-requirement-icon {
+  flex: 0 0 1em;
+  text-align: center;
+}
+
+.password-requirement.is-met {
+  color: #067647;
+  font-weight: 600;
+}
+
 /* --- Registration card and page ------------------------------------------- */
 
 .registration-page {
