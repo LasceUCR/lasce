@@ -53,8 +53,8 @@ The editing data (every language and the version) reaches the page only for an a
 without the grant is rejected and stores nothing.
 
 `ScientificToolsManager` lists the cards (`ScientificToolCard`), wraps each one in
-`EditableWrapper` for edit and delete, and puts an `AddItemCard` after the list.
-`ScientificToolForm` is shared by add and edit. It has the name, the description in `LanguageTabs`
+`EditableWrapper` for edit and delete, and puts an `AddItemCard` before the cards or below the empty
+state when no tools exist. `ScientificToolForm` is shared by add and edit. It has the name, the description in `LanguageTabs`
 with `TranslationReview`, the access URL and a `FileDropInput` for the image. The form points at
 the invalid field and language, keeps what was typed when a save fails, and asks before discarding
 changes. Outcomes are reported with toasts through `useRequestFeedback`
