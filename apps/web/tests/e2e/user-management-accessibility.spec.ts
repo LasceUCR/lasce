@@ -16,23 +16,24 @@ test('disables role changes until the client can open the confirmation dialog', 
     await route.continue()
   })
   const row = page.getByRole('row', { name: new RegExp(fixture.admin.email) })
-  const checkbox = row.getByRole('checkbox', { name: /^Persona administradora:/ })
+  const option = row.getByRole('radio', { name: /^Persona administradora:/ })
+  const noRole = row.getByRole('radio', { name: /^Sin rol:/ })
   const details = row.getByRole('button', { name: fixture.admin.fullName, exact: true })
   try {
     try {
       await page.goto('/administracion/usuarios', { waitUntil: 'commit' })
-      await expect(checkbox).toBeChecked()
-      await expect(checkbox).toBeDisabled()
+      await expect(option).toBeChecked()
+      await expect(option).toBeDisabled()
       await expect(details).toBeDisabled()
     } finally {
       releaseScripts()
     }
     await expect(details).toBeEnabled()
-    await checkbox.click()
+    await noRole.click()
     const dialog = page.getByRole('dialog', { name: 'Confirmar retiro de rol' })
     await expect(dialog.getByText(/perderás el acceso/)).toBeVisible()
     await dialog.getByRole('button', { name: 'No, cancelar' }).click()
-    await expect(checkbox).toBeChecked()
+    await expect(option).toBeChecked()
   } finally {
     await fixture.cleanup()
   }
@@ -60,8 +61,8 @@ test('supports narrow screens, long names, keyboard recovery and conflicting cha
     let dialog = page.getByRole('dialog')
     expect(await dialog.evaluate((el) => el.scrollWidth <= el.clientWidth)).toBe(true)
     await page.keyboard.press('Escape')
-    const checkbox = row.getByRole('checkbox', { name: /^Asistente:/ })
-    await checkbox.focus()
+    const option = row.getByRole('radio', { name: /^Asistente:/ })
+    await option.focus()
     await page.keyboard.press('Space')
     dialog = page.getByRole('dialog')
     await expect(dialog.getByRole('button', { name: 'No, cancelar' })).toBeFocused()
@@ -83,10 +84,10 @@ test('supports narrow screens, long names, keyboard recovery and conflicting cha
     await dialog.getByRole('button', { name: 'Cerrar notificación' }).click()
     await dialog.getByRole('button', { name: 'Recargar página' }).click()
     await expect(page.getByRole('dialog')).toHaveCount(0)
-    await expect(row.getByRole('checkbox', { name: /^Persona administradora:/ })).toBeChecked()
+    await expect(row.getByRole('radio', { name: /^Persona administradora:/ })).toBeChecked()
     await page
       .getByRole('row', { name: new RegExp(fixture.admin.email) })
-      .getByRole('checkbox', { name: /^Persona administradora:/ })
+      .getByRole('radio', { name: /^Sin rol:/ })
       .click()
     await expect(page.getByRole('dialog').getByText(/perderás el acceso/)).toBeVisible()
     await page.setViewportSize({ width: 640, height: 360 })

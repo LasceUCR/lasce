@@ -63,7 +63,7 @@
   outline: 2px solid var(--blue-dark);
   outline-offset: 3px;
 }
-.checkboxTarget {
+.optionTarget {
   display: flex;
   align-items: center;
   justify-content: center;

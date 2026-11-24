@@ -90,3 +90,21 @@ export const LargeGroups: Story = {
     ],
   },
 }
+
+/** SUVI bands, each with a second line saying what it shows. */
+export const WithDescriptions: Story = {
+  args: {
+    ...Default.args,
+    value: 'Fe171',
+    options: [
+      ['Fe171', '171 Å', 'Corona tranquila y bucles'],
+      ['Fe195', '195 Å', 'Corona y agujeros coronales'],
+      ['He303', '304 Å', 'Cromosfera y protuberancias'],
+    ].map(([code, wavelength, description]) => ({
+      value: code!,
+      label: `Imágenes solares: ${wavelength} (${code})`,
+      description,
+      group: suvi,
+    })),
+  },
+}

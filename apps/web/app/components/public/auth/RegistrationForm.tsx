@@ -15,6 +15,7 @@ import {
 import { Button } from '../Button'
 import { FormField } from './FormField'
 import { PasswordRequirements } from './PasswordRequirements'
+import { SelectField } from './SelectField'
 
 export interface RegistrationFormHeading {
   title: string
@@ -152,8 +153,7 @@ export function RegistrationForm({
           placeholder={t('placeholders.institution')}
           required
         />
-        <FormField
-          autoComplete="country"
+        <SelectField
           defaultValue={state.values.countryCode}
           error={state.fieldErrors.countryCode}
           label={t('labels.countryCode')}

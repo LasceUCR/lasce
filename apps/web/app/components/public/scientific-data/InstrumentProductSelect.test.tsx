@@ -7,9 +7,10 @@ import {
   InstrumentProductSelect,
   type InstrumentProductSelectProps,
 } from './InstrumentProductSelect'
-import { Default, LargeGroups } from './InstrumentProductSelect.stories'
+import { Default, LargeGroups, WithDescriptions } from './InstrumentProductSelect.stories'
 
 const groupedArgs = Default.args as InstrumentProductSelectProps
+const describedArgs = WithDescriptions.args as InstrumentProductSelectProps
 
 describe('InstrumentProductSelect', () => {
   test('shows only instruments initially and expands products without committing a selection', async () => {
@@ -36,6 +37,34 @@ describe('InstrumentProductSelect', () => {
     expect(screen.queryByRole('tree')).not.toBeInTheDocument()
     await user.click(trigger)
     expect(screen.getAllByRole('treeitem')).toHaveLength(3)
+  })
+
+  test('shows a description under an option and reads it after the option name', async () => {
+    const user = userEvent.setup()
+    const onChange = vi.fn()
+    renderWithIntl(<InstrumentProductSelect {...describedArgs} onChange={onChange} />)
+
+    const trigger = screen.getByRole('combobox', { name: describedArgs.label })
+    expect(trigger).toHaveTextContent('Imágenes solares: 171 Å (Fe171)')
+    expect(trigger).not.toHaveTextContent('Corona tranquila')
+    await user.click(trigger)
+    await user.click(screen.getByRole('treeitem', { name: /^SUVI/ }))
+    const option = screen.getByRole('treeitem', { name: 'Imágenes solares: 304 Å (He303)' })
+    expect(option).toHaveAccessibleDescription('Cromosfera y protuberancias')
+    expect(option).toHaveTextContent('Cromosfera y protuberancias')
+    await user.click(option)
+    expect(onChange).toHaveBeenCalledWith('He303')
+  })
+
+  test('names an option without a description by its label alone', async () => {
+    const user = userEvent.setup()
+    renderWithIntl(<InstrumentProductSelect {...groupedArgs} />)
+
+    await user.click(screen.getByRole('combobox', { name: groupedArgs.label }))
+    await user.click(screen.getByRole('treeitem', { name: /^MAG/ }))
+    expect(screen.getByRole('treeitem', { name: 'Campo geomagnético' })).not.toHaveAttribute(
+      'aria-describedby',
+    )
   })
 
   test('navigates instrument parents and product children with the keyboard', async () => {

@@ -2,6 +2,7 @@
 
 import { ArrowRight, RefreshCw, Sun } from 'lucide-react'
 import { useFormatter, useTranslations } from 'next-intl'
+import { useId } from 'react'
 
 import { Button } from '@/app/components/public/Button'
 import { Notice } from '@/app/components/public/Notice'
@@ -48,6 +49,7 @@ export function SolarToday({
 }: SolarTodayProps) {
   const t = useTranslations('scientificData.today')
   const format = useFormatter()
+  const bandId = useId()
   const solarTimeRanges = [
     { value: 'day', label: t('ranges.day') },
     { value: '6', label: t('ranges.h6') },
@@ -80,19 +82,33 @@ export function SolarToday({
         <fieldset className="data-wavelengths" disabled={disabled}>
           <legend>{t('wavelengthsLegend')}</legend>
           <div className="data-wavelength-options">
-            {instrument.products.map((item) => (
-              <label key={item.code}>
-                <input
-                  type="radio"
-                  name="today-wavelength"
-                  value={item.code}
-                  checked={product === item.code}
-                  disabled={!item.available}
-                  onChange={() => onProductChange(item.code)}
-                />
-                <span>{item.wavelength ?? item.name}</span>
-              </label>
-            ))}
+            {instrument.products.map((item) => {
+              // The band is the radio's name; what it shows is read after it as a description.
+              const labelId = `${bandId}-${item.code}`
+              const descriptionId = item.description ? `${labelId}-description` : undefined
+              return (
+                <label key={item.code}>
+                  <input
+                    aria-describedby={descriptionId}
+                    aria-labelledby={labelId}
+                    type="radio"
+                    name="today-wavelength"
+                    value={item.code}
+                    checked={product === item.code}
+                    disabled={!item.available}
+                    onChange={() => onProductChange(item.code)}
+                  />
+                  <span className="data-wavelength-text">
+                    <span id={labelId}>{item.wavelength ?? item.name}</span>
+                    {descriptionId ? (
+                      <span className="data-wavelength-description" id={descriptionId}>
+                        {item.description}
+                      </span>
+                    ) : null}
+                  </span>
+                </label>
+              )
+            })}
           </div>
         </fieldset>
         <div className="solar-today-range data-field">

@@ -21,19 +21,20 @@ describe('UserRoleAssignmentDemo', () => {
     const user = userEvent.setup()
     render(<UserRoleAssignmentDemo {...(Default.args as UserRoleAssignmentDemoProps)} />)
     const ana = within(screen.getByRole('row', { name: /ana@example.com/ }))
-    await user.click(ana.getByRole('checkbox', { name: /^Visitante:/ }))
+    await user.click(ana.getByRole('radio', { name: /^Visitante:/ }))
     await user.click(screen.getByRole('button', { name: 'Sí, cambiar rol' }))
     await screen.findByText('Rol actualizado para Ana Ejemplo: Visitante.')
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
-    expect(ana.getByRole('checkbox', { name: /^Visitante:/ })).toBeChecked()
-    expect(ana.getByRole('checkbox', { name: /^Administrador:/ })).not.toBeChecked()
-    expect(ana.getByRole('checkbox', { name: /^Asistente:/ })).not.toBeChecked()
+    expect(ana.getByRole('radio', { name: /^Visitante:/ })).toBeChecked()
+    expect(ana.getByRole('radio', { name: /^Administrador:/ })).not.toBeChecked()
+    expect(ana.getByRole('radio', { name: /^Asistente:/ })).not.toBeChecked()
     const luis = within(screen.getByRole('row', { name: /luis@example.com/ }))
-    expect(luis.getByRole('checkbox', { name: /^Asistente:/ })).toBeChecked()
-    await user.click(ana.getByRole('checkbox', { name: /^Visitante:/ }))
+    expect(luis.getByRole('radio', { name: /^Asistente:/ })).toBeChecked()
+    await user.click(ana.getByRole('radio', { name: /^Sin rol:/ }))
     await user.click(screen.getByRole('button', { name: 'Sí, retirar rol' }))
     await screen.findByText('Rol retirado de Ana Ejemplo.')
-    for (const checkbox of ana.getAllByRole('checkbox')) expect(checkbox).not.toBeChecked()
+    expect(ana.getByRole('radio', { name: /^Sin rol:/ })).toBeChecked()
+    expect(ana.getByRole('radio', { name: /^Visitante:/ })).not.toBeChecked()
   })
 
   test('assigns a role to an unassigned user and resets mock data on remount', async () => {
@@ -42,7 +43,7 @@ describe('UserRoleAssignmentDemo', () => {
       <UserRoleAssignmentDemo {...(Default.args as UserRoleAssignmentDemoProps)} />,
     )
     await user.click(
-      screen.getByRole('checkbox', { name: 'Asistente: Carlos Ejemplo (carlos@example.com)' }),
+      screen.getByRole('radio', { name: 'Asistente: Carlos Ejemplo (carlos@example.com)' }),
     )
     expect(screen.getByText('Rol actual: Sin rol')).toBeInTheDocument()
     expect(screen.getByText('Puede editar el contenido de la página.')).toBeInTheDocument()
@@ -52,22 +53,22 @@ describe('UserRoleAssignmentDemo', () => {
     expect(screen.queryByRole('table')).not.toBeInTheDocument()
     await user.clear(screen.getByRole('searchbox'))
     expect(
-      screen.getByRole('checkbox', { name: 'Asistente: Carlos Ejemplo (carlos@example.com)' }),
+      screen.getByRole('radio', { name: 'Asistente: Carlos Ejemplo (carlos@example.com)' }),
     ).toBeChecked()
     unmount()
     render(<UserRoleAssignmentDemo {...(Default.args as UserRoleAssignmentDemoProps)} />)
     expect(
-      screen.getByRole('checkbox', { name: 'Asistente: Carlos Ejemplo (carlos@example.com)' }),
+      screen.getByRole('radio', { name: 'Asistente: Carlos Ejemplo (carlos@example.com)' }),
     ).not.toBeChecked()
   })
 
   test('keeps the previous role when saving fails and lets the user cancel', async () => {
     const user = userEvent.setup()
     render(<UserRoleAssignmentDemo {...(SaveFailure.args as UserRoleAssignmentDemoProps)} />)
-    const visitor = screen.getByRole('checkbox', {
+    const visitor = screen.getByRole('radio', {
       name: 'Visitante: Ana Ejemplo (ana@example.com)',
     })
-    const admin = screen.getByRole('checkbox', {
+    const admin = screen.getByRole('radio', {
       name: 'Administrador: Ana Ejemplo (ana@example.com)',
     })
     await user.click(visitor)

@@ -13,7 +13,9 @@ chronological images, evenly selected from the existing response and including i
 last observations. Desktop displays all five, tablet shows three at a time, and mobile uses a
 keyboard-focusable horizontal strip. No image is duplicated to fill missing observations.
 
-The six band controls come from the existing instrument catalog, labeled in Å. An independent
+The six band controls come from the existing instrument catalog, labeled in Å, each with a short
+line saying what the band shows (`scientificData.instruments.suvi.bands` in the catalogues, also
+shown under the SUVI products of the form below). An independent
 range selector offers the whole day or the latest 6, 3 or 1 hours, always clamped to today's UTC
 midnight. Band and range changes update automatically without navigation or changing the form
 below. Refreshing images updates the current time and supports retries. At UTC midnight, before
@@ -23,6 +25,12 @@ through `/api/suvi/frames/[id]`); no additional upstream endpoint is called from
 The lower form defaults to EXIS/ray X and retains manual SUVI consultation for any UTC date up
 to today, read from the archive the worker fills. Selecting a product there does not request data
 until **Consultar datos** is pressed.
+
+A badge beside the form's heading says whether the source is measured (**Datos medidos por
+satélite**) or simulated, with a line under the heading explaining it. A result lists six metadata
+tiles (instrument, channel or wavelength, date, UTC and local interval, source), three by two and
+two by three on a phone; the GOES satellite that took the data is a badge in the result's header.
+Minimum, maximum and latest value share one row at every width.
 
 ## Instrument visibility (PUB-002)
 
@@ -83,6 +91,8 @@ banner is informational; the Server Action enforces the same rules
 
 The response always includes an `origin` object. The interface displays its source and whether
 the values are `observed` or `simulated`; these states must never be inferred from styling alone.
+To integrate a new instrument, data provider, or ingestion pipeline, follow the step-by-step
+guide in [add-a-data-source.md](add-a-data-source.md).
 
 ### GOES
 
