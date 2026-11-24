@@ -76,6 +76,16 @@ export const schedules: Schedule[] = [
       lookbackMinutes: 30,
     },
   },
+  {
+    id: 'suvi-pipeline-he303',
+    name: 'suvi-pipeline',
+    cron: '*/1 * * * *',
+    data: {
+      channel: 'He303',
+      spacecraft: 19,
+      lookbackMinutes: 30,
+    },
+  },
   // NOAA publishes EXIS one file per day, around 04:20 UTC the next morning, and sometimes
   // republishes a day. Hourly at minute 20 is plenty: an unchanged window costs one listing and a
   // HEAD per day.

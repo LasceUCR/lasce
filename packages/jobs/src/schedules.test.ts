@@ -1,7 +1,9 @@
+import { suviPipelinePayload } from '@lasce/contracts'
 import { describe, expect, test } from 'vitest'
 
 import { schedules } from './schedules'
 
+const suvi = schedules.filter((schedule) => schedule.name === 'suvi-pipeline')
 const exis = schedules.filter((schedule) => schedule.name === 'exis-pipeline')
 const mag = schedules.filter((schedule) => schedule.name === 'mag-pipeline')
 const seiss = schedules.filter((schedule) => schedule.name === 'seiss-pipeline')
@@ -11,6 +13,13 @@ describe('schedules', () => {
     const ids = schedules.map((schedule) => schedule.id)
 
     expect(new Set(ids).size).toBe(ids.length)
+  })
+
+  // A band missing here never gets a frame, and /datos shows it as permanently empty.
+  test('SUVI fetches every channel the contract accepts', () => {
+    const channels = suvi.map((schedule) => (schedule.data as { channel: string }).channel)
+
+    expect(channels.sort()).toEqual([...suviPipelinePayload.shape.channel.options].sort())
   })
 
   test('EXIS is ingested once per product', () => {
