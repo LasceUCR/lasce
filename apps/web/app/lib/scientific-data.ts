@@ -47,6 +47,8 @@ export interface ScientificProduct {
   available: boolean
   availabilityNote?: string
   wavelength?: string
+  /** What a SUVI band shows, in a few words, for visitors who do not read wavelengths. */
+  description?: string
   parameters: ScientificParameter[]
 }
 
@@ -448,19 +450,22 @@ export function getScientificSources(messages: ScientificDataMessages): Scientif
     {
       code: 'SUVI',
       name: suvi?.name ?? es.scientificData.instruments.suvi.name,
-      products: [
-        { code: 'Fe093', wavelength: '94 Å' },
-        { code: 'Fe131', wavelength: '131 Å' },
-        { code: 'Fe171', wavelength: '171 Å' },
-        { code: 'Fe195', wavelength: '195 Å' },
-        { code: 'Fe284', wavelength: '284 Å' },
-        { code: 'He303', wavelength: '304 Å' },
-      ].map(({ code, wavelength }) => ({
-        code: code as ScientificProductCode,
+      products: (
+        [
+          { code: 'Fe093', wavelength: '94 Å' },
+          { code: 'Fe131', wavelength: '131 Å' },
+          { code: 'Fe171', wavelength: '171 Å' },
+          { code: 'Fe195', wavelength: '195 Å' },
+          { code: 'Fe284', wavelength: '284 Å' },
+          { code: 'He303', wavelength: '304 Å' },
+        ] as const
+      ).map(({ code, wavelength }) => ({
+        code,
         name: (suvi?.imageProductName ?? es.scientificData.instruments.suvi.imageProductName)
           .replace('{wavelength}', wavelength)
           .replace('{code}', code),
         wavelength,
+        description: suvi?.bands?.[code] ?? es.scientificData.instruments.suvi.bands[code],
         visualization: 'image-sequence' as const,
         available: true,
         parameters: [{ code: 'image', label: image, unit: imageUnit }],

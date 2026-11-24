@@ -1857,7 +1857,15 @@
       },
       "suvi": {
         "name": "Generador de imágenes solares ultravioleta",
-        "imageProductName": "Imágenes solares: {wavelength} ({code})"
+        "imageProductName": "Imágenes solares: {wavelength} ({code})",
+        "bands": {
+          "Fe093": "Fulguraciones y plasma muy caliente",
+          "Fe131": "Fulguraciones (el plasma más caliente)",
+          "Fe171": "Corona tranquila y bucles",
+          "Fe195": "Corona y agujeros coronales",
+          "Fe284": "Regiones activas",
+          "He303": "Cromosfera y protuberancias"
+        }
       },
       "rosacI1": {
         "name": "Instrumento 1 (por definir)",
@@ -1967,8 +1975,10 @@
     "explorer": {
       "kicker": "Consulta pública",
       "title": "Configure los datos que desea visualizar",
-      "badgeObserved": "Datos observados",
+      "badgeObserved": "Datos medidos por satélite",
       "badgeSimulated": "Simulación",
+      "badgeObservedHint": "Mediciones reales registradas por instrumentos a bordo de satélites.",
+      "badgeSimulatedHint": "Valores de demostración generados por computadora; no son mediciones reales.",
       "sourceLabel": "Fuente de datos",
       "productLabel": "Instrumento y producto",
       "parameterLabel": "Canal o parámetro",
@@ -1994,8 +2004,6 @@
       "dateResultLabel": "Fecha",
       "intervalResultLabel": "Intervalo",
       "sourceResultLabel": "Fuente",
-      "satelliteResultLabel": "Satélite",
-      "satelliteValue": "GOES-{number}",
       "emptyTitle": "No hay datos disponibles",
       "emptyImageMessage": "No hay imágenes solares disponibles para la banda, la fecha y el horario seleccionados. Seleccione otra banda o intente nuevamente más tarde.",
       "emptyDataMessage": "No se encontraron observaciones para el producto, la fecha y el rango horario seleccionados. Modifique los criterios e intente nuevamente.",
@@ -2023,7 +2031,8 @@
       "localIntervalResultLabel": "Hora de Costa Rica (UTC−6)",
       "localDayBefore": "{time} (día anterior)",
       "localDayAfter": "{time} (día siguiente)",
-      "crossesMidnightResult": "(termina al día siguiente)"
+      "crossesMidnightResult": "(termina al día siguiente)",
+      "satelliteBadge": "Satélite GOES-{number}"
     },
     "downloads": {
       "title": "Descargas",

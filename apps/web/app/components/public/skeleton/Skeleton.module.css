@@ -99,9 +99,19 @@
 
 .summary {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 0.75rem;
   margin: 1rem 0 0;
+}
+
+@media (max-width: 560px) {
+  .summary {
+    gap: 0.5rem;
+  }
+
+  .summaryTile {
+    padding: 0.5rem;
+  }
 }
 
 .summaryTile {
