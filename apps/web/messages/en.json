@@ -1857,7 +1857,15 @@
       },
       "suvi": {
         "name": "Solar Ultraviolet Imager",
-        "imageProductName": "Solar images: {wavelength} ({code})"
+        "imageProductName": "Solar images: {wavelength} ({code})",
+        "bands": {
+          "Fe093": "Flares and very hot plasma",
+          "Fe131": "Flares (the hottest plasma)",
+          "Fe171": "Quiet corona and loops",
+          "Fe195": "Corona and coronal holes",
+          "Fe284": "Active regions",
+          "He303": "Chromosphere and prominences"
+        }
       },
       "rosacI1": {
         "name": "Instrument 1 (to be defined)",
@@ -1967,8 +1975,10 @@
     "explorer": {
       "kicker": "Public query",
       "title": "Configure the data you want to visualize",
-      "badgeObserved": "Observed data",
+      "badgeObserved": "Satellite-measured data",
       "badgeSimulated": "Simulation",
+      "badgeObservedHint": "Real measurements recorded by instruments on board satellites.",
+      "badgeSimulatedHint": "Computer-generated demonstration values; not real measurements.",
       "sourceLabel": "Data source",
       "productLabel": "Instrument and product",
       "parameterLabel": "Channel or parameter",
@@ -1994,8 +2004,6 @@
       "dateResultLabel": "Date",
       "intervalResultLabel": "Interval",
       "sourceResultLabel": "Source",
-      "satelliteResultLabel": "Satellite",
-      "satelliteValue": "GOES-{number}",
       "emptyTitle": "No data available",
       "emptyImageMessage": "No solar images are available for the selected band, date and time range. Select another band or try again later.",
       "emptyDataMessage": "No observations were found for the selected product, date and time range. Adjust the criteria and try again.",
@@ -2023,7 +2031,8 @@
       "localIntervalResultLabel": "Costa Rica time (UTC−6)",
       "localDayBefore": "{time} (previous day)",
       "localDayAfter": "{time} (next day)",
-      "crossesMidnightResult": "(ends the next day)"
+      "crossesMidnightResult": "(ends the next day)",
+      "satelliteBadge": "Satellite GOES-{number}"
     },
     "downloads": {
       "title": "Downloads",
@@ -2284,8 +2293,9 @@
       "panelTitle": "Users and roles",
       "demoNotice": "Sample data: the users and roles shown are fictional.",
       "demoChanges": "Changes are for demonstration only and are lost when the page is reloaded.",
-      "helpEditable": "Each user can have a single role. Select another one to change it, or press the current role to remove it. You will be asked to confirm before the change is applied.",
-      "helpReadOnly": "View only. The checkboxes show the assigned roles and cannot be used to change them.",
+      "helpEditable": "Each user has a single role. Choose another one to change it, or “No role” to remove it. You will be asked to confirm before the change is applied. The platform always keeps at least one administrator account.",
+      "helpReadOnly": "View only. The selected option shows the assigned role and cannot be used to change it.",
+      "noRoleHelp": "No role: the account can sign in and view the public pages, but has no permissions. It cannot download resources or enter the administration area.",
       "noRoles": "There are no roles to show.",
       "empty": "There are no users to show.",
       "search": {
@@ -2299,9 +2309,10 @@
         "region": "Users and roles table",
         "label": "Users and roles",
         "name": "Name",
-        "email": "Email address"
+        "email": "Email address",
+        "noRole": "No role"
       },
-      "checkbox": "{role}: {name} ({email})",
+      "option": "{role}: {name} ({email})",
       "updated": "Role updated for {name}: {role}.",
       "removed": "Role removed from {name}.",
       "details": {
@@ -2321,8 +2332,8 @@
         "removeQuestion": "Do you want to remove the role of <strong>{name}</strong>?",
         "currentRole": "Current role: {roles}",
         "noRole": "No role",
-        "ownRole": "You are changing your own role. Once you are no longer an administrator you will lose access to this screen.",
-        "leftWithoutRole": "The user will be left without an assigned role.",
+        "ownRole": "You are changing your own role. This is only possible while another account keeps the administrator role, and once you are no longer an administrator you will lose access to this screen.",
+        "leftWithoutRole": "The user will have no role: they will be able to sign in and view the public pages, but will have no permissions, so they cannot download resources or enter the administration area.",
         "replaces": "The new role will replace the current one. The user will not keep both roles.",
         "confirmChange": "Yes, change role",
         "confirmRemove": "Yes, remove role",
@@ -2334,7 +2345,8 @@
       "errors": {
         "conflict": "This user's information changed. Reload the page to see their current roles before trying again.",
         "unauthorized": "Your session ended or you are no longer authorized to change roles. Reload the page to check your access.",
-        "unknown": "We could not confirm the change. Reload the page to check the current role before trying again."
+        "unknown": "We could not confirm the change. Reload the page to check the current role before trying again.",
+        "lastAdministrator": "The role was not changed: this is the only administrator account and the platform must keep at least one. Assign the administrator role to another account before trying again."
       }
     },
     "audit": {
@@ -2704,7 +2716,7 @@
         "countryCode": "Select a country"
       },
       "requiredNote": "All fields are required.",
-      "passwordHint": "At least 8 characters.",
+      "passwordHint": "8 to 128 characters, with at least one uppercase letter, one lowercase letter, one number and one special character.",
       "submit": "Create account",
       "submitting": "Creating account...",
       "successTitle": "Account created",
@@ -2723,6 +2735,11 @@
         "passwordRequired": "Enter a password.",
         "passwordTooShort": "The password must be at least 8 characters long.",
         "passwordTooLong": "The password cannot exceed 128 characters.",
+        "passwordMissingCharacters": "The password must include:",
+        "passwordNeedsUppercase": "an uppercase letter",
+        "passwordNeedsLowercase": "a lowercase letter",
+        "passwordNeedsNumber": "a number",
+        "passwordNeedsSpecial": "a special character",
         "confirmationRequired": "Repeat your password.",
         "confirmationMismatch": "The passwords do not match.",
         "reviewFields": "Review the marked fields to continue.",
@@ -2767,7 +2784,7 @@
           "password": "New password",
           "passwordConfirmation": "Repeat password"
         },
-        "passwordHint": "At least 8 characters.",
+        "passwordHint": "8 to 128 characters, with at least one uppercase letter, one lowercase letter, one number and one special character.",
         "submit": "Save password",
         "submitting": "Saving...",
         "invalidTitle": "This link is not valid",
@@ -2777,6 +2794,11 @@
           "passwordRequired": "Enter a password.",
           "passwordTooShort": "The password must be at least 8 characters long.",
           "passwordTooLong": "The password cannot be longer than 128 characters.",
+          "passwordMissingCharacters": "The password must include:",
+          "passwordNeedsUppercase": "an uppercase letter",
+          "passwordNeedsLowercase": "a lowercase letter",
+          "passwordNeedsNumber": "a number",
+          "passwordNeedsSpecial": "a special character",
           "confirmationRequired": "Repeat your password.",
           "confirmationMismatch": "The passwords do not match.",
           "unexpected": "We could not save the password. Try again in a few minutes."
@@ -2792,6 +2814,18 @@
         "ignore": "If you did not ask for this, ignore this message: your password will not change.",
         "signature": "Solar Astrophysics and Space Weather Laboratory, University of Costa Rica"
       }
+    },
+    "passwordRequirements": {
+      "title": "The password must have:",
+      "items": {
+        "length": "8 to 128 characters",
+        "uppercase": "An uppercase letter",
+        "lowercase": "A lowercase letter",
+        "number": "A number",
+        "special": "A special character, such as ! # $ or @"
+      },
+      "met": "Met:",
+      "unmet": "Not met:"
     }
   },
   "account": {

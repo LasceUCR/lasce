@@ -9,11 +9,16 @@ import { createPortal } from 'react-dom'
 import type { SelectOption } from '../Select'
 import { useFloatingMenu } from '../useFloatingMenu'
 
+/** An option of the menu; `description` is drawn as a second line, such as what a band shows. */
+export interface InstrumentProductOption extends SelectOption {
+  description?: string
+}
+
 export interface InstrumentProductSelectProps {
   id: string
   label: string
   value: string
-  options: SelectOption[]
+  options: InstrumentProductOption[]
   onChange: (value: string) => void
   disabled?: boolean
   describedBy?: string
@@ -50,7 +55,7 @@ export function InstrumentProductSelect({
     label: label ?? t('defaultGroupLabel'),
     options: options.filter((option) => option.group === label),
   }))
-  const optionNodes = (items: SelectOption[]) =>
+  const optionNodes = (items: InstrumentProductOption[]) =>
     items
       .filter((option) => !option.disabled)
       .map((option) => ({
@@ -211,20 +216,34 @@ export function InstrumentProductSelect({
     }
   }
 
-  function renderOption(option: SelectOption) {
+  function renderOption(option: InstrumentProductOption) {
+    const optionId = `${id}-option-${option.value}`
+    // The description is read after the option's name rather than as part of it.
+    const described = Boolean(option.description)
     return (
       <div
         key={option.value}
+        aria-describedby={described ? `${optionId}-description` : undefined}
         aria-disabled={option.disabled || undefined}
+        aria-labelledby={described ? `${optionId}-label` : undefined}
         aria-selected={value === option.value}
         className="select-option"
         data-active={active === `option-${option.value}` || undefined}
-        id={`${id}-option-${option.value}`}
+        id={optionId}
         onClick={() => !option.disabled && choose(option.value)}
         onMouseDown={(event) => event.preventDefault()}
         role="treeitem"
       >
-        <span>{option.label}</span>
+        {described ? (
+          <span className="select-option-text">
+            <span id={`${optionId}-label`}>{option.label}</span>
+            <span className="select-option-description" id={`${optionId}-description`}>
+              {option.description}
+            </span>
+          </span>
+        ) : (
+          <span>{option.label}</span>
+        )}
         {value === option.value ? <Check aria-hidden="true" size={16} /> : null}
       </div>
     )

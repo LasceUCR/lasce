@@ -135,7 +135,49 @@ describe('ScientificDataExplorer', () => {
       'electron:T1:E1',
     )
     expect(screen.getByLabelText('Fecha')).not.toHaveAttribute('min')
-    expect(screen.getByText('Datos observados')).toBeInTheDocument()
+    expect(screen.getByText('Datos medidos por satélite')).toBeInTheDocument()
+    expect(
+      screen.getByText('Mediciones reales registradas por instrumentos a bordo de satélites.'),
+    ).toBeInTheDocument()
+  })
+
+  test('says what each SUVI band shows, in the menu and under the selected product', async () => {
+    const user = userEvent.setup()
+    renderWithIntl(<ScientificDataExplorer {...defaultArgs} />)
+
+    await user.click(screen.getByRole('combobox', { name: 'Instrumento y producto' }))
+    await user.click(screen.getByRole('treeitem', { name: /^SUVI/ }))
+    for (const [band, description] of [
+      ['94 Å', 'Fulguraciones y plasma muy caliente'],
+      ['131 Å', 'Fulguraciones (el plasma más caliente)'],
+      ['171 Å', 'Corona tranquila y bucles'],
+      ['195 Å', 'Corona y agujeros coronales'],
+      ['284 Å', 'Regiones activas'],
+      ['304 Å', 'Cromosfera y protuberancias'],
+    ] as const) {
+      const option = screen.getByRole('treeitem', { name: new RegExp(`: ${band} \\(`) })
+      expect(option).toHaveAccessibleDescription(description)
+      expect(option).toHaveTextContent(description)
+    }
+
+    await user.click(screen.getByRole('treeitem', { name: /304 Å/ }))
+    expect(
+      screen.getByRole('combobox', { name: 'Instrumento y producto' }),
+    ).toHaveAccessibleDescription(/Cromosfera y protuberancias/)
+  })
+
+  test('describes the SUVI bands in English', async () => {
+    const user = userEvent.setup()
+    renderWithIntl(<ScientificDataExplorer {...defaultArgs} sources={getScientificSources(en)} />, {
+      locale: 'en',
+    })
+
+    await user.click(screen.getByRole('combobox', { name: 'Instrument and product' }))
+    await user.click(screen.getByRole('treeitem', { name: /^SUVI/ }))
+    expect(screen.getByRole('treeitem', { name: /171 Å/ })).toHaveAccessibleDescription(
+      'Quiet corona and loops',
+    )
+    expect(screen.getByText('Satellite-measured data')).toBeInTheDocument()
   })
 
   test('switches to provisional ROSAC instruments without presenting them as observations', async () => {
@@ -146,6 +188,12 @@ describe('ScientificDataExplorer', () => {
     await user.click(screen.getByRole('option', { name: /ROSAC/ }))
 
     expect(screen.getByText('Simulación')).toBeInTheDocument()
+    expect(
+      screen.getByText(
+        'Valores de demostración generados por computadora; no son mediciones reales.',
+      ),
+    ).toBeInTheDocument()
+    expect(screen.queryByText('Datos medidos por satélite')).not.toBeInTheDocument()
     expect(screen.getByRole('combobox', { name: 'Instrumento y producto' })).toHaveValue('ROSAC-I1')
     expect(screen.getByRole('combobox', { name: 'Instrumento y producto' })).toHaveTextContent(
       'ROSAC-I1',
@@ -285,6 +333,15 @@ describe('ScientificDataExplorer', () => {
     expect(within(results).getByText('08:00–09:00 UTC')).toBeInTheDocument()
     expect(within(results).getByText('Hora de Costa Rica (UTC−6)')).toBeInTheDocument()
     expect(within(results).getByText('02:00–03:00')).toBeInTheDocument()
+  })
+
+  test('names the satellite in the results header and keeps the metadata to six entries', () => {
+    renderWithIntl(<ScientificDataExplorer {...withResultsArgs} />)
+
+    const results = screen.getByRole('region', { name: 'Flujo solar: rayos X (SFXR)' })
+    expect(within(results).getByText('Satélite GOES-18')).toBeInTheDocument()
+    expect(within(results).getAllByRole('term')).toHaveLength(6)
+    expect(within(results).queryByText('Satélite')).not.toBeInTheDocument()
   })
 
   test('names the day of a local time that falls outside the UTC day', () => {

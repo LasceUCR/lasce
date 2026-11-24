@@ -13,8 +13,9 @@ and verification are documented in that follow-up; real-data and authorization d
 ## Supported behaviour
 
 - Display user names, emails and one column per supplied role, using stable role IDs.
-- Display users without assigned roles, with every indicator unchecked.
-- Display assignments using disabled checkboxes; this view cannot change assignments.
+- Display users without assigned roles with the "Sin rol" option selected.
+- Display assignments using disabled radio buttons, one group per user; this view cannot change
+  assignments.
 - Search locally by partial name or email while typing, ignoring case and leading/trailing
   whitespace. Accents are significant. Empty or whitespace-only queries show all supplied users.
 - Retain the matching users' assignments; explain no matches and allow changing or clearing search.

@@ -16,7 +16,7 @@ for (const width of [390, 1440]) {
       await search.fill(fixture.target.email)
       await search.press('Enter')
       await expect(table.getByRole('row')).toHaveCount(2)
-      const admin = table.getByRole('checkbox', {
+      const admin = table.getByRole('radio', {
         name: `Visitante: Usuario QA (${fixture.target.email})`,
       })
       await expect(admin).toBeChecked()
@@ -45,9 +45,11 @@ for (const width of [390, 1440]) {
       await page.reload()
       await search.fill(fixture.target.email)
       await expect(table.getByRole('row')).toHaveCount(2)
-      for (const checkbox of await table.getByRole('checkbox').all()) {
-        await expect(checkbox).not.toBeChecked()
-        await expect(checkbox).toBeEnabled()
+      // An account without a role has "Sin rol" selected, and only that.
+      await expect(table.getByRole('radio', { name: /^Sin rol:/ })).toBeChecked()
+      await expect(table.getByRole('radio', { checked: true })).toHaveCount(1)
+      for (const option of await table.getByRole('radio').all()) {
+        await expect(option).toBeEnabled()
       }
       await search.fill('inexistente')
       await expect(page.getByRole('status')).toHaveText(
@@ -71,9 +73,7 @@ for (const width of [390, 1440]) {
       await scrollRegion.evaluate((element) => {
         element.scrollLeft = element.scrollWidth
       })
-      await expect(
-        table.getByRole('columnheader', { name: 'Persona administradora' }),
-      ).toBeInViewport()
+      await expect(table.getByRole('columnheader', { name: 'Sin rol' })).toBeInViewport()
       const accessibility = await new AxeBuilder({ page })
         .include('main')
         .withTags(['wcag2a', 'wcag2aa', 'wcag21aa'])

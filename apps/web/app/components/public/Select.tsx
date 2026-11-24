@@ -22,6 +22,12 @@ export interface SelectProps {
   onChange: (value: string) => void
   disabled?: boolean
   describedBy?: string
+  /** Trigger text while no option matches `value`. */
+  placeholder?: string
+  /** Marks the trigger `aria-invalid`, for a form field that failed validation. */
+  invalid?: boolean
+  /** Marks the trigger `aria-required`, for a mandatory form field. */
+  required?: boolean
 }
 
 export function Select({
@@ -32,6 +38,9 @@ export function Select({
   onChange,
   disabled,
   describedBy,
+  placeholder,
+  invalid,
+  required,
 }: SelectProps) {
   const [open, setOpen] = useState(false)
   const [active, setActive] = useState(value)
@@ -158,7 +167,9 @@ export function Select({
         aria-describedby={describedBy}
         aria-expanded={expanded}
         aria-haspopup="listbox"
+        aria-invalid={invalid || undefined}
         aria-label={label}
+        aria-required={required || undefined}
         className="select-trigger"
         disabled={disabled}
         id={id}
@@ -178,7 +189,9 @@ export function Select({
         type="button"
         value={value}
       >
-        <span>{selected?.label ?? 'Seleccione una opción'}</span>
+        <span data-placeholder={selected ? undefined : true}>
+          {selected?.label ?? placeholder ?? 'Seleccione una opción'}
+        </span>
         <ChevronDown aria-hidden="true" size={18} />
       </button>
       {expanded &&

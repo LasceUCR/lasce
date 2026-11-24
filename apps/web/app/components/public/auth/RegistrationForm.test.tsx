@@ -7,12 +7,14 @@ import { LOGIN_HREF } from '@/app/lib/auth/login'
 import {
   REGISTRATION_FIELDS,
   REGISTRATION_LABELS,
+  REGISTRATION_PLACEHOLDERS,
   initialRegistrationState,
   registrationFormCopy,
   registrationMessages,
   type RegistrationState,
 } from '@/app/lib/auth/registration'
 import { renderWithIntl } from '@/app/lib/i18n/testing'
+import es from '@/messages/es.json' with { type: 'json' }
 
 import { RegistrationForm, type RegistrationFormProps } from './RegistrationForm'
 import {
@@ -32,12 +34,18 @@ const invalidFormatArgs = InvalidFormat.args as RegistrationFormProps
 const duplicateEmailArgs = DuplicateEmail.args as RegistrationFormProps
 const failedArgs = Failed.args as RegistrationFormProps
 const successArgs = Success.args as RegistrationFormProps
+const passwordRequirementsCopy = es.auth.passwordRequirements
 
 function renderForm(ui: React.ReactElement) {
   return renderWithIntl(<ToastProvider>{ui}</ToastProvider>)
 }
 
 const control = (label: string) => screen.getByLabelText(label, { exact: true })
+
+async function chooseCountry(user: ReturnType<typeof userEvent.setup>, name: string) {
+  await user.click(screen.getByRole('combobox', { name: REGISTRATION_LABELS.countryCode }))
+  await user.click(screen.getByRole('option', { name }))
+}
 
 describe('RegistrationForm', () => {
   test('renders the six fields in order, the required note and the submit button', () => {
@@ -54,7 +62,10 @@ describe('RegistrationForm', () => {
     expect(control(REGISTRATION_LABELS.password)).toHaveAttribute('type', 'password')
     expect(control(REGISTRATION_LABELS.passwordConfirmation)).toHaveAttribute('type', 'password')
     expect(control(REGISTRATION_LABELS.password)).toHaveValue('')
-    expect(screen.getAllByRole('option')).toHaveLength(defaultArgs.countries.length + 1)
+    expect(control(REGISTRATION_LABELS.countryCode)).toHaveAttribute('role', 'combobox')
+    expect(control(REGISTRATION_LABELS.countryCode)).toHaveTextContent(
+      REGISTRATION_PLACEHOLDERS.countryCode ?? '',
+    )
     expect(screen.getByRole('button', { name: registrationFormCopy.submit })).toHaveAttribute(
       'type',
       'submit',
@@ -90,7 +101,7 @@ describe('RegistrationForm', () => {
     await user.type(control(REGISTRATION_LABELS.fullName), 'Ana Pérez')
     await user.type(control(REGISTRATION_LABELS.email), 'ana@ucr.ac.cr')
     await user.type(control(REGISTRATION_LABELS.institution), 'UCR')
-    await user.selectOptions(control(REGISTRATION_LABELS.countryCode), 'CR')
+    await chooseCountry(user, 'Costa Rica')
     await user.type(control(REGISTRATION_LABELS.password), 'una contraseña')
     await user.type(control(REGISTRATION_LABELS.passwordConfirmation), 'una contraseña')
     await user.click(screen.getByRole('button', { name: registrationFormCopy.submit }))
@@ -150,6 +161,24 @@ describe('RegistrationForm', () => {
     expect(control(REGISTRATION_LABELS.fullName)).toHaveFocus()
   })
 
+  test('focuses the country dropdown when it is the first invalid field', () => {
+    renderForm(
+      <RegistrationForm
+        {...defaultArgs}
+        initialState={{
+          ...initialRegistrationState,
+          status: 'error',
+          fieldErrors: { countryCode: registrationMessages.countryRequired },
+        }}
+      />,
+    )
+
+    const country = screen.getByRole('combobox', { name: REGISTRATION_LABELS.countryCode })
+    expect(country).toHaveAttribute('aria-invalid', 'true')
+    expect(country).toHaveAccessibleDescription(registrationMessages.countryRequired)
+    expect(country).toHaveFocus()
+  })
+
   test('refills the non-secret fields and leaves the passwords empty after an error', () => {
     renderForm(<RegistrationForm {...invalidFormatArgs} />)
     const values = invalidFormatArgs.initialState?.values
@@ -157,7 +186,9 @@ describe('RegistrationForm', () => {
     expect(control(REGISTRATION_LABELS.fullName)).toHaveValue(values?.fullName)
     expect(control(REGISTRATION_LABELS.email)).toHaveValue(values?.email)
     expect(control(REGISTRATION_LABELS.institution)).toHaveValue(values?.institution)
-    expect(control(REGISTRATION_LABELS.countryCode)).toHaveValue(values?.countryCode)
+    expect(control(REGISTRATION_LABELS.countryCode)).toHaveTextContent(
+      defaultArgs.countries.find((country) => country.code === values?.countryCode)?.name ?? '',
+    )
     expect(control(REGISTRATION_LABELS.password)).toHaveValue('')
     expect(control(REGISTRATION_LABELS.passwordConfirmation)).toHaveValue('')
     expect(control(REGISTRATION_LABELS.email)).toHaveAccessibleDescription(
@@ -208,7 +239,7 @@ describe('RegistrationForm', () => {
     await user.type(control(REGISTRATION_LABELS.fullName), 'Ana Pérez')
     await user.type(control(REGISTRATION_LABELS.email), 'ana@ucr.ac.cr')
     await user.type(control(REGISTRATION_LABELS.institution), 'UCR')
-    await user.selectOptions(control(REGISTRATION_LABELS.countryCode), 'CR')
+    await chooseCountry(user, 'Costa Rica')
     await user.type(control(REGISTRATION_LABELS.password), 'una contraseña')
     await user.type(control(REGISTRATION_LABELS.passwordConfirmation), 'una contraseña')
     await user.click(screen.getByRole('button', { name: registrationFormCopy.submit }))
@@ -241,5 +272,22 @@ describe('RegistrationForm', () => {
     expect(
       screen.queryByRole('button', { name: registrationFormCopy.submit }),
     ).not.toBeInTheDocument()
+  })
+
+  test('lists the password requirements and ticks them off while the password is typed', async () => {
+    const user = userEvent.setup()
+    renderForm(<RegistrationForm {...defaultArgs} />)
+    const requirements = screen.getByRole('list', { name: passwordRequirementsCopy.title })
+    const requirement = (label: string) => within(requirements).getByText(label).closest('li')
+
+    expect(requirement(passwordRequirementsCopy.items.uppercase)).toHaveTextContent(
+      passwordRequirementsCopy.unmet,
+    )
+
+    await user.type(control(REGISTRATION_LABELS.password), 'Contraseña-1')
+
+    for (const label of Object.values(passwordRequirementsCopy.items)) {
+      expect(requirement(label)).toHaveTextContent(passwordRequirementsCopy.met)
+    }
   })
 })

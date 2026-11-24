@@ -1857,7 +1857,15 @@
       },
       "suvi": {
         "name": "Generador de imágenes solares ultravioleta",
-        "imageProductName": "Imágenes solares: {wavelength} ({code})"
+        "imageProductName": "Imágenes solares: {wavelength} ({code})",
+        "bands": {
+          "Fe093": "Fulguraciones y plasma muy caliente",
+          "Fe131": "Fulguraciones (el plasma más caliente)",
+          "Fe171": "Corona tranquila y bucles",
+          "Fe195": "Corona y agujeros coronales",
+          "Fe284": "Regiones activas",
+          "He303": "Cromosfera y protuberancias"
+        }
       },
       "rosacI1": {
         "name": "Instrumento 1 (por definir)",
@@ -1967,8 +1975,10 @@
     "explorer": {
       "kicker": "Consulta pública",
       "title": "Configure los datos que desea visualizar",
-      "badgeObserved": "Datos observados",
+      "badgeObserved": "Datos medidos por satélite",
       "badgeSimulated": "Simulación",
+      "badgeObservedHint": "Mediciones reales registradas por instrumentos a bordo de satélites.",
+      "badgeSimulatedHint": "Valores de demostración generados por computadora; no son mediciones reales.",
       "sourceLabel": "Fuente de datos",
       "productLabel": "Instrumento y producto",
       "parameterLabel": "Canal o parámetro",
@@ -1994,8 +2004,6 @@
       "dateResultLabel": "Fecha",
       "intervalResultLabel": "Intervalo",
       "sourceResultLabel": "Fuente",
-      "satelliteResultLabel": "Satélite",
-      "satelliteValue": "GOES-{number}",
       "emptyTitle": "No hay datos disponibles",
       "emptyImageMessage": "No hay imágenes solares disponibles para la banda, la fecha y el horario seleccionados. Seleccione otra banda o intente nuevamente más tarde.",
       "emptyDataMessage": "No se encontraron observaciones para el producto, la fecha y el rango horario seleccionados. Modifique los criterios e intente nuevamente.",
@@ -2023,7 +2031,8 @@
       "localIntervalResultLabel": "Hora de Costa Rica (UTC−6)",
       "localDayBefore": "{time} (día anterior)",
       "localDayAfter": "{time} (día siguiente)",
-      "crossesMidnightResult": "(termina al día siguiente)"
+      "crossesMidnightResult": "(termina al día siguiente)",
+      "satelliteBadge": "Satélite GOES-{number}"
     },
     "downloads": {
       "title": "Descargas",
@@ -2284,8 +2293,9 @@
       "panelTitle": "Usuarios y roles",
       "demoNotice": "Datos de prueba: los usuarios y roles mostrados son ficticios.",
       "demoChanges": "Los cambios son de prueba y se pierden al recargar la página.",
-      "helpEditable": "Cada usuario puede tener un solo rol. Selecciona otro para cambiarlo o pulsa el rol actual para retirarlo. Se pedirá confirmación antes de aplicar el cambio.",
-      "helpReadOnly": "Solo consulta. Las casillas indican los roles asignados y no permiten modificarlos.",
+      "helpEditable": "Cada usuario tiene un solo rol. Elige otro para cambiarlo, o «Sin rol» para retirarlo. Se pedirá confirmación antes de aplicar el cambio. La plataforma siempre conserva al menos una cuenta administradora.",
+      "helpReadOnly": "Solo consulta. La opción marcada indica el rol asignado y no permite modificarlo.",
+      "noRoleHelp": "Sin rol: la cuenta puede iniciar sesión y ver las páginas públicas, pero no tiene ningún permiso. No puede descargar recursos ni entrar a la administración.",
       "noRoles": "No hay roles disponibles para mostrar.",
       "empty": "No hay usuarios para mostrar.",
       "search": {
@@ -2299,9 +2309,10 @@
         "region": "Tabla de usuarios y roles",
         "label": "Usuarios y roles",
         "name": "Nombre",
-        "email": "Correo electrónico"
+        "email": "Correo electrónico",
+        "noRole": "Sin rol"
       },
-      "checkbox": "{role}: {name} ({email})",
+      "option": "{role}: {name} ({email})",
       "updated": "Rol actualizado para {name}: {role}.",
       "removed": "Rol retirado de {name}.",
       "details": {
@@ -2321,8 +2332,8 @@
         "removeQuestion": "¿Quieres retirar el rol de <strong>{name}</strong>?",
         "currentRole": "Rol actual: {roles}",
         "noRole": "Sin rol",
-        "ownRole": "Estás modificando tu propio rol. Al dejar de ser administrador perderás el acceso a esta pantalla.",
-        "leftWithoutRole": "El usuario quedará sin un rol asignado.",
+        "ownRole": "Estás modificando tu propio rol. Solo es posible si otra cuenta conserva el rol de administrador, y al dejar de serlo perderás el acceso a esta pantalla.",
+        "leftWithoutRole": "El usuario quedará sin rol: podrá iniciar sesión y ver las páginas públicas, pero no tendrá ningún permiso, así que no podrá descargar recursos ni entrar a la administración.",
         "replaces": "El nuevo rol reemplazará al actual. El usuario no conservará ambos roles.",
         "confirmChange": "Sí, cambiar rol",
         "confirmRemove": "Sí, retirar rol",
@@ -2334,7 +2345,8 @@
       "errors": {
         "conflict": "La información de este usuario cambió. Recarga la página para ver sus roles actuales antes de volver a intentarlo.",
         "unauthorized": "Tu sesión terminó o ya no tienes autorización para cambiar roles. Recarga la página para comprobar tu acceso.",
-        "unknown": "No pudimos confirmar el cambio. Recarga la página para comprobar el rol actual antes de volver a intentarlo."
+        "unknown": "No pudimos confirmar el cambio. Recarga la página para comprobar el rol actual antes de volver a intentarlo.",
+        "lastAdministrator": "No se cambió el rol: es la única cuenta administradora y la plataforma debe conservar al menos una. Asigna el rol de administrador a otra cuenta antes de volver a intentarlo."
       }
     },
     "audit": {
@@ -2704,7 +2716,7 @@
         "countryCode": "Selecciona un país"
       },
       "requiredNote": "Todos los campos son obligatorios.",
-      "passwordHint": "Mínimo 8 caracteres.",
+      "passwordHint": "Entre 8 y 128 caracteres, con al menos una letra mayúscula, una minúscula, un número y un carácter especial.",
       "submit": "Crear cuenta",
       "submitting": "Creando cuenta...",
       "successTitle": "Cuenta creada",
@@ -2723,6 +2735,11 @@
         "passwordRequired": "Ingresa una contraseña.",
         "passwordTooShort": "La contraseña debe tener al menos 8 caracteres.",
         "passwordTooLong": "La contraseña no puede superar los 128 caracteres.",
+        "passwordMissingCharacters": "La contraseña debe incluir:",
+        "passwordNeedsUppercase": "una letra mayúscula",
+        "passwordNeedsLowercase": "una letra minúscula",
+        "passwordNeedsNumber": "un número",
+        "passwordNeedsSpecial": "un carácter especial",
         "confirmationRequired": "Repite tu contraseña.",
         "confirmationMismatch": "Las contraseñas no coinciden.",
         "reviewFields": "Revisa los campos marcados para continuar.",
@@ -2767,7 +2784,7 @@
           "password": "Nueva contraseña",
           "passwordConfirmation": "Repetir contraseña"
         },
-        "passwordHint": "Mínimo 8 caracteres.",
+        "passwordHint": "Entre 8 y 128 caracteres, con al menos una letra mayúscula, una minúscula, un número y un carácter especial.",
         "submit": "Guardar contraseña",
         "submitting": "Guardando...",
         "invalidTitle": "El enlace no es válido",
@@ -2777,6 +2794,11 @@
           "passwordRequired": "Ingresa una contraseña.",
           "passwordTooShort": "La contraseña debe tener al menos 8 caracteres.",
           "passwordTooLong": "La contraseña no puede superar los 128 caracteres.",
+          "passwordMissingCharacters": "La contraseña debe incluir:",
+          "passwordNeedsUppercase": "una letra mayúscula",
+          "passwordNeedsLowercase": "una letra minúscula",
+          "passwordNeedsNumber": "un número",
+          "passwordNeedsSpecial": "un carácter especial",
           "confirmationRequired": "Repite tu contraseña.",
           "confirmationMismatch": "Las contraseñas no coinciden.",
           "unexpected": "No pudimos guardar la contraseña. Inténtalo de nuevo en unos minutos."
@@ -2792,6 +2814,18 @@
         "ignore": "Si no solicitaste este cambio, ignora este mensaje: tu contraseña no cambiará.",
         "signature": "Laboratorio de Astrofísica Solar y Clima Espacial, Universidad de Costa Rica"
       }
+    },
+    "passwordRequirements": {
+      "title": "La contraseña debe tener:",
+      "items": {
+        "length": "Entre 8 y 128 caracteres",
+        "uppercase": "Una letra mayúscula",
+        "lowercase": "Una letra minúscula",
+        "number": "Un número",
+        "special": "Un carácter especial, como ! # $ o @"
+      },
+      "met": "Cumplido:",
+      "unmet": "Pendiente:"
     }
   },
   "account": {

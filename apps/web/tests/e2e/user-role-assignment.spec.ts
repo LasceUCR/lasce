@@ -13,8 +13,9 @@ for (const width of [390, 1440]) {
       await page.goto('/administracion/usuarios')
       await page.getByRole('searchbox', { name: 'Buscar usuarios' }).fill(fixture.target.email)
       const row = page.getByRole('row', { name: new RegExp(fixture.target.email) })
-      const assistant = row.getByRole('checkbox', { name: /^Asistente:/ })
-      const visitor = row.getByRole('checkbox', { name: /^Visitante:/ })
+      const assistant = row.getByRole('radio', { name: /^Asistente:/ })
+      const visitor = row.getByRole('radio', { name: /^Visitante:/ })
+      const noRole = row.getByRole('radio', { name: /^Sin rol:/ })
       await expect(visitor).toBeChecked()
       await assistant.focus()
       await page.keyboard.press('Space')
@@ -39,10 +40,12 @@ for (const width of [390, 1440]) {
       expect(
         (await fixture.prisma.user.findUniqueOrThrow({ where: { id: fixture.target.id } })).role,
       ).toBe('ASSISTANT')
-      await assistant.click()
+      await noRole.click()
       await page.getByRole('button', { name: 'Sí, retirar rol' }).click()
+      await expect(noRole).toBeChecked()
       await expect(assistant).not.toBeChecked()
       await page.reload()
+      await expect(noRole).toBeChecked()
       await expect(assistant).not.toBeChecked()
       expect(
         (await fixture.prisma.user.findUniqueOrThrow({ where: { id: fixture.target.id } })).role,
@@ -69,6 +72,27 @@ for (const width of [390, 1440]) {
     }
   })
 }
+
+test('demotes an administrator while another administrator remains', async ({ page, context }) => {
+  const fixture = await createAdminFixture(context)
+  try {
+    // The signed-in administrator stays, so the last-administrator guard lets this through.
+    await fixture.prisma.user.update({ where: { id: fixture.target.id }, data: { role: 'ADMIN' } })
+    await page.goto('/administracion/usuarios')
+    await page.getByRole('searchbox', { name: 'Buscar usuarios' }).fill(fixture.target.email)
+    const row = page.getByRole('row', { name: new RegExp(fixture.target.email) })
+    await expect(row.getByRole('radio', { name: /^Persona administradora:/ })).toBeChecked()
+    await row.getByRole('radio', { name: /^Asistente:/ }).click()
+    await page.getByRole('button', { name: 'Sí, cambiar rol' }).click()
+    await expect(page.getByText(`Rol actualizado para ${fixture.target.fullName}`)).toBeVisible()
+    await expect(row.getByRole('radio', { name: /^Asistente:/ })).toBeChecked()
+    expect(
+      (await fixture.prisma.user.findUniqueOrThrow({ where: { id: fixture.target.id } })).role,
+    ).toBe('ASSISTANT')
+  } finally {
+    await fixture.cleanup()
+  }
+})
 
 test('requires authentication before returning user information', async ({ page }) => {
   // An anonymous visit is redirected to login. The production server follows that

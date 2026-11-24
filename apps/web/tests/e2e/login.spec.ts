@@ -2,6 +2,7 @@ import AxeBuilder from '@axe-core/playwright'
 import { expect as baseExpect, test, type Page } from '@playwright/test'
 
 import es from '@/messages/es.json' with { type: 'json' }
+import { countryName } from '@/app/lib/auth/countries'
 import {
   ACCESS_PATH,
   LOGIN_CARD_ID,
@@ -36,7 +37,7 @@ const account = {
   email: `login-${runId}@example.com`,
   institution: 'Universidad de Costa Rica',
   countryCode: 'CR',
-  password: 'una contraseña larga',
+  password: 'Una contraseña larga 1!',
 }
 
 // Every locator is scoped: "Crear cuenta", "Iniciar sesión", "Cerrar sesión",
@@ -114,10 +115,13 @@ test.beforeAll(async ({ browser }) => {
 
   await page.goto(REGISTRATION_HREF)
   await waitForHydration(page, `#${REGISTRATION_CARD_ID} form`)
+  // The server renders a native country select, swapped for the dropdown right after hydration.
+  await expect(field('countryCode')).toHaveAttribute('aria-haspopup', 'listbox')
   await field('fullName').fill(account.fullName)
   await field('email').fill(account.email)
   await field('institution').fill(account.institution)
-  await field('countryCode').selectOption(account.countryCode)
+  await field('countryCode').click()
+  await page.getByRole('option', { name: countryName(account.countryCode), exact: true }).click()
   await field('password').fill(account.password)
   await field('passwordConfirmation').fill(account.password)
   await card.getByRole('button', { name: registrationFormCopy.submit }).click()
@@ -504,12 +508,21 @@ test('shows the login and registration forms, their placeholders and validation 
     'placeholder',
     'University / Research center',
   )
+  const country = registrationCard.getByLabel('Country', { exact: true })
+  await expect(country).toHaveAttribute('aria-haspopup', 'listbox')
+  await expect(country).toHaveText('Select a country')
+  await country.click()
+  await expect(page.getByRole('option', { name: 'United States', exact: true })).toBeVisible()
+  await country.press('Escape')
+  await expect(page.getByRole('listbox', { name: 'Country' })).toHaveCount(0)
   await expect(
-    registrationCard.getByLabel('Country', { exact: true }).getByRole('option', {
-      name: 'United States',
-    }),
-  ).toHaveAttribute('value', 'US')
-  await expect(registrationCard.getByText('At least 8 characters.')).toBeVisible()
+    registrationCard.getByText(
+      '8 to 128 characters, with at least one uppercase letter, one lowercase letter, one number and one special character.',
+    ),
+  ).toBeVisible()
+  await expect(
+    registrationCard.getByRole('list', { name: 'The password must have:' }),
+  ).toBeVisible()
 
   await registrationCard.getByRole('button', { name: 'Create account' }).click()
   await expect(
