@@ -340,7 +340,19 @@ describe('ScientificDataExplorer', () => {
 
     const results = screen.getByRole('region', { name: 'Flujo solar: rayos X (SFXR)' })
     expect(within(results).getByText('Satélite GOES-18')).toBeInTheDocument()
-    expect(within(results).getAllByRole('term')).toHaveLength(6)
+    const metadataLabels = [
+      'Instrumento',
+      'Canal',
+      'Fecha',
+      'Intervalo',
+      'Hora de Costa Rica (UTC−6)',
+      'Fuente',
+    ]
+    const terms = within(results)
+      .getAllByRole('term')
+      .map((term) => term.textContent)
+      .filter((label): label is string => label !== null && metadataLabels.includes(label))
+    expect(terms).toHaveLength(6)
     expect(within(results).queryByText('Satélite')).not.toBeInTheDocument()
   })
 
