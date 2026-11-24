@@ -31,6 +31,7 @@ lasce/
 
 Read [`docs/architecture.md`](docs/architecture.md) for how the pieces fit together,
 [`docs/add-a-job.md`](docs/add-a-job.md) to add work to the queue,
+[`docs/add-a-data-source.md`](docs/add-a-data-source.md) to ingest and expose a scientific data source,
 [`docs/add-permissions.md`](docs/add-permissions.md) to gate a page or a control with a role
 grant,
 [`docs/manage-assets.md`](docs/manage-assets.md) to upload or delete files in MinIO, and

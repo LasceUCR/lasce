@@ -39,12 +39,12 @@ check itself against.
 
 ## Who owns what
 
-| Store      | Written by                                      | Read by                   | Schema owner                           |
-| ---------- | ----------------------------------------------- | ------------------------- | -------------------------------------- |
-| PostgreSQL | `apps/web` (Prisma), `apps/worker` (SQLAlchemy) | both                      | **Prisma** — the only migration source |
-| InfluxDB   | `apps/worker`                                   | `apps/worker`             | schema-on-write                        |
-| MinIO      | `apps/worker`, `apps/web`                       | `apps/worker`, `apps/web` | —                                      |
-| Redis      | `apps/web` enqueues, `apps/worker` consumes     | both                      | BullMQ                                 |
+| Store      | Written by                                      | Read by                             | Schema owner                           |
+| ---------- | ----------------------------------------------- | ----------------------------------- | -------------------------------------- |
+| PostgreSQL | `apps/web` (Prisma), `apps/worker` (SQLAlchemy) | both                                | **Prisma** — the only migration source |
+| InfluxDB   | `apps/worker`                                   | `apps/worker`, `apps/web` (SQL API) | schema-on-write                        |
+| MinIO      | `apps/worker`, `apps/web`                       | `apps/worker`, `apps/web`           | —                                      |
+| Redis      | `apps/web` enqueues, `apps/worker` consumes     | both                                | BullMQ                                 |
 
 The worker owns `readings/<deviceId>/<date>.csv` and its derived `.summary.json` siblings.
 `apps/web`'s side (`apps/web/app/services/storage`) is a **service layer with no caller yet**, and
@@ -123,3 +123,10 @@ runs.
 [`docs/tests/component_testing.md`](tests/component_testing.md): Vitest + React Testing Library,
 tests colocated with the component, and the Server Action / `fetch` boundary mocked while
 `@lasce/contracts` is exercised for real.
+
+## Adding capabilities
+
+- To add a background or scheduled worker job, follow [`add-a-job.md`](add-a-job.md).
+- To add a complete scientific data source (worker ingestion -> InfluxDB/MinIO -> Web query layer on `/datos`), follow [`add-a-data-source.md`](add-a-data-source.md).
+- To add a CMS-editable public section, follow [`add-a-cms-feature.md`](add-a-cms-feature.md).
+- To add a reusable UI component, follow [`add-a-component.md`](add-a-component.md).
