@@ -73,4 +73,21 @@ describe('Select', () => {
     await user.click(screen.getByRole('combobox'))
     expect(screen.queryByRole('listbox')).not.toBeInTheDocument()
   })
+
+  test('shows the placeholder until an option is chosen and exposes the field state', () => {
+    const { rerender } = render(
+      <Select {...args} invalid placeholder="Elija un producto" required value="" />,
+    )
+    const trigger = screen.getByRole('combobox', { name: args.label })
+
+    expect(trigger).toHaveTextContent('Elija un producto')
+    expect(trigger).toHaveAttribute('aria-invalid', 'true')
+    expect(trigger).toHaveAttribute('aria-required', 'true')
+
+    rerender(<Select {...args} placeholder="Elija un producto" />)
+
+    expect(trigger).toHaveTextContent('Flujo solar: rayos X')
+    expect(trigger).not.toHaveAttribute('aria-invalid')
+    expect(trigger).not.toHaveAttribute('aria-required')
+  })
 })
