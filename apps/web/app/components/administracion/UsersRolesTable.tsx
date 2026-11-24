@@ -14,6 +14,8 @@ export interface UsersRolesTableProps {
   onUserSelect?: (user: OverviewUser) => void
   onSaveRoles?: UserRolesRowProps['onSaveRoles']
   visibleUserIds?: string[]
+  /** The id of the text explaining what an account without a role can do. */
+  noRoleDescribedBy?: UserRolesRowProps['noRoleDescribedBy']
 }
 
 export function UsersRolesTable({
@@ -24,6 +26,7 @@ export function UsersRolesTable({
   onSaveRoles,
   visibleUserIds,
   currentUserId,
+  noRoleDescribedBy,
 }: UsersRolesTableProps) {
   const t = useTranslations('administration.users.table')
 
@@ -45,6 +48,11 @@ export function UsersRolesTable({
                 {role.name}
               </th>
             ))}
+            {roles.length > 0 && (
+              <th scope="col" className={styles.assignment}>
+                {t('noRole')}
+              </th>
+            )}
           </tr>
         </thead>
         <tbody>
@@ -56,6 +64,7 @@ export function UsersRolesTable({
               roles={roles}
               onUserSelect={onUserSelect}
               onSaveRoles={onSaveRoles}
+              noRoleDescribedBy={noRoleDescribedBy}
               hidden={visibleUserIds ? !visibleUserIds.includes(user.id) : false}
             />
           ))}

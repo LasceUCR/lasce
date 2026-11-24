@@ -21,13 +21,20 @@ describe('UsersRolesTable', () => {
     for (const user of args.users) {
       const row = screen.getByRole('row', { name: new RegExp(user.email) })
       for (const role of args.roles) {
-        const indicator = within(row).getByRole('checkbox', {
+        const indicator = within(row).getByRole('radio', {
           name: `${role.name}: ${user.name} (${user.email})`,
         })
         expect(indicator).toBeDisabled()
         if (user.roleIds.includes(role.id)) expect(indicator).toBeChecked()
         else expect(indicator).not.toBeChecked()
       }
+      const noRole = within(row).getByRole('radio', {
+        name: `Sin rol: ${user.name} (${user.email})`,
+      })
+      expect(noRole).toBeDisabled()
+      if (user.roleIds.length === 0) expect(noRole).toBeChecked()
+      else expect(noRole).not.toBeChecked()
+      expect(within(row).getAllByRole('radio', { checked: true })).toHaveLength(1)
     }
   })
 
@@ -41,6 +48,8 @@ describe('UsersRolesTable', () => {
     )
     expect(screen.getByRole('columnheader', { name: 'Observación' })).toBeInTheDocument()
     expect(screen.queryByRole('columnheader', { name: 'Administrador' })).not.toBeInTheDocument()
-    expect(screen.getByRole('checkbox')).toBeChecked()
+    expect(screen.getByRole('columnheader', { name: 'Sin rol' })).toBeInTheDocument()
+    expect(screen.getByRole('radio', { name: /^Observación:/ })).toBeChecked()
+    expect(screen.getByRole('radio', { name: /^Sin rol:/ })).not.toBeChecked()
   })
 })

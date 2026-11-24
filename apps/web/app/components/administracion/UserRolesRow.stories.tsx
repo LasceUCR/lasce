@@ -18,6 +18,12 @@ export default meta
 type Story = StoryObj<typeof UserRolesRow>
 
 export const ReadOnly: Story = { args: { user: demoUsers[0]!, roles: demoRoles } }
+/** One radio group per row: the arrow keys move between the roles and "Sin rol". */
+export const Editable: Story = { args: { ...ReadOnly.args, onSaveRoles: async () => {} } }
+/** An account without a role has "Sin rol" selected. */
+export const WithoutRole: Story = {
+  args: { ...Editable.args, user: demoUsers.find((user) => user.roleIds.length === 0)! },
+}
 export const SaveFailure: Story = {
   args: {
     ...ReadOnly.args,
